@@ -1,0 +1,74 @@
+/* Range Lab app shell.
+   The page is a fixed-height app: header on top, content below.
+   Cover screen (< 600px): the phone layout, scrolling as one column.
+   Unfolded (>= 600px): each tab splits into two panes that scroll on their own, with the gutter on the fold crease. */
+[hidden]{display:none!important}
+html.app,html.app body{height:100%}
+html.app body{display:flex;flex-direction:column;overflow:hidden;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+html.app .top{position:relative;top:0;flex:none}
+html.app .top-in{max-width:none;padding-block:8px;gap:8px 14px}
+html.app main.wrap{flex:1;min-height:0;overflow-y:auto;max-width:none;width:100%;padding-block:0 28px}
+.home-link{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);background:var(--surface);color:var(--fg);text-decoration:none;font:600 24px/1 var(--f-body);padding-bottom:3px}
+html.app .brand{margin-right:auto;min-width:0}
+html.app .brand b{font-size:20px}
+html.app .tabs button{padding:10px 14px}
+html.app .chips button,html.app .seg button{min-height:38px}
+html.app .icon-btn{width:44px;height:44px}
+html.app .icon-btn.play{height:44px}
+html.app .acts button{min-height:64px;font-size:16px}
+html.app .ladder-q button{min-height:44px}
+html.app .sync{display:none}
+
+@media (min-width:600px){
+  html.app main.wrap{overflow:hidden;padding-block:0;padding-inline:16px}
+  html.app .view:not([hidden]){height:100%;display:flex;flex-direction:column;padding-block:12px 0}
+  html.app .view>h2.title{font-size:22px;margin-bottom:2px}
+  html.app .view>.lede{font-size:13px;margin-bottom:10px;max-width:none}
+
+  /* Charts / ICM: chart on the left, controls and the reading rail on the right */
+  html.app .charts{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"stage ctl" "stage rail";gap:12px 32px;align-items:stretch}
+  /* contain:size stops the tall chart column from stretching the controls row; it scrolls inside its own slot instead */
+  html.app .charts>.stage{grid-area:stage;overflow-y:auto;min-height:0;padding-bottom:16px;contain:size}
+  html.app .charts>.ctl{grid-area:ctl;align-self:start;position:static;gap:10px;max-height:46vh;overflow-y:auto;padding-bottom:4px}
+  html.app .charts>.rail{grid-area:rail;display:flex;flex-direction:column;overflow-y:auto;min-height:0;padding-bottom:16px}
+  html.app .ctl .chips{flex-wrap:wrap;overflow:visible}
+  html.app .ctl .note{display:none}
+  html.app .grid{max-width:none}
+
+  /* Straddle effect: the two charts side by side across the whole screen, one each side of the crease */
+  html.app #v-cmp .charts{display:block;overflow-y:auto}
+  html.app #v-cmp .charts>.stage{contain:none}
+  html.app #v-cmp .charts>.ctl{max-height:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 32px;margin-bottom:12px}
+  html.app #v-cmp .cmp{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px}
+  html.app #v-cmp .charts>.rail{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px 32px;margin-top:14px;overflow:visible}
+
+  /* Hand lens: hand picker on the left, the matchup grids on the right */
+  html.app #v-lens:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:8px 32px}
+  html.app #v-lens .lens-head{grid-column:1;grid-row:1 / span 2;display:flex;flex-direction:column;flex-wrap:nowrap;overflow-y:auto;min-height:0;margin:0;padding-bottom:16px;contain:size}
+  html.app #v-lens .lens-head>div{min-width:0!important}
+  html.app #v-lens #l-legend{grid-column:2;grid-row:1;margin:0!important}
+  html.app #v-lens .lens-blocks{grid-column:2;grid-row:2;overflow-y:auto;min-height:0;grid-template-columns:minmax(0,1fr);align-content:start;padding-bottom:16px}
+  html.app .mx{overflow:visible}
+  html.app .mx-in .mx-strip .d{white-space:nowrap}
+  html.app .mx-in .mx-strip .d:last-child{display:flex;justify-content:flex-end}
+  html.app .mx-in{--lab:84px;min-width:0}
+  html.app .mx-row{min-width:0}
+  html.app .mx-in .mx-row{padding:3px 0}
+  html.app .mx-in .mx-lab b{font-size:12px;white-space:nowrap}
+  html.app .mx-strip,html.app .mx-lines{grid-template-columns:repeat(var(--cols),minmax(6px,1fr))}
+  html.app .mx-strip .d{font-size:8.5px}
+
+  /* Drills: setup and leak map side by side; during a drill the board and the feedback */
+  html.app #d-home:not([hidden]),html.app #d-run:not([hidden]){display:flex;flex-direction:column;height:100%;min-height:0}
+  html.app .drill-home{flex:1;min-height:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:32px;align-items:start}
+  html.app .drill-home>.panel{overflow-y:auto;max-height:100%;min-height:0}
+  html.app .qbar{flex:none}
+  html.app .q{flex:1;min-height:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:32px;align-items:start}
+  html.app .q>*{overflow-y:auto;max-height:100%;min-height:0;padding-bottom:16px}
+  html.app .q>.panel{padding-bottom:16px}
+  html.app #d-run>.panel{flex:0 1 auto;min-height:0;overflow-y:auto;margin-bottom:16px}
+
+  /* Method */
+  html.app .method{flex:1;min-height:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:32px;align-items:start;margin-bottom:16px}
+  html.app .method>.panel{overflow-y:auto;max-height:100%;min-height:0}
+}

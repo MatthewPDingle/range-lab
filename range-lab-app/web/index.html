@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en" class="app">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Range Lab</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Home: two doors, one per trainer. Unfolded they sit either side of the crease; folded they stack. */
+:root{
+  --bg:#eceff1; --surface:#ffffff; --line:#d3dade; --fg:#13212b; --muted:#56666f;
+  --mtt:#9c6a17; --cash:#2f7d78; --go-fg:#ffffff; --k-F:#5a85ad; --k-R:#de5546; --k-J:#991e3b; --k-C:#3a965a; --empty:#dfe5e8;
+  --f-display:'Big Shoulders Display','Roboto Condensed','sans-serif-condensed',sans-serif;
+  --f-body:'Figtree',system-ui,sans-serif; --f-mono:'IBM Plex Mono',monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#0e1418; --surface:#151d22; --line:#29343b; --fg:#e4eaed; --muted:#92a1aa; --mtt:#e0aa55; --cash:#5cc2b8; --go-fg:#10161a; --k-F:#3c6990; --k-R:#d4513e; --k-J:#8c1b37; --k-C:#359157; --empty:#212b31; color-scheme:dark; }
+}
+:root[data-theme="dark"]{ --bg:#0e1418; --surface:#151d22; --line:#29343b; --fg:#e4eaed; --muted:#92a1aa; --mtt:#e0aa55; --cash:#5cc2b8; --go-fg:#10161a; --k-F:#3c6990; --k-R:#d4513e; --k-J:#8c1b37; --k-C:#359157; --empty:#212b31; color-scheme:dark; }
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body);display:flex;flex-direction:column;overflow-y:auto;-webkit-tap-highlight-color:transparent}
+header{padding-inline:20px;padding-block:22px 6px}
+header h1{margin:0;font:800 44px/0.95 var(--f-display);text-transform:uppercase;letter-spacing:.01em}
+header p{margin:6px 0 0;color:var(--muted)}
+.doors{flex:1;display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding-inline:20px;padding-block:16px 20px;align-content:start}
+@media (min-width:600px){ .doors{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-content:stretch} }
+a.door{display:flex;flex-direction:column;gap:12px;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;min-height:220px;position:relative;overflow:hidden}
+a.door:active{transform:scale(.99)}
+a.door .eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+a.door h2{margin:0;font:800 40px/0.95 var(--f-display);text-transform:uppercase}
+a.door p{margin:0;color:var(--muted);max-width:42ch}
+a.door .stats{margin-top:auto;display:flex;flex-direction:column;gap:2px;font-size:13px}
+a.door .stats b{font-variant-numeric:tabular-nums}
+a.door .go{align-self:flex-start;margin-top:6px;padding:10px 18px;border-radius:999px;font-weight:700;color:var(--go-fg)}
+.mtt .eyebrow{color:var(--mtt)} .mtt .go{background:var(--mtt)}
+.cash .eyebrow{color:var(--cash)} .cash .go{background:var(--cash)}
+svg.motif{position:absolute;right:16px;top:16px;width:88px;height:88px;opacity:.9}
+.chart{display:none;grid-template-columns:repeat(13,minmax(0,1fr));gap:2px;width:100%;max-width:420px;align-self:center;margin-block:6px}
+.chart i{aspect-ratio:1;border-radius:2px;background:var(--empty)}
+@media (min-width:600px){ .chart{display:grid} svg.motif{display:none} }
+footer{padding-inline:20px;padding-block:0 20px;color:var(--muted);font-size:12.5px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Range Lab</h1>
+  <p>Preflop ranges you can recall at the table.</p>
+</header>
+<main class="doors">
+  <a class="door mtt" href="tournament.html">
+    <svg class="motif" viewBox="0 0 44 44" aria-hidden="true" id="m1"></svg>
+    <span class="eyebrow">Tournament</span>
+    <h2>Short stacks<br>to 100bb</h2>
+    <p>9-handed with a big-blind ante, 5–100bb. Opens, shoves, calling shoves, resteals, and ICM from half the field left to the final table.</p>
+    <div class="chart" id="c1" aria-hidden="true"></div>
+    <div class="stats" id="s-mtt"></div>
+    <span class="go">Open</span>
+  </a>
+  <a class="door cash" href="cash.html">
+    <svg class="motif" viewBox="0 0 44 44" aria-hidden="true" id="m2"></svg>
+    <span class="eyebrow">Live cash</span>
+    <h2>Regular and<br>straddle games</h2>
+    <p>8-handed with live rake, 100–300bb, open sizes up to 7x. Seat maps, 3-bet and 4-bet pots, and how a straddle changes things.</p>
+    <div class="chart" id="c2" aria-hidden="true"></div>
+    <div class="stats" id="s-cash"></div>
+    <span class="go">Open</span>
+  </a>
+</main>
+<footer>Solutions from GTO Wizard. Everything runs offline; your drill progress stays on this phone.</footer>
+<script>
+'use strict';
+function motif(id, pat) {
+  const el = document.getElementById(id); let h = '';
+  pat.forEach((row, i) => [...row].forEach((c, j) => { h += `<rect x="${j * 11}" y="${i * 11}" width="9.5" height="9.5" rx="1.5" fill="var(--k-${c})"/>`; }));
+  el.innerHTML = h;
+}
+motif('m1', ['JJJR', 'JJRF', 'JRFF', 'RFFF']);
+motif('m2', ['RRRC', 'RRCF', 'RCFF', 'CFFF']);
+// a decorative opening-range shape: pairs on the diagonal, suited hands above it, offsuit below
+function chart(id, hi, mid, top, edge) {
+  let h = '';
+  for (let i = 0; i < 13; i++) for (let j = 0; j < 13; j++) {
+    const s = (12 - Math.min(i, j)) + (12 - Math.max(i, j)) * 0.6 + (i < j ? 2.2 : 0) + (i === j ? 7 : 0);
+    const k = s > top ? hi : s > edge ? mid : 'F';
+    h += `<i style="background:var(--k-${k})"></i>`;
+  }
+  document.getElementById(id).innerHTML = h;
+}
+chart('c1', 'R', 'J', 18.5, 13.5);
+chart('c2', 'R', 'C', 19.5, 15.5);
+function stats(key, el) {
+  let d = null; try { d = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { }
+  if (!d || !d.log || !d.log.length) { el.innerHTML = '<span>No drills yet.</span>'; return; }
+  const last = d.log[d.log.length - 1];
+  const names = { quick: 'Quick-fire', paint: 'Paint', edges: 'Edges', numbers: 'Numbers', seats: 'Seats' };
+  const now = Date.now() / 60000;
+  const due = Object.values(d.items || {}).filter(v => v[1] <= now).length;
+  el.innerHTML = `<span>Last drill: ${new Date(last[0]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · ${names[last[1]] || last[1]} · <b>${last[3]}%</b></span><span><b>${due}</b> review${due === 1 ? '' : 's'} due</span>`;
+}
+stats('v600-progress', document.getElementById('s-mtt'));
+stats('cash-progress', document.getElementById('s-cash'));
+window.addEventListener('pageshow', () => { stats('v600-progress', document.getElementById('s-mtt')); stats('cash-progress', document.getElementById('s-cash')); });
+</script>
+</body>
+</html>

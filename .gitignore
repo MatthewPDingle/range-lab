@@ -1,0 +1,11 @@
+# build output
+range-lab-app/build/
+range-lab-app/dist/
+__pycache__/
+.claude/
+
+# private: GTO Wizard solution data (also bundled inside the APK), the signing key, and the crawler
+data.js
+cash-data.js
+*.keystore
+tools/gtow-crawler.js

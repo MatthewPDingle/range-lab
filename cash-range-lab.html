@@ -1,0 +1,1441 @@
+<title>Live Cash Range Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a clock bar (stack depth or open size is the hero numeral), the 13x13 chart centre stage,
+   spot controls on the left, a reading rail on the right; tabs for hand lens, straddle effect, drills and method. */
+:root{
+  --bg:#eceff1; --surface:#ffffff; --surface-2:#f4f6f7; --line:#d3dade; --fg:#13212b; --muted:#56666f; --faint:#87949c;
+  --accent:#2f7d78; --accent-soft:#d8ece9; --accent-fg:#ffffff;
+  --k-F:#5a85ad; --k-C:#3a965a; --k-X:#4f8d70; --k-R:#de5546; --k-B:#e08a2c; --k-J:#991e3b;
+  --empty:#dfe5e8; --cell-fg:#ffffff; --cell-dim:#93a1aa;
+  --good:#2c8a4d; --ok:#ad7618; --bad:#c43f3c;
+  --card:#ffffff; --card-edge:#c9d0d4; --felt:#e2e9ec; --felt-2:#d3dde2; --rail:#c4cfd5; --suit-s:#1a1a1a; --suit-h:#cf2f2d; --suit-d:#2860c6; --suit-c:#2a873b;
+  --shadow:0 1px 2px rgba(20,33,43,.06), 0 4px 14px rgba(20,33,43,.06);
+  --f-display:'Big Shoulders Display','Arial Narrow','Roboto Condensed',sans-serif;
+  --f-body:'Figtree',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1418; --surface:#151d22; --surface-2:#1b252b; --line:#29343b; --fg:#e4eaed; --muted:#92a1aa; --faint:#64737c;
+    --accent:#5cc2b8; --accent-soft:#16302e; --accent-fg:#06201d;
+    --k-F:#3c6990; --k-C:#359157; --k-X:#46866a; --k-R:#d4513e; --k-B:#cf7e2a; --k-J:#8c1b37;
+    --empty:#212b31; --cell-fg:#ffffff; --cell-dim:#5b6a73;
+    --good:#47ad69; --ok:#d49a3d; --bad:#e25f5a;
+    --card:#f3f3f1; --card-edge:#3a464e; --felt:#1c2930; --felt-2:#162127; --rail:#2b3a43;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1418; --surface:#151d22; --surface-2:#1b252b; --line:#29343b; --fg:#e4eaed; --muted:#92a1aa; --faint:#64737c;
+  --accent:#5cc2b8; --accent-soft:#16302e; --accent-fg:#06201d;
+  --k-F:#3c6990; --k-C:#359157; --k-X:#46866a; --k-R:#d4513e; --k-B:#cf7e2a; --k-J:#8c1b37;
+  --empty:#212b31; --cell-fg:#ffffff; --cell-dim:#5b6a73;
+  --good:#47ad69; --ok:#d49a3d; --bad:#e25f5a;
+  --card:#f3f3f1; --card-edge:#3a464e; --felt:#1c2930; --felt-2:#162127; --rail:#2b3a43;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body);margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1380px;margin:0 auto;padding-inline:16px;padding-block:0 48px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{max-width:1380px;margin:0 auto;padding-inline:16px;padding-block:10px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.chip-mark{width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font:800 12px/1 var(--f-display);letter-spacing:.02em;box-shadow:inset 0 0 0 3px var(--bg),inset 0 0 0 5px var(--accent)}
+.brand b{font:800 22px/1 var(--f-display);letter-spacing:.01em;text-transform:uppercase}
+.brand span{display:block;font-size:12px;color:var(--muted);line-height:1.2}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.tabs button{border:0;background:none;padding:8px 12px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg)}
+.sync{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block}
+.sync.on i{background:var(--good)}
+@media (max-width:720px){.sync{display:none}.brand span{display:none}}
+.view{padding-block:18px 0}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 7px}
+h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spacing:.01em;margin:0 0 4px;text-wrap:balance}
+.lede{color:var(--muted);margin:0 0 16px;max-width:70ch}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button,.seg button{border:1px solid var(--line);background:var(--surface);padding:6px 11px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;color:var(--fg)}
+.chips button[aria-pressed="true"]{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+.chips button:disabled,.seg button:disabled{opacity:.4;cursor:default}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--surface);gap:2px;flex-wrap:wrap}
+.seg button{border:0;padding:5px 12px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:9px 14px;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.ghost{background:none}
+.btn:disabled{opacity:.5;cursor:default}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.charts{display:grid;grid-template-columns:250px minmax(0,1fr) 330px;gap:20px;align-items:start}
+.ctl{display:flex;flex-direction:column;gap:18px;position:sticky;top:76px}
+.stage{min-width:0;display:flex;flex-direction:column;gap:12px}
+.rail{min-width:0;display:flex;flex-direction:column;gap:14px}
+@media (max-width:1180px){.charts{grid-template-columns:230px minmax(0,1fr)}.rail{grid-column:1 / -1;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}}
+@media (max-width:780px){
+  .charts{grid-template-columns:minmax(0,1fr);gap:14px}
+  .ctl{position:static;gap:10px}
+  .ctl .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .ctl .chips button{white-space:nowrap}
+  .ctl .note,#c-mode-help{display:none}
+  .ctl .eyebrow{margin-bottom:5px}
+  .rail{display:flex}
+  .clock{padding:8px 12px;gap:10px}
+  .clock-num b{font-size:52px}
+  .seats{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .stack-big{font-size:58px}
+  .pcard{width:64px;height:90px}.pcard .rk{font-size:38px}.pcard .st{font-size:26px}
+  .acts button{min-width:0;padding:12px 6px}
+}
+.clock{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;flex-wrap:wrap}
+.clock-num{display:flex;align-items:baseline;gap:4px;min-width:110px}
+.clock-num b{font:800 64px/0.9 var(--f-display);font-variant-numeric:tabular-nums;color:var(--accent)}
+.clock-num small{font:600 18px/1 var(--f-display);color:var(--muted);text-transform:uppercase}
+.clock-mid{flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px}
+.clock-mid input[type=range]{width:100%;accent-color:var(--accent);margin:0}
+.clock-sub{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:6px;font-size:12px;color:var(--muted)}
+.clock-sub .sub-lab{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-right:4px}
+.clock-sub button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 9px;font:600 12px var(--f-mono);color:var(--fg);cursor:pointer;min-height:30px}
+.clock-sub button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.ticks{position:relative;height:16px;font:500 10px/1 var(--f-mono);color:var(--faint)}
+.ticks span{position:absolute;transform:translateX(-50%);top:3px;white-space:nowrap}
+.ticks span.on{color:var(--fg);font-weight:600}
+.clock-btns{display:flex;gap:6px}
+.icon-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);cursor:pointer;font-size:16px;display:grid;place-items:center}
+.icon-btn.play{width:auto;border-radius:999px;padding:0 12px;font-size:13px;font-weight:600;gap:6px;display:flex;align-items:center}
+.scn{font-size:15px;margin:0}
+.scn b{font-weight:700}
+.seats{display:flex;gap:4px;flex-wrap:wrap}
+.seat{font:600 11px/1 var(--f-mono);padding:5px 7px;border-radius:6px;background:var(--surface-2);color:var(--muted);border:1px solid var(--line);display:inline-flex;gap:5px;align-items:center}
+.seat.s-fold{opacity:.45;text-decoration:line-through}
+.seat.s-R{background:var(--k-R);color:#fff;border-color:transparent}
+.seat.s-J{background:var(--k-J);color:#fff;border-color:transparent}
+.seat.s-C{background:var(--k-C);color:#fff;border-color:transparent}
+.seat.me{box-shadow:0 0 0 2px var(--accent);color:var(--fg);opacity:1;text-decoration:none}
+.seat em{font-style:normal;font-weight:500;opacity:.85}
+.grid{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:2px;width:100%;max-width:640px;user-select:none;-webkit-user-select:none}
+.grid.mini{max-width:340px;gap:1px}
+.cell{position:relative;aspect-ratio:1;border-radius:3px;background:var(--empty);color:var(--cell-fg);font:600 clamp(7.5px,1.15vw,12.5px)/1 var(--f-mono);padding:3px 3px;overflow:hidden;cursor:pointer;transition:box-shadow .15s}
+.grid.mini .cell{font-size:clamp(6.5px,1.6vw,9px);padding:2px;border-radius:2px}
+.cell .nm{position:relative;z-index:1;text-shadow:0 1px 1px rgba(0,0,0,.25)}
+.cell.out .nm{color:var(--cell-dim);text-shadow:none}
+.cell .val{position:absolute;inset:0;display:grid;place-items:center;padding-top:28%;font:700 clamp(8px,1.25vw,13px)/1 var(--f-mono);z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+.cell.sel{box-shadow:inset 0 0 0 2px var(--fg)}
+.cell.target{box-shadow:0 0 0 3px var(--accent),inset 0 0 0 1px var(--bg);z-index:2}
+.cell.chg-in{box-shadow:inset 0 0 0 2.5px #3fe07a}
+.cell.chg-out{box-shadow:inset 0 0 0 2.5px #ff5d5d;opacity:.9}
+.cell.chg-sw{box-shadow:inset 0 0 0 2.5px #ffc04a}
+.cell.dimmed{opacity:.28}
+.cell.pop{animation:pop .42s ease-out}
+@keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.18);z-index:3}100%{transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){.cell.pop{animation:none}}
+.grid.paint .cell{cursor:crosshair;touch-action:none}
+.grid.paint{touch-action:none}
+.cell.mark-bad::after,.cell.mark-mix::after{content:"";position:absolute;right:2px;bottom:2px;width:30%;height:30%;border-radius:50%;z-index:2}
+.cell.mark-bad::after{background:#ff4d4d;box-shadow:0 0 0 1.5px #fff}
+.cell.mark-mix::after{background:#ffc04a;box-shadow:0 0 0 1.5px #fff}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
+.film{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.film figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px;border-radius:6px;border:1px solid transparent}
+.film figure.on{border-color:var(--accent);background:var(--accent-soft)}
+.film figcaption{font:600 11px/1 var(--f-mono);color:var(--muted);white-space:nowrap}
+.film figure.on figcaption{color:var(--fg)}
+.rail .panel h3{font:800 17px/1.1 var(--f-display);text-transform:uppercase;letter-spacing:.02em;margin:0 0 10px}
+.mix{display:flex;flex-direction:column;gap:6px}
+.mix-row{display:grid;grid-template-columns:96px 1fr 46px;align-items:center;gap:8px;font-size:13px}
+.bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%}
+.words{display:flex;flex-direction:column;gap:9px;font-size:13px}
+.words p{margin:0}
+.words b{display:inline-flex;align-items:center;gap:6px;margin-right:4px}
+.words .r{font-family:var(--f-mono);font-size:12.5px}
+.edges{display:grid;grid-template-columns:max-content 1fr;gap:5px 10px;font-size:12.5px;align-items:center}
+.edges .lad{display:flex;gap:2px;align-items:center;flex-wrap:wrap}
+.edges .lad i{width:10px;height:14px;border-radius:2px;display:inline-block}
+.edges .lad span{font-family:var(--f-mono);margin-left:6px}
+.edges .nm{font-weight:600;color:var(--muted)}
+.handbox{display:flex;flex-direction:column;gap:8px;font-size:13px}
+.handbox .hn{font:800 26px/1 var(--f-display)}
+.taglist{font-family:var(--f-mono);font-size:12.5px;line-height:1.7}
+.taglist span{display:inline-block;padding:0 5px;border-radius:4px;background:var(--surface-2);margin:0 3px 3px 0}
+.lens-head{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}
+.lens-pick{display:flex;flex-direction:column;gap:12px}
+.lens-pick input{font:600 16px var(--f-mono);padding:8px 10px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--fg);width:120px}
+.lens-blocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));gap:16px}
+.lens-blocks h3{font:800 18px/1.1 var(--f-display);text-transform:uppercase;margin:0 0 4px}
+.tri{display:grid;gap:3px;overflow-x:auto;padding-bottom:4px}
+.tri .h{font:600 10.5px/1 var(--f-mono);color:var(--muted);display:grid;place-items:center;white-space:nowrap}
+.tri .h.row{justify-items:end;padding-right:4px}
+.tri .c{height:34px;border-radius:4px;background:var(--empty);display:grid;place-items:center;font:700 11px/1 var(--f-mono);color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.3)}
+.tri .c.na{background:repeating-linear-gradient(45deg,var(--empty) 0 3px,transparent 3px 6px)}
+.tri .c.none{background:transparent}
+.mx{overflow-x:auto}
+.mx-row{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:center;padding:5px 0;border-top:1px solid var(--line)}
+.mx-row.hd{border-top:0;padding-bottom:2px}
+.mx-lab b{font:600 13px var(--f-mono)}
+.mx-lab .rule{display:block;font-size:11.5px;color:var(--muted);line-height:1.3}
+.mx-strip{display:grid;grid-template-columns:repeat(var(--cols),minmax(18px,1fr));gap:2px}
+.mx-strip .c{height:22px;border-radius:3px;background:var(--empty)}
+.mx-strip .c.na{background:repeating-linear-gradient(45deg,var(--empty) 0 3px,transparent 3px 6px)}
+.mx-strip .d{font:500 10px/1 var(--f-mono);color:var(--faint);text-align:center}
+.cmp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:640px){.cmp{grid-template-columns:minmax(0,1fr)}}
+.cmp h3{font:800 18px/1.1 var(--f-display);text-transform:uppercase;margin:0 0 8px}
+.drill-home{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.drill-home{grid-template-columns:minmax(0,1fr)}}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.mode{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.mode b{font:800 19px/1 var(--f-display);text-transform:uppercase;letter-spacing:.02em}
+.mode span{font-size:12.5px;color:var(--muted);line-height:1.35}
+.mode[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:var(--accent-soft)}
+.form{display:flex;flex-direction:column;gap:16px;margin-top:16px}
+.heat{display:grid;gap:3px;font-size:11.5px;overflow-x:auto}
+.heat .hc{border-radius:4px;padding:6px 2px;text-align:center;font:600 11px/1.1 var(--f-mono);color:#fff;cursor:pointer;border:0}
+.heat .hc.none{background:var(--surface-2);color:var(--faint)}
+.heat .hl{font-weight:600;color:var(--muted);align-self:center;white-space:nowrap}
+.q{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.q{grid-template-columns:minmax(0,1fr)}}
+.qbar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:12px}
+.qbar b{color:var(--fg);font-variant-numeric:tabular-nums}
+.prog{flex:1;min-width:120px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent)}
+.board{display:flex;flex-direction:column;gap:14px}
+.board-top{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.stack-big{font:800 72px/.85 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums}
+.stack-big small{font-size:22px;color:var(--muted);margin-left:3px}
+.board-meta{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:2px;padding-bottom:6px}
+.board-meta b{color:var(--fg);font-size:15px}
+.cards{display:flex;gap:10px}
+.pcard{width:74px;height:104px;border-radius:9px;background:var(--card);border:1px solid var(--card-edge);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:var(--f-display)}
+.pcard .rk{font-weight:800;font-size:44px;line-height:1}
+.pcard .st{font-size:30px;line-height:1}
+.pcard.s-s{color:var(--suit-s)}.pcard.s-h{color:var(--suit-h)}.pcard.s-d{color:var(--suit-d)}.pcard.s-c{color:var(--suit-c)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts button{flex:1;min-width:110px;border:0;border-radius:10px;padding:14px 10px;font-weight:700;font-size:15px;line-height:1.25;color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px}
+.acts button small{font:500 11px/1 var(--f-mono);opacity:.8}
+.acts button:disabled{cursor:default}
+.acts button.chosen{outline:3px solid var(--fg);outline-offset:2px}
+/* quick-fire table */
+.tblw{container-type:inline-size;width:100%}
+.tbl{position:relative;width:33.3em;height:29em;margin:0 auto;font-size:min(3cqw,15px)}
+.tbl .felt{position:absolute;left:2.3em;right:2.3em;top:2.4em;bottom:3.4em;border-radius:999px;background:radial-gradient(ellipse at 50% 42%,var(--felt),var(--felt-2));border:.6em solid var(--rail)}
+.ts{position:absolute;transform:translate(-50%,-50%);min-width:4.7em;padding:.32em .45em;border-radius:.6em;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;gap:.12em;z-index:2;white-space:nowrap}
+.ts b{font:700 1em/1.1 var(--f-body);color:var(--fg)}
+.ts span{font:500 .9em/1.1 var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.ts.act{border-color:var(--k);box-shadow:0 0 0 1px var(--k),var(--shadow)}
+.ts.act span{color:color-mix(in srgb,var(--k) 70%,var(--fg));font:700 .9em/1.1 var(--f-body)}
+.ts.f{opacity:.35;box-shadow:none}
+.ts.me{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),var(--shadow)}
+.ts.me b,.ts.me span,.ts.me.act span{color:var(--accent-fg)}
+.tb{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:.28em;padding:.2em .45em .2em .22em;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--fg);white-space:nowrap;z-index:1}
+.tb span{font:600 .92em/1 var(--f-mono)}
+.tb i{width:1em;height:1em;border-radius:50%;background:var(--k,var(--faint));box-shadow:inset 0 0 0 .2em rgba(255,255,255,.4)}
+.tdlr{position:absolute;transform:translate(-50%,-50%);width:1.25em;height:1.25em;border-radius:50%;background:#fff;color:#111;display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.35);z-index:1}
+.tdlr span{font:800 .72em/1 var(--f-body)}
+.tpot{position:absolute;transform:translate(-50%,-50%);text-align:center;display:flex;flex-direction:column;align-items:center;gap:.25em}
+.tpot b{font:800 3.3em/.85 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums}
+.tpot b small{font-size:.4em;margin-left:.08em;color:var(--muted)}
+.tpot span{font:600 .9em/1 var(--f-mono);color:var(--muted)}
+.tcards{position:absolute;transform:translate(-50%,-100%);display:flex;gap:.35em;z-index:3}
+.tbl .pcard{width:5.2em;height:7.3em;border-radius:.6em}
+.tbl .pcard .rk{font-size:3.15em}
+.tbl .pcard .st{font-size:2.2em}
+.tcap{position:absolute;left:0;top:0;font-size:.85em;line-height:1.3;color:var(--muted);max-width:8.5em}
+.tcap b{color:var(--fg);font-weight:700}
+.verdict{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;font-weight:700;font-size:17px;flex-wrap:wrap}
+.verdict.good{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.verdict.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.verdict.bad{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+.verdict small{font-weight:500;font-size:13px;color:var(--fg)}
+.fb{display:flex;flex-direction:column;gap:12px}
+.ladder-q{display:flex;flex-wrap:wrap;gap:6px}
+.ladder-q button{font:600 13px var(--f-mono);border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:8px 9px;cursor:pointer;min-width:52px;color:var(--fg)}
+.ladder-q button.k-in{color:#fff;border-color:transparent}
+.ladder-q button.pick{outline:3px solid var(--fg);outline-offset:1px}
+.ladder-q button.ans{box-shadow:0 0 0 3px var(--accent)}
+.brushes{display:flex;gap:6px;flex-wrap:wrap}
+.brushes button{border:2px solid transparent;border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px;color:#fff;cursor:pointer}
+.brushes button[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 2px var(--bg) inset}
+.score{font:800 52px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.summary-list{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.summary-list button{all:unset;cursor:pointer;color:var(--accent);font-weight:600}
+.method{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:900px){.method{grid-template-columns:minmax(0,1fr)}}
+.principles{display:flex;flex-direction:column;gap:14px;counter-reset:p;padding:0;margin:0}
+.principles li{list-style:none;display:grid;grid-template-columns:34px 1fr;gap:10px}
+.principles li::before{counter-increment:p;content:counter(p);font:800 28px/1 var(--f-display);color:var(--accent)}
+.principles h4{margin:0 0 3px;font-size:16px}
+.principles p{margin:0;color:var(--muted);max-width:62ch}
+table.plan{border-collapse:collapse;width:100%;font-size:13.5px}
+table.plan th,table.plan td{text-align:left;padding:8px 8px;border-top:1px solid var(--line);vertical-align:top}
+table.plan th{font:800 15px/1.1 var(--f-display);text-transform:uppercase;white-space:nowrap;color:var(--accent)}
+.note{font-size:13px;color:var(--muted);border-left:3px solid var(--accent);padding:2px 0 2px 12px;margin:0}
+.empty-state{padding:40px 16px;text-align:center;color:var(--muted)}
+@media (hover:none){.kbd-tip{display:none}}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><div class="chip-mark" aria-hidden="true">8MX</div><div><b>Live Cash Range Lab</b><span>8-handed preflop, regular and straddle games</span></div></div>
+    <nav class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-tab="charts">Charts</button>
+      <button role="tab" data-tab="lens">Hand lens</button>
+      <button role="tab" data-tab="cmp">Straddle effect</button>
+      <button role="tab" data-tab="drill">Drill</button>
+      <button role="tab" data-tab="method">Method</button>
+    </nav>
+    <div class="sync" id="sync"><i></i><span>Progress saved on this device</span></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="view" id="v-charts" hidden>
+    <div class="charts">
+      <aside class="ctl">
+        <div><p class="eyebrow">Game</p><div class="seg" id="c-tag"></div></div>
+        <div><p class="eyebrow">Spot</p><div class="chips" id="c-fam"></div></div>
+        <div><p class="eyebrow" id="c-sit-lab">Your seat</p><div class="chips" id="c-sit"></div></div>
+        <div><p class="eyebrow">Slide through</p><div class="seg" id="c-axis"><button data-a="depth">Stack depth</button><button data-a="open">Open size</button></div></div>
+        <div><p class="eyebrow">Show</p><div class="seg" id="c-mode">
+          <button data-m="strategy">Strategy</button><button data-m="changes">Changes</button><button data-m="seats">Seat map</button></div>
+          <p class="small muted" id="c-mode-help" style="margin:8px 0 0"></p>
+        </div>
+        <div id="c-metric-wrap" hidden><p class="eyebrow">Seat map for</p><div class="seg" id="c-metric"></div></div>
+        <p class="note" id="c-note"></p>
+      </aside>
+      <div class="stage">
+        <div class="clock">
+          <div class="clock-num"><b id="c-val">100</b><small id="c-unit">bb</small></div>
+          <div class="clock-mid"><input type="range" id="c-slider" min="0" max="6" step="1" aria-label="Axis value"><div class="ticks" id="c-ticks"></div><div class="clock-sub" id="c-sub"></div></div>
+        </div>
+        <p class="scn" id="c-scn"></p>
+        <div class="seats" id="c-seats"></div>
+        <div class="grid" id="c-grid"></div>
+        <div class="legend" id="c-legend"></div>
+        <div><p class="eyebrow" id="c-film-lab">Every step for this spot</p><div class="film" id="c-film"></div></div>
+      </div>
+      <aside class="rail" id="c-rail"></aside>
+    </div>
+  </section>
+
+  <section class="view" id="v-lens" hidden>
+    <div class="lens-head">
+      <div style="flex:1;min-width:260px">
+        <h2 class="title">Hand lens</h2>
+        <p class="lede">One hand, every seat matchup. Rows are your seat, columns are the other player's seat, and each square shows what the hand does there. Letters: R = raise (3-bet, 4-bet), C = call, L = limp, AI = all-in, blank = fold. Striped squares mean you'd have folded the hand earlier.</p>
+        <div class="lens-pick">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="l-input" value="KTs" autocomplete="off" spellcheck="false" aria-label="Hand"><div class="cards" id="l-cards"></div></div>
+          <div><p class="eyebrow">Game</p><div class="seg" id="l-tag"></div></div>
+          <div><p class="eyebrow">Stack</p><div class="chips" id="l-dp"></div></div>
+          <div><p class="eyebrow">Open size</p><div class="chips" id="l-open"></div></div>
+        </div>
+      </div>
+      <div><p class="eyebrow">Pick a hand</p><div class="grid mini" id="l-grid" style="width:min(340px,86vw)"></div></div>
+    </div>
+    <div class="legend" id="l-legend" style="margin-bottom:12px"></div>
+    <div class="lens-blocks" id="l-blocks"></div>
+  </section>
+
+  <section class="view" id="v-cmp" hidden>
+    <h2 class="title">Straddle effect</h2>
+    <p class="lede">The same seat and stack, with and without a straddle. Rings on the straddle chart show what changed: green started playing, red stopped, amber switched action. In the straddle game the straddler acts last, so “Last to act vs open” compares the BB in a regular game with the straddler.</p>
+    <div class="charts">
+      <aside class="ctl">
+        <div><p class="eyebrow">Spot</p><div class="chips" id="s-fam"></div></div>
+        <div><p class="eyebrow">Seat</p><div class="chips" id="s-sit"></div></div>
+        <div><p class="eyebrow">Stack</p><div class="chips" id="s-dp"></div></div>
+      </aside>
+      <div class="stage">
+        <div class="cmp">
+          <div><h3>Regular <span class="muted small" id="s-pa"></span></h3><div class="grid" id="s-ga"></div></div>
+          <div><h3>Straddle <span class="muted small" id="s-pb"></span></h3><div class="grid" id="s-gb"></div></div>
+        </div>
+        <div class="legend" id="s-legend"></div>
+      </div>
+      <aside class="rail" id="s-rail"></aside>
+    </div>
+  </section>
+
+  <section class="view" id="v-drill" hidden>
+    <div id="d-home">
+      <h2 class="title">Drill</h2>
+      <p class="lede">Most questions use hands near the edge of a range, where mistakes happen. Misses come back a few hands later and again on a spaced schedule over the next days.</p>
+      <div class="drill-home">
+        <div class="panel">
+          <p class="eyebrow">Mode</p>
+          <div class="modes" id="d-modes">
+            <button class="mode" data-mode="quick"><b>Quick-fire</b><span>Read the table, act on instinct.</span></button>
+            <button class="mode" data-mode="paint"><b>Paint</b><span>Draw a whole range from memory, then see the gaps.</span></button>
+            <button class="mode" data-mode="edges"><b>Edges</b><span>Name the weakest hand in a family that still plays.</span></button>
+            <button class="mode" data-mode="seats"><b>Seats</b><span>From which seat does this hand start playing?</span></button>
+          </div>
+          <div class="form">
+            <div><p class="eyebrow">Plan presets</p><div class="chips" id="d-presets"></div></div>
+            <div><p class="eyebrow">Game</p><div class="seg" id="d-tag"></div></div>
+            <div><p class="eyebrow">Spots</p><div class="chips" id="d-fams"></div></div>
+            <div><p class="eyebrow">Stacks</p><div class="chips" id="d-bands"></div></div>
+            <div><p class="eyebrow">Open sizes</p><div class="chips" id="d-opens"></div></div>
+            <div id="d-len-wrap"><p class="eyebrow">Length</p><div class="seg" id="d-len"><button data-len="20">20</button><button data-len="40">40</button><button data-len="80">80</button></div></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn primary" id="d-start">Start</button><span class="small muted" id="d-due"></span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <p class="eyebrow">Where you leak</p>
+          <p class="small muted" style="margin:0 0 10px">Quick-fire accuracy by spot and stack. Tap a square to drill just that.</p>
+          <div class="heat" id="d-heat"></div>
+          <p class="eyebrow" style="margin-top:18px">Recent sessions</p>
+          <div class="summary-list" id="d-log"></div>
+        </div>
+      </div>
+    </div>
+    <div id="d-run" hidden></div>
+  </section>
+
+  <section class="view" id="v-method" hidden>
+    <h2 class="title">How to learn cash ranges</h2>
+    <p class="lede">Cash ranges hinge on seats far more than on stack depth. So learn them as one picture per spot type: which seat a hand starts playing from, and how far each ladder reaches. Then learn how deeper stacks, bigger opens and a straddle move the edges.</p>
+    <div class="method">
+      <div class="panel">
+        <ol class="principles">
+          <li><div><h4>One seat map instead of seven charts</h4><p>Charts → First in → Seat map shows, for every hand, the earliest seat it opens from. KTo reads “HJ”: open it from the HJ and later. One chart covers the whole opening game. The same view for BB defence tells you the earliest opener you defend each hand against.</p></div></li>
+          <li><div><h4>Learn the edges</h4><p>Each range is a few ladders (pairs, Ax suited, Kx offsuit…). Memorise where each ladder stops in each seat. The Edges panel and the Edges drill train exactly that.</p></div></li>
+          <li><div><h4>File it under the hand</h4><p>At the table you see your cards first. Hand lens shows one hand across every opener-versus-you matchup, so “A5s” becomes a small picture: open everywhere, 3-bet against late opens, call against early ones.</p></div></li>
+          <li><div><h4>Learn the adjustments as changes</h4><p>Start at 100bb with 3x opens. Then turn on Changes and slide to deeper stacks, bigger opens, or the straddle game. Only the ringed hands are new. That's how to handle live 5x opens without learning new charts from scratch.</p></div></li>
+          <li><div><h4>Recall beats re-reading</h4><p>Paint ranges from memory and drill fast decisions on edge hands. Misses come back on a spaced schedule.</p></div></li>
+        </ol>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">Suggested order</p>
+        <table class="plan">
+          <tr><th>Step 1</th><td>First in at 100bb: the Seat map, then Paint each seat. Quick-fire “First in”.</td></tr>
+          <tr><th>Step 2</th><td>Big blind against each opener: call or 3-bet. Seats drill on BB defence.</td></tr>
+          <tr><th>Step 3</th><td>Facing an open from other seats: flat or 3-bet. Hand lens on suited aces and broadway hands.</td></tr>
+          <tr><th>Step 4</th><td>Facing a 3-bet: in position and out of position. Edges drill.</td></tr>
+          <tr><th>Step 5</th><td>4-bets and squeezes.</td></tr>
+          <tr><th>Step 6</th><td>Adjustments: deeper stacks, bigger opens, the straddle game. Changes mode on each.</td></tr>
+          <tr><th>Then</th><td>Mixed Quick-fire daily, red squares in “Where you leak” first.</td></tr>
+        </table>
+        <p class="note" style="margin-top:14px">Every session: 10 minutes of Paint, Edges or Seats, then 15 minutes of Quick-fire. Reviews that are due come first automatically.</p>
+        <p class="eyebrow" style="margin-top:18px">About the numbers</p>
+        <p class="small muted" style="margin:0">Solutions: GTO Wizard, 8-handed cash with cold calls. Regular game: 10% live rake, opens from 2x to 7x at 100–300bb. Straddle game: a 2bb straddle with the straddler acting last, NL25 rake (the heaviest rake offered for straddle games), opens from 4bb to 7bb at 50–1,600bb. These are equilibrium ranges. A live table that over-calls or rarely 3-bets is worth adjusting against, but learn the baseline first.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="cash-data.js"></script>
+<script>
+'use strict';
+/* ---------- constants ---------- */
+const RANKS = 'AKQJT98765432';
+const GRID = [];
+for (let i = 0; i < 13; i++) for (let j = 0; j < 13; j++) GRID.push(i === j ? RANKS[i] + RANKS[i] : i < j ? RANKS[i] + RANKS[j] + 's' : RANKS[j] + RANKS[i] + 'o');
+const GIDX = Object.fromEntries(GRID.map((n, i) => [n, i]));
+const A2G = [...GRID].sort().map(n => GIDX[n]);
+const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+const DEC = {}; [...B64].forEach((c, i) => DEC[c] = i);
+const COMBOS = GRID.map(n => n.length === 2 ? 6 : n[2] === 's' ? 4 : 12);
+const GAMES = {
+  reg: { label: 'Regular', desc: '8-handed · 10% live rake', defOpen: '3x' },
+  str: { label: 'Straddle', desc: '8-handed · 2bb straddle · NL25 rake', defOpen: '5bb' },
+};
+const FAM = {
+  RFI: { label: 'First in', seat: 'Your seat' },
+  BBvsOpen: { label: 'Last to act vs open', seat: 'Opener' },
+  BBvsLimp: { label: 'vs limp', seat: 'Limper' },
+  vsOpen: { label: 'Facing an open', seat: 'You vs opener' },
+  vs3bet: { label: 'Facing a 3-bet', seat: 'You opened vs 3-bettor' },
+  vs4bet: { label: 'Facing a 4-bet', seat: 'You 3-bet vs opener' },
+  Squeeze: { label: 'Open + call', seat: 'Opener + caller' },
+};
+const FAM_ORDER = Object.keys(FAM);
+function famLabel(fam, tag) {
+  if (fam === 'BBvsOpen') return tag === 'str' ? 'Straddle vs open' : 'BB vs open';
+  if (fam === 'BBvsLimp') return tag === 'str' ? 'Straddle vs limp' : 'BB vs SB limp';
+  return FAM[fam].label;
+}
+const KORD = { J: 0, B: 1, R: 2, C: 3, X: 4, F: 5 };
+const KNAME = { J: 'All-in', B: 'Bigger raise', R: 'Raise', C: 'Call', X: 'Check', F: 'Fold' };
+const BANDS = [{ id: 'b50', label: '50–90', lo: 0, hi: 99 }, { id: 'b100', label: '100bb', lo: 100, hi: 100 }, { id: 'b150', label: '125–175', lo: 101, hi: 175 }, { id: 'b200', label: '200–250', lo: 176, hi: 250 }, { id: 'b300', label: '300bb', lo: 251, hi: 300 }, { id: 'b400', label: '400+', lo: 301, hi: 99999 }];
+const bandOf = dp => BANDS.find(b => dp >= b.lo && dp <= b.hi).id;
+const SUITSYM = { s: '♠', h: '♥', d: '♦', c: '♣' };
+const SHORT = { 'UTG+1': 'U+1', 'UTG+2': 'U+2' };
+const seatShort = n => SHORT[n] || n;
+
+/* ---------- decode data ---------- */
+const SPOTS = [], SITS = new Map(), SPOT_AT = new Map(), POSN = { reg: [], str: [] }, OPENS = { reg: new Set(), str: new Set() }, DEPTHS = { reg: new Set(), str: new Set() };
+function kindOf(code, ai) { if (code === 'F') return 'F'; if (code === 'X') return 'X'; if (code === 'C') return 'C'; if (ai) return 'J'; return 'R'; }
+const openVal = o => parseFloat(o);
+class Spot {
+  get f() { return this._f || inflate(this)._f; }
+  get loss() { return this._l || inflate(this)._l; }
+  get reach() { if (!this._f) inflate(this); return this._reach; }
+  get prim() { return this._prim || inflate(this)._prim; }
+  get order() { return this._order || inflate(this)._order; }
+  get btnOrder() { return this._btn || inflate(this)._btn; }
+}
+function inflate(sp) {
+  const A = sp.A, [f, l, r] = sp._raw;
+  const fr = f.map(x => { const a = new Float32Array(169); for (let k = 0; k < 169; k++) a[A2G[k]] = DEC[x[k]] / 63; return a; });
+  const ls = l.map(x => { const a = new Float32Array(169); for (let k = 0; k < 169; k++) a[A2G[k]] = 0.02 * (Math.exp(DEC[x[k]] / 9) - 1); return a; });
+  let reach = null;
+  if (r) { reach = new Float32Array(169); for (let k = 0; k < 169; k++) reach[A2G[k]] = DEC[r[k]] / 63; }
+  const prim = new Uint8Array(169);
+  for (let g = 0; g < 169; g++) {
+    let t = 0, b = 0;
+    for (let a = 0; a < A.length; a++) { t += fr[a][g]; if (fr[a][g] > fr[b][g]) b = a; }
+    if (t > 0) for (let a = 0; a < A.length; a++) fr[a][g] /= t;
+    prim[g] = b;
+  }
+  const live = A.filter(a => a.i === sp.defIdx || fr[a.i].some((v, g) => v >= 0.02 && (!reach || reach[g] > 0.04)));
+  sp._order = [...live].sort((x, y) => KORD[x.kind] - KORD[y.kind]).map(a => a.i);
+  sp._btn = [...live].sort((x, y) => KORD[y.kind] - KORD[x.kind]).map(a => a.i);
+  sp._f = fr; sp._l = ls; sp._reach = reach; sp._prim = prim; sp._raw = null;
+  return sp;
+}
+(function decode() {
+  const recs = (window.CASH_DATA && window.CASH_DATA.spots) || [];
+  for (const rec of recs) {
+    const [fam, tag, gt, n, dp, hero, vs, caller, pos, acts, f, l, r, hist, open] = rec;
+    const A = acts.map(([code, t, size, ai, tf], i) => ({ i, code, kind: kindOf(code, ai), size: +size, tf }));
+    const raises = A.filter(a => a.kind === 'R').sort((x, y) => x.size - y.size);
+    raises.slice(1).forEach(a => a.kind = 'B');
+    const sitKey = [tag, fam, hero, vs, caller].join('|');
+    const spot = Object.assign(new Spot(), { id: SPOTS.length, fam, tag, gt, n, dp, hero, vs, caller, open, A, hist: hist || '', sitKey, multiR: raises.length > 1, _raw: [f, l, r] });
+    spot.defIdx = (A.find(a => a.kind === 'F') || A.find(a => a.kind === 'X') || A[0]).i;
+    SPOTS.push(spot);
+    POSN[tag][hero] = pos;
+    OPENS[tag].add(open); DEPTHS[tag].add(dp);
+    SPOT_AT.set(sitKey + '|' + open + '|' + dp, spot);
+    if (!SITS.has(sitKey)) SITS.set(sitKey, { key: sitKey, fam, tag, n, hero, vs, caller, spots: [] });
+    SITS.get(sitKey).spots.push(spot);
+  }
+  for (const t of ['reg', 'str']) { OPENS[t] = [...OPENS[t]].sort((a, b) => openVal(a) - openVal(b)); DEPTHS[t] = [...DEPTHS[t]].sort((a, b) => a - b); }
+})();
+const sitSort = (a, b) => a.hero - b.hero || a.vs - b.vs || a.caller - b.caller;
+const sitsWhere = pred => [...SITS.values()].filter(pred).sort(sitSort);
+function series(sit, axis, fixed) {
+  sit._ser = sit._ser || {};
+  const k = axis + '|' + fixed;
+  if (!sit._ser[k]) sit._ser[k] = axis === 'open' ? sit.spots.filter(s => s.dp === fixed).sort((a, b) => openVal(a.open) - openVal(b.open)) : sit.spots.filter(s => s.open === fixed).sort((a, b) => a.dp - b.dp);
+  return sit._ser[k];
+}
+const axisVal = (sp, axis) => axis === 'open' ? sp.open : sp.dp;
+const P = tag => POSN[tag];
+
+/* ---------- helpers ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pct = x => Math.round(x * 100) + '%';
+const fmtBB = x => (Math.round(x * 10) / 10) + 'bb';
+const rnd = n => Math.floor(Math.random() * n);
+const pick = arr => arr[rnd(arr.length)];
+const inRange = (spot, g) => !spot.reach || spot.reach[g] > 0.04;
+const kindAt = (spot, g) => spot.A[spot.prim[g]].kind;
+const playsAt = (spot, g) => inRange(spot, g) && spot.f[spot.defIdx][g] < 0.5;
+const raisesAt = (spot, g) => { if (!inRange(spot, g)) return false; let v = 0; spot.A.forEach((a, i) => { if (a.kind === 'R' || a.kind === 'B' || a.kind === 'J') v += spot.f[i][g]; }); return v >= 0.5; };
+function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
+function load(k) { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+function weightedPick(weights) { let t = 0; for (const w of weights) t += w; if (t <= 0) return -1; let x = Math.random() * t; for (let i = 0; i < weights.length; i++) { x -= weights[i]; if (x <= 0) return i; } return weights.length - 1; }
+function raiseWord(spot) { return ({ RFI: 'Raise', BBvsOpen: '3-bet', vsOpen: '3-bet', BBvsLimp: 'Iso-raise', vs3bet: '4-bet', vs4bet: '5-bet', Squeeze: 'Squeeze' })[spot.fam] || 'Raise'; }
+function actLabel(spot, a, short) {
+  const A = spot.A[a];
+  switch (A.kind) {
+    case 'F': return 'Fold';
+    case 'X': return 'Check';
+    case 'C': return spot.fam === 'RFI' ? 'Limp' : 'Call';
+    case 'J': return short ? 'All-in' : 'All-in ' + fmtBB(A.size);
+    default: return short && !spot.multiR ? raiseWord(spot) : raiseWord(spot) + ' ' + fmtBB(A.size);
+  }
+}
+function actAbbr(spot, a) { const k = spot.A[a].kind; return k === 'F' ? '' : k === 'X' ? 'X' : k === 'C' ? (spot.fam === 'RFI' ? 'L' : 'C') : k === 'J' ? 'AI' : 'R'; }
+const kColor = k => `var(--k-${k})`;
+function sitLabel(s) {
+  const p = P(s.tag);
+  switch (s.fam) {
+    case 'RFI': return p[s.hero];
+    case 'BBvsOpen': return 'vs ' + p[s.vs];
+    case 'BBvsLimp': return 'vs ' + p[s.vs] + ' limp';
+    case 'Squeeze': return p[s.hero] + ' vs ' + p[s.vs] + ' + ' + p[s.caller];
+    default: return p[s.hero] + ' vs ' + p[s.vs];
+  }
+}
+function spotDesc(spot) { return GAMES[spot.tag].desc + ' · ' + spot.dp + 'bb · ' + spot.open + ' opens'; }
+function simulate(spot) {
+  const acts = spot.hist ? spot.hist.split('-') : [];
+  let queue = [...Array(spot.n).keys()];
+  const folded = new Set(), ev = [], last = {};
+  let raises = 0;
+  for (const code of acts) {
+    const p = queue.shift(); if (p === undefined) break;
+    if (code === 'F') { folded.add(p); ev.push({ p, t: 'F' }); last[p] = 'fold'; continue; }
+    if (code === 'C' || code === 'X') { ev.push({ p, t: code, r: raises }); last[p] = code === 'X' ? 'X' : 'C'; continue; }
+    raises++;
+    const size = code === 'RAI' ? null : parseFloat(code.slice(1));
+    const isJam = code === 'RAI' || size >= spot.dp - 0.2;
+    ev.push({ p, t: isJam ? 'J' : 'R', size: isJam ? null : size, r: raises });
+    last[p] = isJam ? 'J' : 'R';
+    const next = [];
+    for (let k = 1; k < spot.n; k++) { const q = (p + k) % spot.n; if (!folded.has(q)) next.push(q); }
+    queue = next;
+  }
+  return { ev, last, folded };
+}
+function narrate(spot) {
+  const p = P(spot.tag), { ev } = simulate(spot), H = spot.hero;
+  const out = [];
+  let k = 0; while (k < ev.length && ev[k].t === 'F') k++;
+  if (k === ev.length) return H === 0 ? `You're first to act in <b>${p[0]}</b>.` : `Folds to you in the <b>${p[H]}</b>.`;
+  let heroActed = false;
+  for (let e = k; e < ev.length; e++) {
+    const x = ev[e]; if (x.t === 'F') continue;
+    const me = x.p === H; if (me) heroActed = true;
+    const who = me ? 'You' : `<b>${p[x.p]}</b>`, v = w => me ? w : w + 's';
+    let s;
+    if (x.t === 'R') s = `${who} ${x.r === 1 ? v('open') : x.r === 2 ? v('3-bet') : x.r === 3 ? v('4-bet') : v('5-bet')} to ${fmtBB(x.size)}`;
+    else if (x.t === 'J') s = `${who} ${v('go')} all-in`.replace('gos', 'goes');
+    else if (x.t === 'C') s = `${who} ${x.r ? v('call') : v('limp')}`;
+    else s = `${who} ${v('check')}`;
+    if (e === k && k > 0) s = (me ? `Folds to you in the <b>${p[x.p]}</b>. ` : `Folds to ${p[x.p]}. `) + s;
+    out.push(s + '.');
+  }
+  out.push(heroActed ? 'Back to you.' : `You're in the <b>${p[H]}</b>.`);
+  return out.join(' ');
+}
+function seatsHTML(spot) {
+  const p = P(spot.tag), { last } = simulate(spot);
+  return p.map((nm, i) => {
+    const st = last[i], me = i === spot.hero;
+    let cls = 'seat', tag = '';
+    if (st === 'fold') cls += ' s-fold'; else if (st === 'R') cls += ' s-R'; else if (st === 'J') { cls += ' s-J'; tag = '<em>all-in</em>'; } else if (st === 'C') cls += ' s-C';
+    if (me) cls += ' me';
+    return `<span class="${cls}">${nm}${tag}</span>`;
+  }).join('');
+}
+
+/* ---------- ladders & notation ---------- */
+const LADDERS = (() => {
+  const L = [{ name: 'Pairs', short: 'Pairs', pair: true, cells: [...Array(13).keys()].map(i => i * 13 + i) }];
+  for (let i = 0; i < 12; i++) L.push({ name: RANKS[i] + 'x suited', short: RANKS[i] + 'xs', cells: [...Array(12 - i).keys()].map(d => i * 13 + i + 1 + d) });
+  for (let i = 0; i < 12; i++) L.push({ name: RANKS[i] + 'x offsuit', short: RANKS[i] + 'xo', cells: [...Array(12 - i).keys()].map(d => (i + 1 + d) * 13 + i) });
+  return L;
+})();
+const EDGE_LADDERS = LADDERS.filter(l => l.pair || ['Axs', 'Kxs', 'Qxs', 'Jxs', 'Txs', '9xs', 'Axo', 'Kxo', 'Qxo', 'Jxo', 'Txo'].includes(l.short));
+function ladderRuns(l, test) {
+  const c = l.cells, runs = []; let s = -1;
+  for (let k = 0; k <= c.length; k++) { const on = k < c.length && test(c[k]); if (on && s < 0) s = k; if (!on && s >= 0) { runs.push([s, k - 1]); s = -1; } }
+  return runs;
+}
+function ladderNotation(l, test) { const n = l.cells.map(g => GRID[g]); return ladderRuns(l, test).map(([a, b]) => a === 0 ? n[b] + '+' : a === b ? n[a] : n[a] + '–' + n[b]); }
+function rangeText(test) { const parts = []; for (const l of LADDERS) parts.push(...ladderNotation(l, test)); return parts.join(', '); }
+function topRunEdge(l, test) { let k = 0; while (k < l.cells.length && test(l.cells[k])) k++; return k - 1; }
+
+/* ---------- painting ---------- */
+function cellBg(spot, g) {
+  if (!spot) return 'var(--empty)';
+  const reach = spot.reach ? spot.reach[g] : 1;
+  if (reach < 0.04) return 'var(--empty)';
+  const segs = []; let x = 0;
+  for (const a of spot.order) { const p = spot.f[a][g]; if (p < 0.004) continue; segs.push(`${kColor(spot.A[a].kind)} ${(x * 100).toFixed(1)}% ${((x + p) * 100).toFixed(1)}%`); x += p; }
+  if (!segs.length) return 'var(--empty)';
+  const grad = `linear-gradient(90deg,${segs.join(',')})`;
+  if (reach < 0.97) return `${grad} bottom/100% ${(reach * 100).toFixed(0)}% no-repeat,var(--empty)`;
+  return grad;
+}
+class Grid {
+  constructor(el, opts = {}) {
+    this.el = el; this.cells = []; el.innerHTML = '';
+    for (let g = 0; g < 169; g++) { const c = document.createElement('div'); c.className = 'cell'; c.dataset.g = g; c.innerHTML = `<span class="nm">${GRID[g]}</span><span class="val"></span>`; el.appendChild(c); this.cells.push(c); }
+    if (opts.onCell) el.addEventListener('click', e => { const c = e.target.closest('.cell'); if (c) opts.onCell(+c.dataset.g); });
+    this.prevK = new Array(169).fill(null);
+  }
+  show(spot, { marks, values, animate, bg } = {}) {
+    for (let g = 0; g < 169; g++) {
+      const c = this.cells[g];
+      c.style.background = bg ? bg(g) : cellBg(spot, g);
+      const out = spot ? !inRange(spot, g) : false;
+      let cls = 'cell' + (out ? ' out' : '');
+      if (marks) { const m = marks(g); if (m) cls += ' ' + m; }
+      const k = spot && !out ? kindAt(spot, g) : 'out';
+      if (animate && this.prevK[g] !== null && this.prevK[g] !== k) cls += ' pop';
+      this.prevK[g] = k; c.className = cls;
+      c.querySelector('.val').textContent = values ? (values(g) ?? '') : '';
+    }
+  }
+}
+function legendHTML(kinds, extra = '') { return kinds.map(k => `<span><i class="sw" style="background:${kColor(k)}"></i>${KNAME[k]}</span>`).join('') + `<span><i class="sw" style="background:var(--empty)"></i>Not in your range</span>` + extra; }
+let COLORS = {};
+function readColors() { const cs = getComputedStyle(document.documentElement); for (const k of ['F', 'C', 'X', 'R', 'B', 'J']) COLORS[k] = cs.getPropertyValue('--k-' + k).trim(); COLORS.empty = cs.getPropertyValue('--empty').trim(); }
+function drawMini(cv, spot, size = 4) {
+  const gap = 1, W = 13 * size + 12 * gap, dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = W * dpr; cv.style.width = cv.style.height = W + 'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, W);
+  for (let g = 0; g < 169; g++) {
+    const x = (g % 13) * (size + gap), y = Math.floor(g / 13) * (size + gap);
+    ctx.fillStyle = COLORS.empty; ctx.fillRect(x, y, size, size);
+    if (!spot || !inRange(spot, g)) continue;
+    let off = 0;
+    for (const a of spot.order) { const p = spot.f[a][g]; if (p < 0.01) continue; ctx.fillStyle = COLORS[spot.A[a].kind]; ctx.fillRect(x + off * size, y, Math.max(p * size, 0.6), size); off += p; }
+  }
+}
+function mixOf(spot) {
+  const tot = new Float64Array(spot.A.length); let W = 0;
+  for (let g = 0; g < 169; g++) { const w = COMBOS[g] * (spot.reach ? spot.reach[g] : 1); W += w; for (let a = 0; a < spot.A.length; a++) tot[a] += w * spot.f[a][g]; }
+  return [...tot].map(x => W ? x / W : 0);
+}
+function mixHTML(spot) { const m = mixOf(spot); return `<div class="mix">${spot.order.map(a => `<div class="mix-row"><span>${actLabel(spot, a)}</span><div class="bar"><i style="width:${(m[a] * 100).toFixed(1)}%;background:${kColor(spot.A[a].kind)}"></i></div><span class="mono">${pct(m[a])}</span></div>`).join('')}</div>`; }
+function kindLabel(spot, k) { return k === 'F' ? 'Fold' : k === 'X' ? 'Check' : k === 'C' ? (spot.fam === 'RFI' ? 'Limp' : 'Call') : k === 'J' ? 'All-in' : k === 'B' ? raiseWord(spot) + ' (big)' : raiseWord(spot); }
+/* one row per action type that exists anywhere in the series, so rows never appear or vanish while sliding */
+function stableMixHTML(spot, spots) {
+  const kinds = [];
+  for (const s of spots) for (const a of s.order) { const k = s.A[a].kind; if (!kinds.includes(k)) kinds.push(k); }
+  kinds.sort((x, y) => KORD[x] - KORD[y]);
+  const m = mixOf(spot);
+  return `<div class="mix">${kinds.map(k => {
+    const idx = spot.order.filter(a => spot.A[a].kind === k);
+    const v = idx.reduce((s, a) => s + m[a], 0);
+    const size = (k === 'R' || k === 'B') && idx.length ? ` <small class="muted">${fmtBB(spot.A[idx[0]].size)}</small>` : '';
+    return `<div class="mix-row"><span style="${idx.length ? '' : 'color:var(--faint)'}">${kindLabel(spot, k)}${size}</span><div class="bar"><i style="width:${(v * 100).toFixed(1)}%;background:${kColor(k)}"></i></div><span class="mono">${pct(v)}</span></div>`;
+  }).join('')}</div>`;
+}
+function wordsHTML(spot) {
+  const m = mixOf(spot);
+  const rows = spot.order.filter(a => a !== spot.defIdx && m[a] >= 0.005).map(a => `<p><b><i class="sw" style="background:${kColor(spot.A[a].kind)}"></i>${actLabel(spot, a, true)}</b><span class="r">${rangeText(g => inRange(spot, g) && spot.prim[g] === a && spot.f[a][g] >= 0.35) || '—'}</span></p>`);
+  const mixed = [];
+  for (let g = 0; g < 169; g++) { if (!inRange(spot, g)) continue; const mx = Math.max(...spot.order.map(a => spot.f[a][g])); if (mx < 0.72) mixed.push(g); }
+  mixed.sort((a, b) => COMBOS[b] - COMBOS[a]);
+  const mixTxt = mixed.slice(0, 16).map(g => `<span title="${spot.order.map(a => actLabel(spot, a, true) + ' ' + pct(spot.f[a][g])).join(', ')}">${GRID[g]}</span>`).join('');
+  return `<div class="words">${rows.join('')}</div>` + (mixed.length ? `<p class="eyebrow" style="margin:12px 0 4px">Mixed (play either way)</p><div class="taglist">${mixTxt}${mixed.length > 16 ? ` <span>+${mixed.length - 16}</span>` : ''}</div>` : '');
+}
+function edgesHTML(spot) {
+  return `<div class="edges">${EDGE_LADDERS.map(l => `<span class="nm">${l.short}</span><div class="lad">${l.cells.map(g => `<i title="${GRID[g]}" style="background:${inRange(spot, g) ? cellBg(spot, g) : 'var(--empty)'}"></i>`).join('')}<span>${ladderNotation(l, g => playsAt(spot, g)).join(', ') || 'none'}</span></div>`).join('')}</div>`;
+}
+function handDetailHTML(spot, g) {
+  if (g == null) return '<p class="small muted" style="margin:0">Tap a hand in the chart to see its exact frequencies and what each wrong choice costs.</p>';
+  if (!inRange(spot, g)) return `<div class="handbox"><span class="hn">${GRID[g]}</span><span class="muted">Not in your range here. You'd have folded it earlier.</span></div>`;
+  const rows = spot.order.map(a => `<div class="mix-row"><span>${actLabel(spot, a, true)}</span><div class="bar"><i style="width:${(spot.f[a][g] * 100).toFixed(1)}%;background:${kColor(spot.A[a].kind)}"></i></div><span class="mono">${pct(spot.f[a][g])}</span></div><div class="small muted" style="margin:-4px 0 2px 104px">${spot.loss[a][g] < 0.01 ? 'best or tied' : '−' + spot.loss[a][g].toFixed(2) + 'bb vs best'}</div>`).join('');
+  return `<div class="handbox"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="hn">${GRID[g]}</span><button class="btn ghost small" data-lens="${g}">Open in Hand lens →</button></div><div class="mix">${rows}</div></div>`;
+}
+function ticksHTML(labels, cur, width) {
+  const n = labels.length; if (!n) return '';
+  const posOf = i => n > 1 ? i / (n - 1) : 0.5;
+  const minGap = 30 / Math.max(width, 120);
+  const chosen = [];
+  const tryAdd = i => { if (i < 0 || chosen.includes(i)) return; if (chosen.every(j => Math.abs(posOf(j) - posOf(i)) >= minGap)) chosen.push(i); };
+  tryAdd(0); tryAdd(n - 1); labels.forEach((d, i) => tryAdd(i));
+  return chosen.sort((a, b) => a - b).map(i => `<span style="left:${(posOf(i) * 100).toFixed(2)}%" class="${String(labels[i]) === String(cur) ? 'on' : ''}">${labels[i]}</span>`).join('');
+}
+
+/* ---------- state ---------- */
+const UI = Object.assign({ tab: 'charts', cTag: 'reg', cFam: 'RFI', cSit: null, cAxis: 'depth', cDp: 100, cOpen: null, cMode: 'strategy', cMetric: 'P', lens: GIDX['KTs'], lTag: 'reg', lDp: 100, lOpen: null, sFam: 'RFI', sSit: 'BTN', sDp: 100, dMode: 'quick', dTag: 'reg', dFams: FAM_ORDER, dBands: BANDS.map(b => b.id), dOpens: null, dLen: 40 }, load('cash-ui') || {});
+const saveUI = () => store('cash-ui', UI);
+
+/* ---------- tabs ---------- */
+function setTab(t) {
+  UI.tab = t; saveUI();
+  for (const b of $$('#tabs button')) b.setAttribute('aria-selected', b.dataset.tab === t);
+  for (const v of $$('.view')) v.hidden = v.id !== 'v-' + t;
+  if (t === 'charts') renderCharts();
+  if (t === 'lens') renderLens();
+  if (t === 'cmp') renderCmp();
+  if (t === 'drill' && !RUN) renderDrillHome();
+  window.scrollTo({ top: 0 });
+}
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.tab); });
+const tagSeg = (el, cur) => { el.innerHTML = ['reg', 'str'].filter(t => SPOTS.some(s => s.tag === t)).map(t => `<button data-t="${t}" aria-pressed="${t === cur}">${GAMES[t].label}</button>`).join(''); };
+
+/* ---------- CHARTS ---------- */
+const cGrid = new Grid($('#c-grid'), { onCell: g => { cSel = g; renderChartsRail(); renderChartsGrid(false); } });
+let cSel = null, cPlay = null;
+function cSits() { return sitsWhere(s => s.tag === UI.cTag && s.fam === UI.cFam); }
+function cCurSit() {
+  const sits = cSits(); let s = sits.find(x => x.key === UI.cSit);
+  if (!s) { const want = P(UI.cTag).indexOf('CO'); s = sits.find(x => x.fam === 'RFI' ? x.hero === want : x.fam === 'BBvsOpen' ? P(x.tag)[x.vs] === 'BTN' : x.fam === 'vsOpen' ? P(x.tag)[x.hero] === 'BTN' && P(x.tag)[x.vs] === 'CO' : true) || sits[0]; UI.cSit = s && s.key; }
+  return s;
+}
+const cFixed = () => UI.cAxis === 'open' ? UI.cDp : UI.cOpen;
+const curVal = () => UI.cAxis === 'open' ? UI.cOpen : UI.cDp;
+function cSeries() {
+  const sit = cCurSit();
+  if (!UI.cOpen || !OPENS[UI.cTag].includes(UI.cOpen)) UI.cOpen = GAMES[UI.cTag].defOpen;
+  if (!DEPTHS[UI.cTag].includes(UI.cDp)) UI.cDp = 100;
+  let ser = series(sit, UI.cAxis, cFixed());
+  if (!ser.length) { UI.cOpen = GAMES[UI.cTag].defOpen; UI.cDp = 100; ser = series(sit, UI.cAxis, cFixed()); }
+  if (!ser.length) { UI.cAxis = UI.cAxis === 'open' ? 'depth' : 'open'; ser = series(sit, UI.cAxis, cFixed()); }
+  return ser;
+}
+function cCurSpot() {
+  const ser = cSeries(); if (!ser.length) return null;
+  if (UI.cAxis === 'depth') return ser.reduce((b, sp) => Math.abs(sp.dp - UI.cDp) < Math.abs(b.dp - UI.cDp) ? sp : b, ser[0]);
+  return ser.find(sp => sp.open === UI.cOpen) || ser.reduce((b, sp) => Math.abs(openVal(sp.open) - openVal(UI.cOpen)) < Math.abs(openVal(b.open) - openVal(UI.cOpen)) ? sp : b, ser[0]);
+}
+function seatSeries(spot) {
+  const t = spot.tag, o = spot.open, d = spot.dp, out = [];
+  for (let i = 0; i < spot.n - 1; i++) {
+    const key = spot.fam === 'RFI' ? [t, 'RFI', i, -1, -1].join('|') : [t, spot.fam, spot.hero, i, -1].join('|');
+    const sp = SPOT_AT.get(key + '|' + o + '|' + d); if (sp) out.push({ i, sp });
+  }
+  return out;
+}
+function seatMapVals(spot, metric) {
+  const ss = seatSeries(spot); const test = metric === 'R' ? raisesAt : playsAt;
+  return { ss, vals: GRID.map((_, g) => { const x = ss.find(x => test(x.sp, g)); return x ? x.i : null; }) };
+}
+function renderCharts() {
+  if (!SPOTS.length) return;
+  if (!SPOTS.some(s => s.tag === UI.cTag)) UI.cTag = 'reg';
+  tagSeg($('#c-tag'), UI.cTag);
+  const fams = FAM_ORDER.filter(f => SPOTS.some(s => s.tag === UI.cTag && s.fam === f));
+  if (!fams.includes(UI.cFam)) UI.cFam = fams[0];
+  $('#c-fam').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${f === UI.cFam}">${famLabel(f, UI.cTag)}</button>`).join('');
+  const sits = cSits(), sit = cCurSit();
+  $('#c-sit-lab').textContent = FAM[UI.cFam].seat;
+  $('#c-sit').innerHTML = sits.map(s => `<button data-s="${s.key}" aria-pressed="${s.key === sit.key}">${esc(sitLabel(s))}</button>`).join('');
+  const canSeats = ['RFI', 'BBvsOpen', 'vsOpen'].includes(UI.cFam);
+  if (!canSeats && UI.cMode === 'seats') UI.cMode = 'strategy';
+  for (const b of $$('#c-mode button')) { b.setAttribute('aria-pressed', b.dataset.m === UI.cMode); if (b.dataset.m === 'seats') b.disabled = !canSeats; }
+  for (const b of $$('#c-axis button')) b.setAttribute('aria-pressed', b.dataset.a === UI.cAxis);
+  $('#c-metric-wrap').hidden = UI.cMode !== 'seats' || UI.cFam === 'RFI';
+  if (UI.cFam === 'RFI') UI.cMetric = 'P';
+  $('#c-metric').innerHTML = [['P', 'Continue'], ['R', '3-bet or more']].map(([k, l]) => `<button data-k="${k}" aria-pressed="${k === UI.cMetric}">${l}</button>`).join('');
+  $('#c-mode-help').textContent = {
+    strategy: 'Bars show how often the solver takes each action. Tap a hand for exact numbers.',
+    changes: 'Rings show what changed from the previous step on the slider: green started playing, red stopped, amber switched action.',
+    seats: UI.cFam === 'RFI' ? 'Each hand shows the earliest seat it opens (or limps) from. One chart for every seat.' : 'Each hand shows the earliest opener you continue against from your seat (or 3-bet, if chosen).',
+  }[UI.cMode];
+  $('#c-note').textContent = GAMES[UI.cTag].desc + '.' + (UI.cTag === 'str' ? ' The straddler (STR) acts last preflop.' : '');
+  const ser = cSeries(), sp = cCurSpot(); if (UI.cAxis === 'open') UI.cOpen = sp.open; else UI.cDp = sp.dp;
+  for (const b of $$('#c-axis button')) b.setAttribute('aria-pressed', b.dataset.a === UI.cAxis);
+  const sl = $('#c-slider'); sl.max = Math.max(0, ser.length - 1); sl.value = ser.indexOf(sp); sl.disabled = ser.length < 2;
+  $('#c-ticks').innerHTML = ticksHTML(ser.map(s => axisVal(s, UI.cAxis)), curVal(), $('#c-ticks').clientWidth || 300);
+  $('#c-film-lab').textContent = UI.cAxis === 'open' ? `Every open size at ${UI.cDp}bb` : `Every stack depth with ${UI.cOpen} opens`;
+  renderChartsGrid(false); renderFilm(); renderChartsRail(); saveUI();
+}
+function renderClock(sp) {
+  const sit = SITS.get(sp.sitKey);
+  if (UI.cAxis === 'open') { const v = sp.open; $('#c-val').textContent = v.replace(/x|bb/, ''); $('#c-unit').textContent = v.endsWith('x') ? 'x open' : 'bb open'; }
+  else { $('#c-val').textContent = sp.dp; $('#c-unit').textContent = 'bb'; }
+  // chips for the axis the slider isn't moving
+  const vals = UI.cAxis === 'open' ? [...new Set(sit.spots.filter(s => s.open === sp.open).map(s => s.dp))].sort((a, b) => a - b) : [...new Set(sit.spots.filter(s => s.dp === sp.dp).map(s => s.open))].sort((a, b) => openVal(a) - openVal(b));
+  const cur = UI.cAxis === 'open' ? sp.dp : sp.open;
+  $('#c-sub').innerHTML = `<span class="sub-lab">${UI.cAxis === 'open' ? 'Stack' : 'Open'}</span>` + vals.map(v => `<button data-ov="${v}" aria-pressed="${String(v) === String(cur)}">${UI.cAxis === 'open' ? v + 'bb' : v}</button>`).join('');
+}
+$('#c-sub').addEventListener('click', e => { const b = e.target.closest('[data-ov]'); if (!b) return; if (UI.cAxis === 'open') UI.cDp = +b.dataset.ov; else UI.cOpen = b.dataset.ov; stopPlay(); renderCharts(); });
+function renderChartsGrid(animate) {
+  const sp = cCurSpot(); if (!sp) return;
+  renderClock(sp);
+  $('#c-scn').innerHTML = narrate(sp);
+  $('#c-seats').innerHTML = seatsHTML(sp);
+  const kinds = [...new Set(sp.order.map(a => sp.A[a].kind))];
+  if (UI.cMode === 'seats') {
+    const { ss, vals } = seatMapVals(sp, UI.cMetric);
+    const n = Math.max(1, ss.length - 1);
+    const col = UI.cFam === 'RFI' ? 'var(--k-R)' : UI.cMetric === 'R' ? 'var(--k-R)' : 'var(--k-C)';
+    const idxOf = i => ss.findIndex(x => x.i === i);
+    cGrid.show(sp, { bg: g => vals[g] == null ? 'var(--empty)' : `color-mix(in srgb, ${col} ${Math.round(100 - 65 * idxOf(vals[g]) / n)}%, var(--empty))`, values: g => vals[g] == null ? '' : seatShort(P(sp.tag)[vals[g]]), marks: g => (g === cSel ? 'sel' : '') });
+    $('#c-legend').innerHTML = ss.map((x, k) => `<span><i class="sw" style="background:color-mix(in srgb, ${col} ${Math.round(100 - 65 * k / n)}%, var(--empty))"></i>${P(sp.tag)[x.i]}${k < ss.length - 1 ? '+' : ''}</span>`).join('') + '<span><i class="sw" style="background:var(--empty)"></i>Never</span>';
+    return;
+  }
+  $('#c-legend').innerHTML = legendHTML(kinds);
+  const ser = cSeries(), prev = ser[ser.indexOf(sp) - 1];
+  cGrid.show(sp, {
+    animate, marks: g => {
+      let m = g === cSel ? 'sel' : '';
+      if (UI.cMode === 'changes' && prev) { const a = playsAt(prev, g), b = playsAt(sp, g); if (!a && b) m += ' chg-in'; else if (a && !b) m += ' chg-out'; else if (a && b && kindAt(prev, g) !== kindAt(sp, g)) m += ' chg-sw'; }
+      return m;
+    },
+  });
+}
+function renderFilm() {
+  const ser = cSeries(), sp = cCurSpot(), el = $('#c-film');
+  el.innerHTML = ser.map(s => `<figure data-v="${axisVal(s, UI.cAxis)}" class="${s === sp ? 'on' : ''}"><canvas></canvas><figcaption>${UI.cAxis === 'open' ? s.open : s.dp + 'bb'}</figcaption></figure>`).join('');
+  $$('canvas', el).forEach((cv, i) => drawMini(cv, ser[i], 4));
+}
+function changesHTML(sp) {
+  const ser = cSeries(), prev = ser[ser.indexOf(sp) - 1];
+  if (!prev) return `<p class="small muted" style="margin:0">This is the first step. Slide to ${UI.cAxis === 'open' ? 'a bigger open' : 'a deeper stack'} to see what changes.</p>`;
+  const inn = [], out = [], sw = [];
+  for (let g = 0; g < 169; g++) { const a = playsAt(prev, g), b = playsAt(sp, g); if (!a && b) inn.push(g); else if (a && !b) out.push(g); else if (a && b && kindAt(prev, g) !== kindAt(sp, g)) sw.push(g); }
+  const list = arr => arr.length ? `<div class="taglist">${arr.map(g => `<span>${GRID[g]}</span>`).join('')}</div>` : '<p class="small muted" style="margin:0">none</p>';
+  const swList = sw.length ? `<div class="taglist">${sw.map(g => `<span title="${KNAME[kindAt(prev, g)]} → ${KNAME[kindAt(sp, g)]}">${GRID[g]} <small>${KNAME[kindAt(prev, g)][0]}→${KNAME[kindAt(sp, g)][0]}</small></span>`).join('')}</div>` : '<p class="small muted" style="margin:0">none</p>';
+  const from = UI.cAxis === 'open' ? `${prev.open} to ${sp.open} opens` : `${prev.dp}bb to ${sp.dp}bb`;
+  return `<p class="small muted" style="margin:0 0 10px">From ${from}</p><p class="eyebrow" style="color:var(--good)">Started playing (${inn.length})</p>${list(inn)}<p class="eyebrow" style="color:var(--bad);margin-top:10px">Stopped playing (${out.length})</p>${list(out)}<p class="eyebrow" style="color:var(--ok);margin-top:10px">Switched action (${sw.length})</p>${swList}`;
+}
+function seatsPanelHTML(sp) {
+  const ss = seatSeries(sp);
+  return `<div class="mix">${ss.map(x => { const m = mixOf(x.sp); const v = UI.cMetric === 'R' && sp.fam !== 'RFI' ? x.sp.A.reduce((s, a, i) => s + (['R', 'B', 'J'].includes(a.kind) ? m[i] : 0), 0) : 1 - m[x.sp.defIdx]; return `<div class="mix-row"><span>${sp.fam === 'RFI' ? P(sp.tag)[x.i] : 'vs ' + P(sp.tag)[x.i]}</span><div class="bar"><i style="width:${(v * 100).toFixed(1)}%;background:var(--accent)"></i></div><span class="mono">${pct(v)}</span></div>`; }).join('')}</div>`;
+}
+function mixChartSVG(ser, cur, axis) {
+  const W = 300, H = 96, pad = { l: 26, r: 8, t: 6, b: 16 };
+  const n = ser.length; if (n < 2) return '';
+  const xs = i => pad.l + (W - pad.l - pad.r) * (i / (n - 1)), ys = v => pad.t + (H - pad.t - pad.b) * (1 - v);
+  const kinds = ['J', 'B', 'R', 'C', 'X'];
+  const mixes = ser.map(sp => { const m = mixOf(sp), o = {}; kinds.forEach(k => o[k] = 0); sp.A.forEach((a, i) => { if (a.kind !== 'F') o[a.kind] += m[i]; }); return o; });
+  let base = new Array(n).fill(0); const paths = [];
+  for (const k of kinds) {
+    if (!mixes.some(m => m[k] > 0.004)) continue;
+    const top = base.map((b, i) => b + mixes[i][k]);
+    paths.push(`<path d="M${top.map((v, i) => `${xs(i).toFixed(1)},${ys(v).toFixed(1)}`).join('L')}L${base.map((v, i) => `${xs(i).toFixed(1)},${ys(v).toFixed(1)}`).reverse().join('L')}Z" fill="${kColor(k)}" opacity=".92"/>`);
+    base = top;
+  }
+  const ci = ser.indexOf(cur);
+  const grid = [0.25, 0.5].map(v => `<line x1="${pad.l}" x2="${W - pad.r}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--line)" stroke-dasharray="2 3"/><text x="${pad.l - 4}" y="${ys(v) + 3}" text-anchor="end" font-size="9" fill="var(--faint)" font-family="var(--f-mono)">${v * 100}%</text>`).join('');
+  const lab = ser.map((sp, i) => `<text x="${xs(i)}" y="${H - 3}" text-anchor="middle" font-size="9" fill="${i === ci ? 'var(--fg)' : 'var(--faint)'}" font-family="var(--f-mono)">${axisVal(sp, axis)}</text>`).join('');
+  const hit = ser.map((sp, i) => `<rect x="${xs(i) - (W / n) / 2}" y="0" width="${W / n}" height="${H}" fill="transparent" data-v="${axisVal(sp, axis)}" style="cursor:pointer"></rect>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Share of hands played by action at each step" style="display:block;margin-top:12px">${grid}${paths.join('')}<line x1="${xs(ci)}" x2="${xs(ci)}" y1="${pad.t - 2}" y2="${H - pad.b}" stroke="var(--fg)" stroke-width="1.5"/>${lab}${hit}</svg><p class="small muted" style="margin:4px 0 0">Share of hands played, by action, at every ${axis === 'open' ? 'open size' : 'stack'}. Tap to jump.</p>`;
+}
+function renderChartsRail() {
+  const sp = cCurSpot(); if (!sp) return;
+  const parts = [`<div class="panel"><h3>${esc(sitLabel(sp.sit || SITS.get(sp.sitKey)))} · ${sp.dp}bb · ${sp.open}</h3>${stableMixHTML(sp, cSeries())}${mixChartSVG(cSeries(), sp, UI.cAxis)}</div>`];
+  if (UI.cMode === 'seats') parts.push(`<div class="panel"><h3>${sp.fam === 'RFI' ? 'How much each seat opens' : 'How much you continue by opener'}</h3>${seatsPanelHTML(sp)}</div>`);
+  if (UI.cMode === 'changes') parts.push(`<div class="panel"><h3>What changed</h3>${changesHTML(sp)}</div>`);
+  parts.push(`<div class="panel"><h3>Hand</h3>${handDetailHTML(sp, cSel)}</div>`);
+  parts.push(`<div class="panel"><h3>Edges</h3><p class="small muted" style="margin:-4px 0 10px">Each ladder from strongest to weakest, and where it stops.</p>${edgesHTML(sp)}</div>`);
+  $('#c-rail').innerHTML = parts.join('');
+}
+$('#c-rail').addEventListener('click', e => { const r = e.target.closest('rect[data-v]'); if (r) { stopPlay(); setStep(cSeries().findIndex(s => String(axisVal(s, UI.cAxis)) === r.dataset.v)); return; } const b = e.target.closest('[data-lens]'); if (b) { UI.lens = +b.dataset.lens; const sp = cCurSpot(); UI.lTag = sp.tag; UI.lDp = sp.dp; UI.lOpen = sp.open; setTab('lens'); } });
+$('#c-tag').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cTag = b.dataset.t; UI.cSit = null; UI.cOpen = GAMES[UI.cTag].defOpen; UI.cDp = 100; stopPlay(); renderCharts(); });
+$('#c-fam').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cFam = b.dataset.f; UI.cSit = null; stopPlay(); renderCharts(); });
+$('#c-sit').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cSit = b.dataset.s; stopPlay(); renderCharts(); });
+$('#c-axis').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cAxis = b.dataset.a; stopPlay(); renderCharts(); });
+$('#c-mode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; UI.cMode = b.dataset.m; renderCharts(); });
+$('#c-metric').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cMetric = b.dataset.k; renderCharts(); });
+function setStep(i, animate = true) {
+  const ser = cSeries(); i = Math.max(0, Math.min(ser.length - 1, i));
+  const v = axisVal(ser[i], UI.cAxis); if (String(v) === String(curVal())) return false;
+  if (UI.cAxis === 'open') UI.cOpen = v; else UI.cDp = v; saveUI();
+  $('#c-slider').value = i;
+  $$('#c-ticks span').forEach(s => s.classList.toggle('on', s.textContent === String(v)));
+  renderChartsGrid(animate); renderChartsRail();
+  $$('#c-film figure').forEach(f => f.classList.toggle('on', f.dataset.v === String(v)));
+  return true;
+}
+const curIdx = () => cSeries().indexOf(cCurSpot());
+$('#c-slider').addEventListener('input', e => { stopPlay(); setStep(+e.target.value); });
+$('#c-film').addEventListener('click', e => { const f = e.target.closest('figure'); if (!f) return; stopPlay(); const ser = cSeries(); setStep(ser.findIndex(s => String(axisVal(s, UI.cAxis)) === f.dataset.v)); });
+function stopPlay() { if (cPlay) { clearInterval(cPlay); cPlay = null; } }
+document.addEventListener('keydown', e => {
+  if (e.target && e.target.closest && e.target.closest('input,textarea')) return;
+  if (UI.tab === 'charts' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); stopPlay(); setStep(curIdx() + (e.key === 'ArrowLeft' ? -1 : 1)); }
+  if (UI.tab === 'drill' && RUN) drillKey(e);
+});
+
+/* ---------- HAND LENS ---------- */
+const lGrid = new Grid($('#l-grid'), { onCell: g => { UI.lens = g; saveUI(); renderLens(); } });
+function defaultCombo(n) { if (n.length === 2) return [[n[0], 's'], [n[1], 'h']]; return n[2] === 's' ? [[n[0], 'h'], [n[1], 'h']] : [[n[0], 's'], [n[1], 'd']]; }
+function cardsHTML(g, combo) { const c = combo || defaultCombo(GRID[g]); return c.map(([r, s]) => `<div class="pcard s-${s}"><span class="rk">${r === 'T' ? '10' : r}</span><span class="st">${SUITSYM[s]}</span></div>`).join(''); }
+function dealCombo(n) {
+  const S = ['s', 'h', 'd', 'c'];
+  if (n.length !== 2 && n[2] === 's') { const s = pick(S); return [[n[0], s], [n[1], s]]; }
+  const a = rnd(4); let b = rnd(3); if (b >= a) b++; return [[n[0], S[a]], [n[1], S[b]]];
+}
+function lensCell(sp, g) {
+  if (!sp) return '<i class="c none"></i>';
+  if (!inRange(sp, g)) return '<i class="c na" title="not in your range"></i>';
+  const tip = sp.order.map(a => actLabel(sp, a, true) + ' ' + pct(sp.f[a][g])).join(', ');
+  const mx = Math.max(...sp.order.map(a => sp.f[a][g]));
+  return `<i class="c" title="${esc(tip)}" style="background:${cellBg(sp, g)}">${actAbbr(sp, sp.prim[g])}${mx < 0.65 && actAbbr(sp, sp.prim[g]) ? '~' : ''}</i>`;
+}
+function triHTML(title, note, rows, cols, getSpot, g, tag) {
+  const p = P(tag);
+  let h = `<div class="tri" style="grid-template-columns:52px repeat(${cols.length},minmax(30px,1fr))"><span></span>${cols.map(c => `<span class="h">${seatShort(p[c])}</span>`).join('')}`;
+  for (const r of rows) { h += `<span class="h row">${seatShort(p[r])}</span>` + cols.map(c => lensCell(getSpot(r, c), g)).join(''); }
+  return `<section class="panel"><h3>${title}</h3>${note ? `<p class="small muted" style="margin:0 0 10px">${note}</p>` : ''}${h}</div></section>`;
+}
+function renderLens() {
+  if (!SPOTS.length) return;
+  const g = UI.lens, tag = SPOTS.some(s => s.tag === UI.lTag) ? UI.lTag : 'reg'; UI.lTag = tag;
+  if (!UI.lOpen || !OPENS[tag].includes(UI.lOpen)) UI.lOpen = GAMES[tag].defOpen;
+  if (!DEPTHS[tag].includes(UI.lDp)) UI.lDp = 100;
+  const has = (o, d) => SPOT_AT.has([tag, 'RFI', 0, -1, -1].join('|') + '|' + o + '|' + d);
+  if (!has(UI.lOpen, UI.lDp)) { if (has(GAMES[tag].defOpen, UI.lDp)) UI.lOpen = GAMES[tag].defOpen; else UI.lDp = 100; }
+  const open = UI.lOpen, dp = UI.lDp, p = P(tag), n = p.length;
+  $('#l-input').value = GRID[g];
+  $('#l-cards').innerHTML = cardsHTML(g);
+  tagSeg($('#l-tag'), tag);
+  $('#l-dp').innerHTML = DEPTHS[tag].map(d => `<button data-d="${d}" aria-pressed="${d === dp}" ${has(open, d) ? '' : 'disabled'}>${d}bb</button>`).join('');
+  $('#l-open').innerHTML = OPENS[tag].map(o => `<button data-o="${o}" aria-pressed="${o === open}" ${has(o, dp) ? '' : 'disabled'}>${o}</button>`).join('');
+  lGrid.show(null, { bg: g2 => g2 === g ? 'var(--accent)' : (COMBOS[g2] === 6 ? 'var(--k-F)' : COMBOS[g2] === 4 ? 'color-mix(in srgb, var(--k-F) 70%, var(--empty))' : 'color-mix(in srgb, var(--k-F) 45%, var(--empty))') });
+  $('#l-legend').innerHTML = legendHTML(['J', 'B', 'R', 'C', 'X', 'F']) + '<span><i class="sw" style="background:repeating-linear-gradient(45deg,var(--empty) 0 2px,transparent 2px 4px)"></i>Folded earlier</span><span>“~” = mixed</span>';
+  const at = (fam, hero, vs, caller = -1) => SPOT_AT.get([tag, fam, hero, vs, caller].join('|') + '|' + open + '|' + dp);
+  const seats = [...Array(n).keys()];
+  const blocks = [];
+  const rfiRow = `<div class="tri" style="grid-template-columns:52px repeat(${n - 1},minmax(30px,1fr))"><span></span>${seats.slice(0, n - 1).map(c => `<span class="h">${seatShort(p[c])}</span>`).join('')}<span class="h row">You</span>${seats.slice(0, n - 1).map(c => lensCell(at('RFI', c, -1), g)).join('')}</div>`;
+  blocks.push(`<section class="panel"><h3>First in</h3><p class="small muted" style="margin:0 0 10px">${dp}bb, ${open} opens. Each column is your seat.</p>${rfiRow}</section>`);
+  blocks.push(triHTML('Facing an open', 'Rows: your seat. Columns: the opener.', seats.slice(1), seats.slice(0, n - 1), (r, c) => r > c ? (r === n - 1 ? at('BBvsOpen', r, c) : at('vsOpen', r, c)) : null, g, tag));
+  blocks.push(triHTML('You opened, facing a 3-bet', 'Rows: your seat (the opener). Columns: the 3-bettor.', seats.slice(0, n - 1), seats.slice(1), (r, c) => c > r ? at('vs3bet', r, c) : null, g, tag));
+  if (SPOTS.some(s => s.tag === tag && s.fam === 'vs4bet' && s.open === open && s.dp === dp)) blocks.push(triHTML('You 3-bet, facing a 4-bet', 'Rows: your seat (the 3-bettor). Columns: the opener who 4-bet.', seats.slice(1), seats.slice(0, n - 1), (r, c) => r > c ? at('vs4bet', r, c) : null, g, tag));
+  const extra = sitsWhere(s => s.tag === tag && (s.fam === 'Squeeze' || s.fam === 'BBvsLimp'));
+  if (extra.length) {
+    const rows = extra.map(s => { const sp = SPOT_AT.get(s.key + '|' + open + '|' + dp); return sp ? `<div class="mx-row" style="grid-template-columns:150px 60px"><div class="mx-lab"><b>${esc(famLabel(s.fam, tag))}</b><span class="rule">${esc(sitLabel(s))}</span></div><div class="tri" style="grid-template-columns:1fr">${lensCell(sp, g)}</div></div>` : ''; }).join('');
+    if (rows) blocks.push(`<section class="panel"><h3>Squeezes and limps</h3>${rows}</section>`);
+  }
+  // first in across stacks / opens
+  const ser = (axis) => seats.slice(0, n - 1).map(c => { const s = SITS.get([tag, 'RFI', c, -1, -1].join('|')); return s ? { c, ser: series(s, axis, axis === 'open' ? dp : open) } : null; }).filter(Boolean);
+  for (const axis of ['depth', 'open']) {
+    const rows = ser(axis); if (!rows.length || rows[0].ser.length < 2) continue;
+    const labels = rows[0].ser.map(s => axis === 'open' ? s.open : s.dp);
+    blocks.push(`<section class="panel"><h3>First in by ${axis === 'open' ? 'open size' : 'stack'}</h3><p class="small muted" style="margin:0 0 8px">${axis === 'open' ? dp + 'bb deep.' : open + ' opens.'}</p><div class="mx"><div class="mx-row hd"><div class="mx-lab"></div><div class="mx-strip" style="--cols:${labels.length}">${labels.map(l => `<span class="d">${l}</span>`).join('')}</div></div>${rows.map(r => `<div class="mx-row"><div class="mx-lab"><b>${p[r.c]}</b></div><div class="mx-strip" style="--cols:${labels.length}">${r.ser.map(sp => inRange(sp, g) ? `<i class="c" style="background:${cellBg(sp, g)}" title="${esc(sp.order.map(a => actLabel(sp, a, true) + ' ' + pct(sp.f[a][g])).join(', '))}"></i>` : '<i class="c na"></i>').join('')}</div></div>`).join('')}</div></section>`);
+  }
+  $('#l-blocks').innerHTML = blocks.join('');
+  saveUI();
+}
+$('#l-input').addEventListener('change', e => {
+  let v = e.target.value.trim(); if (!v) return;
+  v = v[0].toUpperCase() + (v[1] || '').toUpperCase() + v.slice(2).toLowerCase();
+  if (v.length === 2 && v[0] !== v[1]) v += 'o';
+  if (v.length === 3 && GIDX[v] == null) { const s2 = v[1] + v[0] + v[2]; if (GIDX[s2] != null) v = s2; }
+  if (GIDX[v] != null) { UI.lens = GIDX[v]; renderLens(); } else e.target.value = GRID[UI.lens];
+});
+$('#l-tag').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.lTag = b.dataset.t; UI.lOpen = null; renderLens(); });
+$('#l-dp').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.disabled) return; UI.lDp = +b.dataset.d; renderLens(); });
+$('#l-open').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.disabled) return; UI.lOpen = b.dataset.o; renderLens(); });
+
+/* ---------- STRADDLE EFFECT ---------- */
+const sGa = new Grid($('#s-ga'), { onCell: g => { sSel = g; renderCmp(); } }), sGb = new Grid($('#s-gb'), { onCell: g => { sSel = g; renderCmp(); } });
+let sSel = null;
+function cmpPair(fam, name, dp) {
+  const find = (tag) => {
+    const p = P(tag), n = p.length;
+    if (fam === 'RFI') { const i = p.indexOf(name); return i >= 0 && i < n - 1 ? SPOT_AT.get([tag, 'RFI', i, -1, -1].join('|') + '|' + GAMES[tag].defOpen + '|' + dp) : null; }
+    if (fam === 'BBvsOpen') { const i = p.indexOf(name); return i >= 0 ? SPOT_AT.get([tag, 'BBvsOpen', n - 1, i, -1].join('|') + '|' + GAMES[tag].defOpen + '|' + dp) : null; }
+    if (fam === 'vsOpen') { const [h, o] = name.split(' vs '); const hi = p.indexOf(h), oi = p.indexOf(o); return hi >= 0 && oi >= 0 ? SPOT_AT.get([tag, 'vsOpen', hi, oi, -1].join('|') + '|' + GAMES[tag].defOpen + '|' + dp) : null; }
+    return null;
+  };
+  return [find('reg'), find('str')];
+}
+function cmpNames(fam) {
+  const names = new Set();
+  for (const s of SPOTS) {
+    if (s.tag !== 'reg' || s.fam !== fam) continue;
+    const p = P('reg'); const nm = fam === 'RFI' ? p[s.hero] : fam === 'BBvsOpen' ? p[s.vs] : p[s.hero] + ' vs ' + p[s.vs];
+    names.add(nm);
+  }
+  return [...names].filter(nm => { const [a, b] = cmpPair(fam, nm, 100); return a && b; });
+}
+function renderCmp() {
+  if (!SPOTS.some(s => s.tag === 'str')) { $('#v-cmp').innerHTML = '<div class="empty-state">No straddle data loaded.</div>'; return; }
+  const fams = ['RFI', 'BBvsOpen', 'vsOpen'];
+  if (!fams.includes(UI.sFam)) UI.sFam = 'RFI';
+  $('#s-fam').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${f === UI.sFam}">${f === 'BBvsOpen' ? 'Last to act vs open' : FAM[f].label}</button>`).join('');
+  const names = cmpNames(UI.sFam);
+  if (!names.includes(UI.sSit)) UI.sSit = names.includes('BTN') ? 'BTN' : names.includes('BTN vs CO') ? 'BTN vs CO' : names[0];
+  $('#s-sit').innerHTML = names.map(nm => `<button data-s="${nm}" aria-pressed="${nm === UI.sSit}">${UI.sFam === 'BBvsOpen' ? 'vs ' + nm : nm}</button>`).join('');
+  const dps = DEPTHS.reg.filter(d => DEPTHS.str.includes(d) && cmpPair(UI.sFam, UI.sSit, d).every(Boolean));
+  if (!dps.includes(UI.sDp)) UI.sDp = dps[0];
+  $('#s-dp').innerHTML = dps.map(d => `<button data-d="${d}" aria-pressed="${d === UI.sDp}">${d}bb</button>`).join('');
+  const [a, b] = cmpPair(UI.sFam, UI.sSit, UI.sDp);
+  if (!a || !b) return;
+  const playA = 1 - mixOf(a)[a.defIdx], playB = 1 - mixOf(b)[b.defIdx];
+  $('#s-pa').textContent = `${GAMES.reg.defOpen} opens · plays ${pct(playA)}`; $('#s-pb').textContent = `${GAMES.str.defOpen} opens · plays ${pct(playB)}`;
+  sGa.show(a, { marks: g => g === sSel ? 'sel' : '' });
+  sGb.show(b, { marks: g => { let m = g === sSel ? 'sel' : ''; const x = playsAt(a, g), y = playsAt(b, g); if (x && !y) m += ' chg-out'; else if (!x && y) m += ' chg-in'; else if (x && y && kindAt(a, g) !== kindAt(b, g)) m += ' chg-sw'; return m; } });
+  const kinds = [...new Set([...a.order.map(i => a.A[i].kind), ...b.order.map(i => b.A[i].kind)])].sort((x, y) => KORD[x] - KORD[y]);
+  $('#s-legend').innerHTML = legendHTML(kinds, '<span><i class="sw" style="box-shadow:inset 0 0 0 2px #3fe07a"></i>Added with straddle</span><span><i class="sw" style="box-shadow:inset 0 0 0 2px #ff5d5d"></i>Dropped</span><span><i class="sw" style="box-shadow:inset 0 0 0 2px #ffc04a"></i>Switched</span>');
+  const drop = [], add = [], sw = [];
+  for (let g = 0; g < 169; g++) { const x = playsAt(a, g), y = playsAt(b, g); if (x && !y) drop.push(g); else if (!x && y) add.push(g); else if (x && y && kindAt(a, g) !== kindAt(b, g)) sw.push(g); }
+  const list = arr => arr.length ? `<div class="taglist">${arr.map(g => `<span>${GRID[g]}</span>`).join('')}</div>` : '<p class="small muted" style="margin:0">none</p>';
+  $('#s-rail').innerHTML = `<div class="panel"><h3>${esc(UI.sFam === 'BBvsOpen' ? 'Last to act vs ' + UI.sSit : UI.sSit)} · ${UI.sDp}bb</h3><p class="small" style="margin:0 0 8px">${narrate(a)}</p><p class="eyebrow" style="color:var(--good)">Added with straddle (${add.length})</p>${list(add)}<p class="eyebrow" style="color:var(--bad);margin-top:10px">Dropped (${drop.length})</p>${list(drop)}<p class="eyebrow" style="color:var(--ok);margin-top:10px">Switched action (${sw.length})</p>${list(sw)}</div>` +
+    (sSel != null ? `<div class="panel"><h3>Regular</h3>${handDetailHTML(a, sSel)}</div><div class="panel"><h3>Straddle</h3>${handDetailHTML(b, sSel)}</div>` : '<div class="panel"><p class="small muted" style="margin:0">Tap a hand to compare its frequencies in both games.</p></div>');
+}
+$('#s-fam').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.sFam = b.dataset.f; UI.sSit = null; renderCmp(); saveUI(); });
+$('#s-sit').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.sSit = b.dataset.s; renderCmp(); saveUI(); });
+$('#s-dp').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.sDp = +b.dataset.d; renderCmp(); saveUI(); });
+$('#s-rail').addEventListener('click', e => { const b = e.target.closest('[data-lens]'); if (b) { UI.lens = +b.dataset.lens; setTab('lens'); } });
+
+/* ---------- progress ---------- */
+const Progress = {
+  key: 'cash-progress', data: { v: 1, updated: 0, items: {}, stats: {}, log: [] }, ref: null, busy: false, again: false, timer: null,
+  init() { const d = load(this.key); if (d && d.v === 1) this.data = Object.assign(this.data, d); },
+  async connect() {
+    try {
+      if (!window.claude || !window.claude.use) return;
+      const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      if (!db || !user) return;
+      const uid = await user.id(); if (!uid) return;
+      const ref = db.doc('data/users/' + uid + '/progress');
+      const snap = await ref.get();
+      if (snap.exists) { const d = snap.data(); if (d && d.v === 1 && (d.updated || 0) > (this.data.updated || 0)) { this.data = JSON.parse(JSON.stringify(d)); store(this.key, this.data); if (UI.tab === 'drill' && !RUN) renderDrillHome(); } }
+      this.ref = ref;
+      const s = $('#sync'); s.classList.add('on'); $('span', s).textContent = 'Progress synced to your account';
+    } catch (e) { }
+  },
+  touch() {
+    this.data.updated = Date.now();
+    const keys = Object.keys(this.data.items);
+    if (keys.length > 3500) keys.sort((a, b) => this.data.items[b][0] - this.data.items[a][0] || this.data.items[a][2] - this.data.items[b][2]).slice(0, keys.length - 3000).forEach(k => delete this.data.items[k]);
+    if (this.data.log.length > 60) this.data.log = this.data.log.slice(-60);
+    store(this.key, this.data);
+    clearTimeout(this.timer); this.timer = setTimeout(() => this.push(), 3500);
+  },
+  async push() { if (!this.ref) return; if (this.busy) { this.again = true; return; } this.busy = true; try { await this.ref.set(JSON.parse(JSON.stringify(this.data))); } catch (e) { } this.busy = false; if (this.again) { this.again = false; this.push(); } },
+};
+const INTERVALS = [4, 20, 1440, 4320, 8640, 17280];
+function itemKey(spot, g) { return spot.sitKey + '#' + spot.open + '#' + spot.dp + '#' + GRID[g]; }
+function itemFromKey(k) { const [sk, open, dp, hn] = k.split('#'); const spot = SPOT_AT.get(sk + '|' + open + '|' + dp); return spot ? { spot, g: GIDX[hn] } : null; }
+function recordAnswer(spot, g, grade) {
+  const k = itemKey(spot, g), now = Date.now() / 60000;
+  const it = Progress.data.items[k] || [0, 0, 0, 0];
+  if (grade === 'bad') { it[0] = 0; it[3]++; } else if (grade === 'good') it[0] = Math.min(5, it[0] + 1);
+  it[1] = Math.round(now + INTERVALS[it[0]]); it[2]++;
+  Progress.data.items[k] = it;
+  const sk = spot.fam + '|' + bandOf(spot.dp) + '|' + spot.tag;
+  const st = Progress.data.stats[sk] || [0, 0, 0]; st[0]++; if (grade === 'good') st[1]++; else if (grade === 'ok') st[2]++;
+  Progress.data.stats[sk] = st; Progress.touch();
+}
+
+/* ---------- DRILL ---------- */
+let RUN = null;
+function drillCfg() { return { mode: UI.dMode, tag: UI.dTag, fams: new Set(UI.dFams), bands: new Set(UI.dBands), opens: new Set(UI.dOpens || [GAMES[UI.dTag].defOpen]), len: UI.dLen }; }
+function poolFor(cfg) { return SPOTS.filter(s => s.tag === cfg.tag && cfg.fams.has(s.fam) && cfg.bands.has(bandOf(s.dp)) && cfg.opens.has(s.open)); }
+function matchCfg(spot, cfg) { return spot.tag === cfg.tag && cfg.fams.has(spot.fam) && cfg.bands.has(bandOf(spot.dp)) && cfg.opens.has(spot.open); }
+function dueCount(cfg) { const now = Date.now() / 60000; let n = 0; for (const [k, v] of Object.entries(Progress.data.items)) { if (v[1] > now) continue; const it = itemFromKey(k); if (it && matchCfg(it.spot, cfg)) n++; } return n; }
+const PRESETS = [
+  { label: 'First in', fams: ['RFI'], bands: ['b100'] },
+  { label: 'BB defence', fams: ['BBvsOpen', 'BBvsLimp'], bands: ['b100'] },
+  { label: 'Facing opens', fams: ['vsOpen', 'BBvsOpen', 'Squeeze'], bands: ['b100'] },
+  { label: '3-bet pots', fams: ['vs3bet', 'vs4bet'], bands: ['b100'] },
+  { label: 'Deep stacks', fams: FAM_ORDER, bands: ['b150', 'b200', 'b300', 'b400'] },
+  { label: 'Short stacks', fams: FAM_ORDER, bands: ['b50'] },
+  { label: 'Everything at 100bb', fams: FAM_ORDER, bands: ['b100'] },
+];
+function renderDrillHome() {
+  $('#d-home').hidden = false; $('#d-run').hidden = true;
+  if (!SPOTS.some(s => s.tag === UI.dTag)) UI.dTag = 'reg';
+  if (!UI.dOpens || !UI.dOpens.every(o => OPENS[UI.dTag].includes(o))) UI.dOpens = [GAMES[UI.dTag].defOpen];
+  for (const b of $$('#d-modes .mode')) b.setAttribute('aria-pressed', b.dataset.mode === UI.dMode);
+  tagSeg($('#d-tag'), UI.dTag);
+  const fams = FAM_ORDER.filter(f => SPOTS.some(s => s.tag === UI.dTag && s.fam === f));
+  $('#d-fams').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${UI.dFams.includes(f)}">${famLabel(f, UI.dTag)}</button>`).join('');
+  $('#d-bands').innerHTML = BANDS.map(b => `<button data-b="${b.id}" aria-pressed="${UI.dBands.includes(b.id)}">${b.label}</button>`).join('');
+  $('#d-opens').innerHTML = OPENS[UI.dTag].map(o => `<button data-o="${o}" aria-pressed="${UI.dOpens.includes(o)}">${o}</button>`).join('');
+  for (const b of $$('#d-len button')) b.setAttribute('aria-pressed', +b.dataset.len === UI.dLen);
+  const same = (a, c) => a.length === c.length && a.every(x => c.includes(x));
+  $('#d-presets').innerHTML = PRESETS.map((p, i) => `<button data-p="${i}" aria-pressed="${same(p.fams.filter(f => fams.includes(f)), UI.dFams) && same(p.bands, UI.dBands)}">${p.label}</button>`).join('');
+  $('#d-len-wrap').hidden = UI.dMode === 'paint';
+  const cfg = drillCfg(), pool = poolFor(cfg), due = dueCount(cfg);
+  $('#d-start').disabled = !pool.length;
+  $('#d-due').textContent = !pool.length ? 'No spots match. Turn on more spots, stacks or open sizes.' : (UI.dMode === 'quick' ? (due ? `${due} review${due > 1 ? 's' : ''} due in this deck` : 'No reviews due. New edge hands only.') : `${pool.length} spots in this deck`);
+  let html = `<div class="heat" style="grid-template-columns:max-content repeat(${BANDS.length},minmax(48px,1fr))"><span></span>${BANDS.map(b => `<span class="hl" style="text-align:center">${b.label}</span>`).join('')}`;
+  for (const f of fams) {
+    html += `<span class="hl">${famLabel(f, UI.dTag)}</span>`;
+    for (const b of BANDS) {
+      const has = SPOTS.some(s => s.tag === UI.dTag && s.fam === f && bandOf(s.dp) === b.id);
+      const st = Progress.data.stats[f + '|' + b.id + '|' + UI.dTag];
+      if (!has) { html += '<span class="hc none">·</span>'; continue; }
+      if (!st || !st[0]) { html += `<button class="hc none" data-hf="${f}" data-hb="${b.id}">–</button>`; continue; }
+      const acc = (st[1] + 0.5 * st[2]) / st[0];
+      html += `<button class="hc" data-hf="${f}" data-hb="${b.id}" style="background:${acc >= 0.85 ? 'var(--good)' : acc >= 0.7 ? 'var(--ok)' : 'var(--bad)'}" title="${st[0]} answered">${Math.round(acc * 100)}<br><small style="opacity:.8">${st[0]}</small></button>`;
+    }
+  }
+  $('#d-heat').innerHTML = html + '</div>';
+  const log = Progress.data.log.slice(-6).reverse();
+  $('#d-log').innerHTML = log.length ? log.map(l => `<div>${new Date(l[0]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · ${({ quick: 'Quick-fire', paint: 'Paint', edges: 'Edges', seats: 'Seats' })[l[1]]} · ${l[2]} done · <b>${l[3]}%</b></div>`).join('') : '<p class="small muted" style="margin:0">No sessions yet.</p>';
+  saveUI();
+}
+$('#d-modes').addEventListener('click', e => { const b = e.target.closest('.mode'); if (!b) return; UI.dMode = b.dataset.mode; renderDrillHome(); });
+$('#d-tag').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.dTag = b.dataset.t; UI.dOpens = null; renderDrillHome(); });
+const toggle = (arr, v) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v];
+$('#d-fams').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.dFams = toggle(UI.dFams, b.dataset.f); renderDrillHome(); });
+$('#d-bands').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.dBands = toggle(UI.dBands, b.dataset.b); renderDrillHome(); });
+$('#d-opens').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.dOpens = toggle(UI.dOpens, b.dataset.o); renderDrillHome(); });
+$('#d-len').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.dLen = +b.dataset.len; renderDrillHome(); });
+$('#d-presets').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const p = PRESETS[+b.dataset.p]; UI.dFams = [...p.fams]; UI.dBands = [...p.bands]; UI.dOpens = [GAMES[UI.dTag].defOpen]; renderDrillHome(); });
+$('#d-heat').addEventListener('click', e => { const b = e.target.closest('[data-hf]'); if (!b) return; UI.dFams = [b.dataset.hf]; UI.dBands = [b.dataset.hb]; UI.dMode = 'quick'; renderDrillHome(); startDrill(); });
+$('#d-start').addEventListener('click', () => startDrill());
+
+function neighbours(spot) {
+  const sit = SITS.get(spot.sitKey), out = [];
+  for (const [axis, fixed] of [['depth', spot.open], ['open', spot.dp]]) { const ser = series(sit, axis, fixed), i = ser.indexOf(spot); if (i >= 0) out.push(ser[i - 1], ser[i + 1]); }
+  return out.filter(Boolean);
+}
+function handWeights(spot) {
+  if (spot._w) return spot._w;
+  const nb = neighbours(spot), seatsNb = seatSeries(spot).map(x => x.sp).filter(s => s !== spot);
+  const w = new Float32Array(169);
+  for (let g = 0; g < 169; g++) {
+    if (!inRange(spot, g)) continue;
+    const k = kindAt(spot, g), mx = spot.f[spot.prim[g]][g], i = Math.floor(g / 13), j = g % 13;
+    let edge = mx < 0.8 || nb.some(s => inRange(s, g) && kindAt(s, g) !== k);
+    if (!edge) for (const [di, dj] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) { const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii > 12 || jj > 12) continue; const g2 = ii * 13 + jj; if (inRange(spot, g2) && kindAt(spot, g2) !== k) { edge = true; break; } }
+    if (!edge && seatsNb.length) edge = seatsNb.some(s => inRange(s, g) && kindAt(s, g) !== k) && Math.random() < 0.3;
+    w[g] = (spot.reach ? spot.reach[g] : 1) * Math.sqrt(COMBOS[g]) * (edge ? 1 : 0.07);
+  }
+  return (spot._w = w);
+}
+function grade(spot, g, a) { const f = spot.f[a][g], L = spot.loss[a][g]; if (f >= 0.35) return 'good'; if (f >= 0.08 || L <= 0.05) return 'ok'; return 'bad'; }
+function pickQuick(R) {
+  const now = Date.now() / 60000;
+  if (Math.random() < 0.6) {
+    const due = [];
+    for (const [k, v] of Object.entries(Progress.data.items)) { if (v[1] > now || R.recent.includes(k)) continue; const it = itemFromKey(k); if (it && matchCfg(it.spot, R.cfg) && inRange(it.spot, it.g)) due.push([v[1], it]); }
+    if (due.length) { due.sort((a, b) => a[0] - b[0]); return pick(due.slice(0, 6))[1]; }
+  }
+  for (let t = 0; t < 30; t++) { const spot = pick(R.pool), g = weightedPick(handWeights(spot)); if (g < 0 || R.recent.includes(itemKey(spot, g))) continue; return { spot, g }; }
+  return null;
+}
+function startDrill() {
+  const cfg = drillCfg(), pool = poolFor(cfg); if (!pool.length) return;
+  RUN = { cfg, pool, n: 0, total: cfg.mode === 'paint' ? 5 : cfg.len, good: 0, ok: 0, bad: 0, streak: 0, best: 0, times: [], misses: [], requeue: [], recent: [], cur: null };
+  $('#d-home').hidden = true; $('#d-run').hidden = false; nextItem();
+}
+function endDrill() {
+  const R = RUN; if (!R) return;
+  const done = R.good + R.ok + R.bad;
+  if (done) { Progress.data.log.push([Date.now(), R.cfg.mode, done, Math.round(100 * (R.good + 0.5 * R.ok) / done)]); Progress.touch(); }
+  const acc = done ? Math.round(100 * (R.good + 0.5 * R.ok) / done) : 0;
+  const avg = R.times.length ? (R.times.reduce((a, b) => a + b, 0) / R.times.length / 1000).toFixed(1) : '–';
+  const misses = R.misses.slice(-14).reverse().map((m, i) => `<div>${GRID[m.g]} · ${esc(sitLabel(SITS.get(m.spot.sitKey)))} · ${m.spot.dp}bb ${m.spot.open} · <span class="muted">${esc(m.note)}</span> <button data-mi="${R.misses.length - 1 - i}">Show chart</button></div>`).join('');
+  $('#d-run').innerHTML = `<div class="panel" style="max-width:760px"><p class="eyebrow">Session done</p><div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-end"><div><div class="score">${acc}%</div><span class="small muted">score</span></div><div><div class="score">${done}</div><span class="small muted">answered</span></div>${R.cfg.mode === 'quick' ? `<div><div class="score">${avg}s</div><span class="small muted">avg decision</span></div><div><div class="score">${R.best}</div><span class="small muted">best streak</span></div>` : ''}</div>${misses ? `<p class="eyebrow" style="margin-top:18px">Misses</p><div class="summary-list">${misses}</div>` : ''}<div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap"><button class="btn primary" id="d-again">Go again</button><button class="btn" id="d-back">Back to setup</button></div></div>`;
+  $('#d-again').onclick = () => startDrill();
+  $('#d-back').onclick = () => { RUN = null; renderDrillHome(); };
+  $$('[data-mi]').forEach(b => b.onclick = () => { const m = R.misses[+b.dataset.mi]; openInCharts(m.spot, m.g); });
+  R.ended = true;
+}
+function openInCharts(spot, g) { UI.cTag = spot.tag; UI.cFam = spot.fam; UI.cSit = spot.sitKey; UI.cAxis = 'depth'; UI.cDp = spot.dp; UI.cOpen = spot.open; UI.cMode = 'strategy'; cSel = g; RUN = null; setTab('charts'); }
+function nextItem() { const R = RUN; if (!R) return; if (R.n >= R.total) return endDrill(); ({ quick: nextQuick, paint: nextPaint, edges: nextEdge, seats: nextSeat })[R.cfg.mode](); }
+function runHeader() {
+  const R = RUN, done = R.good + R.ok + R.bad, acc = done ? Math.round(100 * (R.good + 0.5 * R.ok) / done) + '%' : '–';
+  return `<div class="qbar"><span><b>${Math.min(R.n + (R.cur && !R.cur.answered ? 1 : 0), R.total)}</b> / ${R.total}</span><div class="prog"><i style="width:${(100 * R.n / R.total).toFixed(1)}%"></i></div><span>Score <b>${acc}</b></span>${R.cfg.mode === 'quick' ? `<span>Streak <b>${R.streak}</b></span>` : ''}<button class="btn ghost small" id="d-quit">End</button></div>`;
+}
+function bindRunHeader() { const q = $('#d-quit'); if (q) q.onclick = () => endDrill(); }
+/* ---------- quick-fire table ---------- */
+const TBL = { cx: 16.65, cy: 13.2, rx: 13.6, ry: 11.4, potY: 11.0, card: 7.3 };
+const num = x => String(Math.round(x * 100) / 100);
+function tableState(spot) {
+  const n = spot.n, { names, blinds, ante } = tableSetup(spot);
+  const bet = Array(n).fill(0), st = Array(n).fill(''), word = Array(n).fill('');
+  let level = 0, raises = 0, queue = [...Array(n).keys()];
+  for (const [p, b] of blinds) { bet[p] = b; level = Math.max(level, b); }
+  const folded = new Set();
+  for (const code of (spot.hist ? spot.hist.split('-') : [])) {
+    const p = queue.shift(); if (p === undefined) break;
+    if (code === 'F') { folded.add(p); st[p] = 'F'; word[p] = 'Fold'; continue; }
+    if (code === 'X') { st[p] = 'X'; word[p] = 'Check'; continue; }
+    if (code === 'C') { bet[p] = Math.min(spot.dp, level); st[p] = 'C'; word[p] = raises ? 'Call' : 'Limp'; continue; }
+    raises++;
+    const size = code === 'RAI' ? spot.dp : parseFloat(code.slice(1)), jam = code === 'RAI' || size >= spot.dp - 0.2;
+    bet[p] = jam ? spot.dp : size; level = bet[p]; st[p] = jam ? 'J' : 'R';
+    word[p] = jam ? 'All-in' : raises === 1 ? 'Open' : (raises + 1) + '-bet';
+    queue = []; for (let k = 1; k < n; k++) { const q = (p + k) % n; if (!folded.has(q)) queue.push(q); }
+  }
+  return { n, names, bet, st, word, pot: ante + bet.reduce((a, b) => a + b, 0), btn: names.indexOf('BTN') };
+}
+/* seats on an oval, hero at the bottom, action running clockwise */
+function tableHTML(spot, cards) {
+  const T = tableState(spot), n = T.n, { cx, cy, rx, ry, potY } = TBL, em = v => v.toFixed(2) + 'em';
+  let out = '';
+  for (let i = 0; i < n; i++) {
+    const k = (i - spot.hero + n) % n, th = (90 + k * 360 / n) * Math.PI / 180, ux = Math.cos(th), uy = Math.sin(th);
+    const x = cx + rx * ux, y = cy + ry * uy, me = k === 0, s = T.st[i], kc = s && 'RJCX'.includes(s) ? s : '';
+    const kv = kc ? `;--k:var(--k-${kc})` : '';
+    out += `<div class="ts${me ? ' me' : ''}${s === 'F' ? ' f' : ''}${kc ? ' act' : ''}" style="left:${em(x)};top:${em(y)}${kv}"><b>${T.names[i]}</b><span>${s ? T.word[i] : num(spot.dp - T.bet[i])}</span></div>`;
+    const lab = T.bet[i] > 0 && s !== 'F' ? num(T.bet[i]) : '', hw = (lab.length * 0.62 + 1.7) / 2;
+    let bx, by;
+    if (me) { bx = cx; by = y - 1.3 - TBL.card - 1.0; }
+    else if (Math.abs(uy) >= 0.5) { by = y - Math.sign(uy) * 2.7; bx = x + (cx - x) * 0.15; }
+    else { bx = x - Math.sign(ux) * (2.7 + hw + 0.35); by = y + (potY - y) * 0.2; }
+    if (lab) out += `<div class="tb" style="left:${em(bx)};top:${em(by)}${kv}"><i></i><span>${lab}</span></div>`;
+    if (i === T.btn) {
+      let dx = bx, dy = by;
+      if (me) { dx = x + 3.9; dy = y; }
+      else if (Math.abs(uy) >= 0.5) dx = bx + (Math.abs(ux) < 0.2 ? 1 : Math.sign(ux)) * (hw + 1.1);
+      else dy = by + 1.9;
+      out += `<div class="tdlr" style="left:${em(dx)};top:${em(dy)}"><span>D</span></div>`;
+    }
+  }
+  out += `<div class="tpot" style="left:${em(cx)};top:${em(potY)}"><b>${spot.dp}<small>bb</small></b><span>Pot ${Math.round(T.pot * 10) / 10}</span></div>`;
+  out += `<div class="tcards" style="left:${em(cx)};top:${em(cy + ry - 1.3)}">${cards}</div>`;
+  const label = narrate(spot).replace(/<[^>]+>/g, '');
+  return `<div class="tblw"><div class="tbl" role="img" aria-label="${esc(label)}"><div class="felt"></div>${out}<div class="tcap">${tableCaption(spot)}</div></div></div>`;
+}
+function tableSetup(spot) {
+  const names = P(spot.tag), blinds = [[names.indexOf('SB'), 0.5], [names.indexOf('BB'), 1]];
+  if (names.includes('STR')) blinds.push([names.indexOf('STR'), 2]);
+  return { names, blinds, ante: 0 };
+}
+function tableCaption(spot) { return `<b>${GAMES[spot.tag].label}</b><br>${spot.open} opens`; }
+function boardTop(spot) { return `<div class="board-top"><div class="stack-big">${spot.dp}<small>bb</small></div><div class="board-meta"><b>${esc(P(spot.tag)[spot.hero])}</b><span>${GAMES[spot.tag].label} · ${spot.open} opens</span></div></div><div class="seats">${seatsHTML(spot)}</div><p class="scn">${narrate(spot)}</p>`; }
+let qTimer = null;
+function nextQuick() {
+  const R = RUN; let item = null;
+  const ri = R.requeue.findIndex(x => x.at <= R.n); if (ri >= 0) item = R.requeue.splice(ri, 1)[0];
+  if (!item) item = pickQuick(R);
+  if (!item) { $('#d-run').innerHTML = '<div class="empty-state">No hands to ask in this deck.</div>'; return; }
+  R.recent.push(itemKey(item.spot, item.g)); if (R.recent.length > 10) R.recent.shift();
+  R.cur = { spot: item.spot, g: item.g, combo: dealCombo(GRID[item.g]), t0: performance.now(), answered: false };
+  const c = R.cur, sp = c.spot;
+  const btns = sp.btnOrder.map((a, i) => `<button data-a="${a}" style="background:${kColor(sp.A[a].kind)}">${actLabel(sp, a)}</button>`).join('');
+  $('#d-run').innerHTML = runHeader() + `<div class="q"><div class="panel board qtable">${tableHTML(sp, cardsHTML(c.g, c.combo))}<div class="acts" id="q-acts">${btns}</div></div><div id="q-fb" class="fb"><div class="panel kbd-tip"><p class="small muted" style="margin:0">Keys: 1–${sp.btnOrder.length} to act, Space or Enter for the next hand.</p></div></div></div>`;
+  bindRunHeader();
+  $('#q-acts').onclick = e => { const b = e.target.closest('button'); if (b) answerQuick(+b.dataset.a); };
+}
+function answerQuick(a) {
+  const R = RUN, c = R.cur; if (!c || c.answered) return;
+  c.answered = true; clearInterval(qTimer);
+  const ms = performance.now() - c.t0; R.times.push(Math.min(ms, 20000));
+  const sp = c.spot, g = c.g, gr = grade(sp, g, a);
+  R[gr]++; R.n++;
+  if (gr === 'bad') { R.streak = 0; R.requeue.push({ spot: sp, g, at: R.n + 3 + rnd(4) }); R.misses.push({ spot: sp, g, note: `you ${actLabel(sp, a, true).toLowerCase()}, solver ${actLabel(sp, sp.prim[g], true).toLowerCase()} ${pct(sp.f[sp.prim[g]][g])}` }); }
+  else { R.streak++; R.best = Math.max(R.best, R.streak); }
+  recordAnswer(sp, g, gr);
+  $$('#q-acts button').forEach(b => { b.disabled = true; if (+b.dataset.a === a) b.classList.add('chosen'); });
+  const freq = sp.order.filter(x => sp.f[x][g] >= 0.01).map(x => `${actLabel(sp, x, true)} ${pct(sp.f[x][g])}`).join(' · ');
+  const L = sp.loss[a][g], best = sp.prim[g], fam = LADDERS.find(l => l.cells.includes(g));
+  $('#q-fb').innerHTML = `<div class="verdict ${gr}">${gr === 'good' ? '✓ Correct' : gr === 'ok' ? '≈ Fine, it mixes' : '✗ Mistake'}<small>${freq}${L < 0.01 ? '' : ` · costs ${L.toFixed(2)}bb`}</small></div>
+    <div class="panel"><p class="eyebrow">${GRID[g]} in this spot</p><div class="grid mini" id="q-grid" style="max-width:440px"></div>
+    <p class="small" style="margin:10px 0 0"><b>${fam ? fam.short : ''} that play here:</b> <span class="mono">${fam ? ladderNotation(fam, x => playsAt(sp, x)).join(', ') || 'none' : ''}</span></p>
+</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="q-next">Next hand ↵</button><button class="btn ghost" id="q-chart">Open chart</button></div>`;
+  new Grid($('#q-grid')).show(sp, { marks: x => x === g ? 'target' : '' });
+  $('#q-next').onclick = () => nextItem();
+  $('#q-chart').onclick = () => openInCharts(sp, g);
+}
+function drillKey(e) {
+  const R = RUN; if (!R || R.ended || !R.cur) return;
+  if (R.cfg.mode === 'quick' && !R.cur.answered && /^[1-9]$/.test(e.key)) { const a = R.cur.spot.btnOrder[+e.key - 1]; if (a != null) { e.preventDefault(); answerQuick(a); } }
+  else if (R.cur.answered && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); nextItem(); }
+}
+function nextPaint() {
+  const R = RUN; let spot = null;
+  for (let t = 0; t < 40 && !spot; t++) { const s = pick(R.pool); if (s.order.length >= 2 && (!R.cur || s !== R.cur.spot)) spot = s; }
+  if (!spot) spot = R.pool[0];
+  const brushes = spot.btnOrder.filter(a => a !== spot.defIdx).reverse();
+  R.cur = { spot, painted: new Int16Array(169).fill(spot.defIdx), brush: brushes[brushes.length - 1], brushes, answered: false };
+  renderPaint();
+}
+function renderPaint() {
+  const R = RUN, c = R.cur, sp = c.spot;
+  $('#d-run').innerHTML = runHeader() + `<div class="q"><div class="panel board">${boardTop(sp)}
+    <p class="eyebrow" style="margin:0">Paint the range. Tap or drag; tap a painted hand again to clear it.</p>
+    <div class="brushes" id="p-br">${c.brushes.map(a => `<button data-a="${a}" style="background:${kColor(sp.A[a].kind)}" aria-pressed="${a === c.brush}">${actLabel(sp, a, true)}</button>`).join('')}<span class="small muted" style="align-self:center">Unpainted = ${actLabel(sp, sp.defIdx, true).toLowerCase()}</span></div>
+    <div class="grid paint" id="p-grid"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="p-check">Check my range</button><button class="btn ghost" id="p-clear">Clear</button></div></div>
+    <div id="p-fb" class="fb"><div class="panel"><p class="small muted" style="margin:0">Hands you wouldn't hold here (folded earlier) are greyed out. Your score counts only hands that you or the solver play, weighted by combos, so easy folds don't pad it.</p></div></div></div>`;
+  bindRunHeader();
+  const grid = new Grid($('#p-grid')); c.grid = grid;
+  const paintBg = g => { if (!inRange(sp, g)) return 'var(--empty)'; const a = c.painted[g]; return a === sp.defIdx ? 'var(--surface-2)' : kColor(sp.A[a].kind); };
+  const redraw = () => grid.show(sp, { bg: paintBg, marks: g => inRange(sp, g) ? '' : 'out' });
+  redraw();
+  $('#p-br').onclick = e => { const b = e.target.closest('button'); if (!b) return; c.brush = +b.dataset.a; $$('#p-br button').forEach(x => x.setAttribute('aria-pressed', +x.dataset.a === c.brush)); };
+  let painting = false, val = null; const el = $('#p-grid');
+  const apply = target => { const cell = target && target.closest && target.closest('.cell'); if (!cell || c.answered) return; const g = +cell.dataset.g; if (!inRange(sp, g)) return; if (val === null) val = c.painted[g] === c.brush ? sp.defIdx : c.brush; if (c.painted[g] !== val) { c.painted[g] = val; cell.style.background = paintBg(g); } };
+  el.addEventListener('pointerdown', e => { if (c.answered) return; painting = true; val = null; el.setPointerCapture(e.pointerId); apply(e.target); e.preventDefault(); });
+  el.addEventListener('pointermove', e => { if (painting) apply(document.elementFromPoint(e.clientX, e.clientY)); });
+  const stop = () => { painting = false; val = null; }; el.addEventListener('pointerup', stop); el.addEventListener('pointercancel', stop);
+  $('#p-clear').onclick = () => { c.painted.fill(sp.defIdx); redraw(); };
+  $('#p-check').onclick = () => checkPaint();
+}
+function checkPaint() {
+  const R = RUN, c = R.cur, sp = c.spot; if (c.answered) return; c.answered = true;
+  let W = 0, ok = 0; const missed = [], extra = [], wrong = [];
+  for (let g = 0; g < 169; g++) {
+    if (!inRange(sp, g)) continue;
+    const a = c.painted[g], solverPlays = playsAt(sp, g), youPlay = a !== sp.defIdx;
+    if (!solverPlays && !youPlay && sp.f[sp.defIdx][g] > 0.9) continue;
+    const w = COMBOS[g] * (sp.reach ? sp.reach[g] : 1); W += w;
+    if (sp.f[a][g] >= 0.35 || a === sp.prim[g]) { ok += w; continue; }
+    if (solverPlays && !youPlay) missed.push(g); else if (!solverPlays && youPlay) extra.push(g); else wrong.push(g);
+  }
+  const acc = W ? ok / W : 0, gr = acc >= 0.85 ? 'good' : acc >= 0.7 ? 'ok' : 'bad';
+  R[gr]++; R.n++;
+  if (gr === 'bad') R.misses.push({ spot: sp, g: missed[0] ?? extra[0] ?? wrong[0] ?? 0, note: `painted ${Math.round(acc * 100)}%` });
+  c.grid.show(sp, { marks: g => { if (!inRange(sp, g)) return 'out'; const a = c.painted[g]; return (sp.f[a][g] >= 0.35 || a === sp.prim[g]) ? '' : (sp.f[a][g] >= 0.08 ? 'mark-mix' : 'mark-bad'); } });
+  const lst = arr => arr.length ? `<div class="taglist">${arr.map(g => `<span>${GRID[g]}</span>`).join('')}</div>` : '<p class="small muted" style="margin:0">none</p>';
+  $('#p-fb').innerHTML = `<div class="verdict ${gr}">${Math.round(acc * 100)}% right<small>${gr === 'good' ? 'Solid.' : gr === 'ok' ? 'Close. Fix the dots.' : 'Study the dots, then retry.'}</small></div>
+    <div class="panel"><p class="small muted" style="margin:0 0 10px">The chart now shows the solver's range. Red dots are your mistakes; amber dots are mixed hands where you didn't pick the main action.</p>
+    <p class="eyebrow">Should play, you folded (${missed.length})</p>${lst(missed)}<p class="eyebrow" style="margin-top:10px">Solver folds, you played (${extra.length})</p>${lst(extra)}<p class="eyebrow" style="margin-top:10px">Right hand, wrong action (${wrong.length})</p>${lst(wrong)}</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="p-next">Next spot ↵</button><button class="btn" id="p-retry">Retry this spot</button></div>`;
+  $('#p-check').disabled = true;
+  $('#p-next').onclick = () => nextItem();
+  $('#p-retry').onclick = () => { R.n--; R[gr]--; R.cur = { spot: sp, painted: new Int16Array(169).fill(sp.defIdx), brush: c.brushes[c.brushes.length - 1], brushes: c.brushes, answered: false }; renderPaint(); };
+}
+function nextEdge() {
+  const R = RUN; let q = null;
+  for (let t = 0; t < 80 && !q; t++) {
+    const spot = pick(R.pool), l = pick(EDGE_LADDERS);
+    if (!l.cells.some(g => inRange(spot, g))) continue;
+    const ans = topRunEdge(l, g => playsAt(spot, g));
+    if ((ans === -1 || ans === l.cells.length - 1) && Math.random() > 0.18) continue;
+    q = { spot, l, ans, answered: false };
+  }
+  if (!q) { $('#d-run').innerHTML = '<div class="empty-state">No questions in this deck.</div>'; return; }
+  R.cur = q;
+  const sp = q.spot, l = q.l;
+  $('#d-run').innerHTML = runHeader() + `<div class="q"><div class="panel board">${boardTop(sp)}
+    <p style="margin:0;font-size:17px">Counting down from <b>${GRID[l.cells[0]]}</b>, what's the weakest <b>${l.name}</b> hand you still play before the first fold?</p>
+    <div class="ladder-q" id="e-opts">${l.cells.map((g, i) => `<button data-i="${i}" ${inRange(sp, g) ? '' : 'disabled title="not in your range"'}>${GRID[g]}</button>`).join('')}<button data-i="-1">None</button></div></div>
+    <div id="e-fb" class="fb"><div class="panel"><p class="small muted" style="margin:0">“Play” means anything but fold: open, limp, call or raise.</p></div></div></div>`;
+  bindRunHeader();
+  $('#e-opts').onclick = e => { const b = e.target.closest('button'); if (!b || q.answered) return; answerEdge(+b.dataset.i); };
+}
+function answerEdge(i) {
+  const R = RUN, c = R.cur, sp = c.spot, l = c.l; c.answered = true;
+  const gr = i === c.ans ? 'good' : Math.abs(i - c.ans) === 1 ? 'ok' : 'bad';
+  R[gr]++; R.n++;
+  if (gr === 'bad') R.misses.push({ spot: sp, g: l.cells[Math.max(0, c.ans)], note: `${l.short} edge is ${c.ans < 0 ? 'none' : GRID[l.cells[c.ans]]}` });
+  $$('#e-opts button').forEach(b => { const k = +b.dataset.i; b.disabled = true; if (k >= 0) { const g = l.cells[k]; if (inRange(sp, g)) { b.style.background = cellBg(sp, g); if (playsAt(sp, g)) b.classList.add('k-in'); } } if (k === i) b.classList.add('pick'); if (k === c.ans) b.classList.add('ans'); });
+  $('#e-fb').innerHTML = `<div class="verdict ${gr}">${gr === 'good' ? '✓ Right edge' : gr === 'ok' ? '≈ One step off' : '✗ Not quite'}<small>Edge: ${c.ans < 0 ? 'none play' : GRID[l.cells[c.ans]]}</small></div>
+    <div class="panel"><p class="small" style="margin:0 0 8px"><b>${l.short} that play:</b> <span class="mono">${ladderNotation(l, g => playsAt(sp, g)).join(', ') || 'none'}</span></p><div class="grid mini" id="e-grid" style="max-width:440px"></div></div>
+    <div><button class="btn primary" id="e-next">Next ↵</button></div>`;
+  new Grid($('#e-grid')).show(sp, { marks: g => l.cells.includes(g) ? '' : 'dimmed' });
+  $('#e-next').onclick = () => nextItem();
+}
+/* seats drill: earliest seat a hand plays from */
+function nextSeat() {
+  const R = RUN; let q = null;
+  const bases = R.pool.filter(s => ['RFI', 'BBvsOpen', 'vsOpen'].includes(s.fam) && seatSeries(s).length >= 3);
+  for (let t = 0; t < 120 && !q && bases.length; t++) {
+    const base = pick(bases), ss = seatSeries(base);
+    const g = weightedPick(handWeights(ss[ss.length - 1].sp)); if (g < 0) continue;
+    const firstIdx = ss.findIndex(x => playsAt(x.sp, g));
+    if ((firstIdx <= 0) && Math.random() > 0.2) continue;
+    if (!ss.some(x => inRange(x.sp, g))) continue;
+    q = { base, ss, g, ans: firstIdx, combo: dealCombo(GRID[g]), answered: false };
+  }
+  if (!q) { $('#d-run').innerHTML = '<div class="empty-state">No questions in this deck. Seats needs First in, BB vs open or Facing an open.</div>'; return; }
+  R.cur = q;
+  const b = q.base, p = P(b.tag);
+  const ask = b.fam === 'RFI' ? `What's the earliest seat you open <b>${GRID[q.g]}</b> from?` : `In the <b>${p[b.hero]}</b>, what's the earliest opener you continue against with <b>${GRID[q.g]}</b>? (Continue means call or raise.)`;
+  $('#d-run').innerHTML = runHeader() + `<div class="q"><div class="panel board"><div class="cards">${cardsHTML(q.g, q.combo)}</div>
+    <p style="margin:0;font-size:17px">${ask}</p><p class="small muted" style="margin:0">${GAMES[b.tag].label} · ${b.dp}bb · ${b.open} opens. Pick the earliest seat.</p>
+    <div class="ladder-q" id="n-opts">${q.ss.map((x, k) => `<button data-k="${k}">${p[x.i]}</button>`).join('')}<button data-k="-1">Never</button></div></div><div id="n-fb" class="fb"></div></div>`;
+  bindRunHeader();
+  $('#n-opts').onclick = e => { const btn = e.target.closest('button'); if (!btn || q.answered) return; answerSeat(+btn.dataset.k); };
+}
+function answerSeat(k) {
+  const R = RUN, c = R.cur; c.answered = true;
+  const gr = k === c.ans ? 'good' : (k >= 0 && c.ans >= 0 && Math.abs(k - c.ans) === 1) ? 'ok' : 'bad';
+  R[gr]++; R.n++;
+  const p = P(c.base.tag);
+  if (gr === 'bad') R.misses.push({ spot: c.ans >= 0 ? c.ss[c.ans].sp : c.base, g: c.g, note: `starts at ${c.ans >= 0 ? p[c.ss[c.ans].i] : 'never'}` });
+  $$('#n-opts button').forEach(b => { const v = +b.dataset.k; b.disabled = true; if (v === k) b.classList.add('pick'); if (v === c.ans) b.classList.add('ans'); if (v >= 0) b.style.background = cellBg(c.ss[v].sp, c.g), b.style.color = playsAt(c.ss[v].sp, c.g) ? '#fff' : ''; });
+  $('#n-fb').innerHTML = `<div class="verdict ${gr}">${gr === 'good' ? '✓ Right seat' : gr === 'ok' ? '≈ One seat off' : '✗ Off'}<small>Starts at: ${c.ans >= 0 ? p[c.ss[c.ans].i] : 'never'}</small></div>
+    <div class="panel"><p class="small muted" style="margin:0">Each seat button is now coloured by what ${GRID[c.g]} does there.</p></div><div><button class="btn primary" id="n-next">Next ↵</button></div>`;
+  $('#n-next').onclick = () => nextItem();
+}
+
+/* ---------- boot ---------- */
+readColors();
+const mq = window.matchMedia('(prefers-color-scheme: dark)');
+const recolor = () => { readColors(); if (UI.tab === 'charts') renderFilm(); };
+if (mq.addEventListener) mq.addEventListener('change', recolor);
+new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+Progress.init();
+if (!SPOTS.length) document.querySelector('main').innerHTML = '<div class="empty-state">Range data didn’t load. Make sure cash-data.js sits next to this page.</div>';
+else setTab(['charts', 'lens', 'cmp', 'drill', 'method'].includes(UI.tab) ? UI.tab : 'charts');
+Progress.connect();
+</script>
