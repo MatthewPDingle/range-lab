@@ -32,7 +32,7 @@ for source in (old['spots'], new['spots']):
 
 spots = sorted(merged.values(), key=lambda r: (r[1], r[14], r[4], r[0], r[5], r[6], r[7]))
 with open(out_js, 'w', encoding='utf-8') as fh:
-    fh.write('window.CASH_DATA=' + json.dumps({'v': 1, 'built': new.get('built'), 'source': 'GTO Wizard', 'spots': spots}, separators=(',', ':')) + ';\n')
+    fh.write('window.CASH_DATA=' + json.dumps({'v': 1, 'built': new.get('built'), 'source': old.get('source', 'solver'), 'spots': spots}, separators=(',', ':')) + ';\n')
 
 print(f"old {len(old['spots'])} + new {len(new['spots'])} -> {len(spots)} records ({bad} invalid skipped)")
 grid = collections.defaultdict(set)

@@ -1,6 +1,6 @@
 # Range Lab
 
-Preflop range trainer for live poker, built on GTO Wizard solutions. It's an Android app (made for the Galaxy Z Fold, unfolded) with two trainers:
+Preflop range trainer for live poker, built from solver output. It's an Android app (made for the Galaxy Z Fold, unfolded) with two trainers:
 
 - **Tournament**: 9-handed Chip EV, 12.5% ante, 5–100bb (38 depths, every seat matchup), plus 8-handed ICM stages (50% left, bubble, ITM 10%, final table).
 - **Live cash**: 8-handed regular games (2x–7x opens, 100–300bb, 10% live rake) and single-straddle games (4–7bb opens, 50–1,600bb).
@@ -9,7 +9,7 @@ Each trainer has Charts (ranges by stack depth), Hand lens (one hand across ever
 
 ## What's not in this repo
 
-The range data is GTO Wizard solver output from a personal subscription, so it isn't published here. These files are kept privately: `data.js`, `cash-data.js`, the built APK (it bundles the data), the signing keystore, and the crawler that pulls the data. The trainers need the two data files to show anything.
+The range data is solver output from a personal subscription, so it isn't published here. These files are kept privately: `data.js`, `cash-data.js`, the built APK (it bundles the data), the signing keystore, and the crawler that pulls the data. The trainers need the two data files to show anything.
 
 ## Layout
 
