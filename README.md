@@ -2,10 +2,10 @@
 
 Preflop range trainer for live poker, built from solver output. It's an Android app (made for the Galaxy Z Fold, unfolded) with two trainers:
 
-- **Tournament**: 9-handed Chip EV, 12.5% ante, 5–100bb (38 depths, every seat matchup), plus 8-handed ICM stages (50% left, bubble, ITM 10%, final table).
+- **Tournament**: 9-handed Chip EV, 12.5% ante, 5–100bb (38 depths, every seat matchup, 3-bet and 4-bet pots, multiway pots), plus 8-handed ICM stages (50% left, bubble, ITM 10%, final table).
 - **Live cash**: 8-handed regular games (2x–7x opens, 100–300bb, 10% live rake) and single-straddle games (4–7bb opens, 50–1,600bb).
 
-Each trainer has Charts (ranges by stack depth), Hand lens (one hand across every spot and stack), and drills with spaced repetition. Quick fire shows each spot on a poker table.
+Each trainer has Charts (ranges by stack depth), a Spot builder (tap seats on a table to set up the action and see the range for whoever is to act), Hand lens (one hand across every spot and stack), and drills with spaced repetition. Quick fire shows each spot on a poker table.
 
 ## What's not in this repo
 

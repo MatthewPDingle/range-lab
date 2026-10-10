@@ -284,6 +284,16 @@ table.plan th{font:800 15px/1.1 var(--f-display);text-transform:uppercase;white-
 .note{font-size:13px;color:var(--muted);border-left:3px solid var(--accent);padding:2px 0 2px 12px;margin:0}
 .empty-state{padding:40px 16px;text-align:center;color:var(--muted)}
 @media (hover:none){.kbd-tip{display:none}}
+/* spot builder */
+button.ts{font:inherit;color:inherit;cursor:pointer}
+button.ts:hover{border-color:var(--accent)}
+button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bact{display:flex;flex-direction:column;gap:8px}
+.bwho{font-size:14px;color:var(--muted)}
+.bwho b{color:var(--fg)}
+.bact .acts button.prev{outline:3px solid var(--fg);outline-offset:2px}
+.brow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.binfo{display:flex;flex-direction:column;gap:14px}
 </style>
 
 <header class="top">
@@ -291,6 +301,7 @@ table.plan th{font:800 15px/1.1 var(--f-display);text-transform:uppercase;white-
     <div class="brand"><div class="chip-mark" aria-hidden="true">8MX</div><div><b>Live Cash Range Lab</b><span>8-handed preflop, regular and straddle games</span></div></div>
     <nav class="tabs" role="tablist" id="tabs">
       <button role="tab" data-tab="charts">Charts</button>
+      <button role="tab" data-tab="build">Spot builder</button>
       <button role="tab" data-tab="lens">Hand lens</button>
       <button role="tab" data-tab="cmp">Straddle effect</button>
       <button role="tab" data-tab="drill">Drill</button>
@@ -327,6 +338,33 @@ table.plan th{font:800 15px/1.1 var(--f-display);text-transform:uppercase;white-
         <div><p class="eyebrow" id="c-film-lab">Every step for this spot</p><div class="film" id="c-film"></div></div>
       </div>
       <aside class="rail" id="c-rail"></aside>
+    </div>
+  </section>
+
+  <!-- SPOT BUILDER -->
+  <section class="view" id="v-build" hidden>
+    <div class="charts">
+      <aside class="ctl">
+        <div><p class="eyebrow">Game</p><div class="chips" id="b-game"></div></div>
+        <div id="b-sub"></div>
+        <p class="small muted" style="margin:0">Tap a seat to skip ahead to it: everyone before it folds. Then pick that player's action under the table. Tap a seat that already acted to change what it did.</p>
+      </aside>
+      <div class="stage">
+        <div class="clock">
+          <div class="clock-num"><b id="b-dp">20</b><small>bb</small></div>
+          <div class="clock-mid"><input type="range" id="b-slider" min="0" max="10" step="1" aria-label="Stack depth"><div class="ticks" id="b-ticks"></div></div>
+        </div>
+        <div id="b-table"></div>
+        <div class="bact">
+          <div class="bwho" id="b-who"></div>
+          <div class="acts" id="b-acts"></div>
+          <div class="brow"><button class="btn ghost small" id="b-back">Undo</button><button class="btn ghost small" id="b-reset">Start over</button><span class="small muted" id="b-note"></span></div>
+        </div>
+      </div>
+      <aside class="rail" id="b-rail">
+        <div class="panel"><h3 id="b-title"></h3><div class="grid" id="b-grid"></div><p class="small muted" id="b-empty" style="margin:0" hidden></p><div class="legend" id="b-legend" style="margin-top:8px"></div></div>
+        <div id="b-info" class="binfo"></div>
+      </aside>
     </div>
   </section>
 
@@ -428,6 +466,8 @@ table.plan th{font:800 15px/1.1 var(--f-display);text-transform:uppercase;white-
           <tr><th>Then</th><td>Mixed Quick-fire daily, red squares in “Where you leak” first.</td></tr>
         </table>
         <p class="note" style="margin-top:14px">Every session: 10 minutes of Paint, Edges or Seats, then 15 minutes of Quick-fire. Reviews that are due come first automatically.</p>
+        <p class="eyebrow" style="margin-top:18px">After a session</p>
+        <p style="margin:0 0 8px">Rebuild the hands you weren't sure about in Spot builder: tap the seats in the order they acted, then slide the stack. Do it on a break or after play; live events don't allow checking charts during a hand.</p>
         <p class="eyebrow" style="margin-top:18px">About the numbers</p>
         <p class="small muted" style="margin:0">Solutions: 8-handed cash with cold calls. Regular game: 10% live rake, opens from 2x to 7x at 100–300bb. Straddle game: a 2bb straddle with the straddler acting last, NL25 rake (the heaviest rake offered for straddle games), opens from 4bb to 7bb at 50–1,600bb. These are equilibrium ranges. A live table that over-calls or rarely 3-bets is worth adjusting against, but learn the baseline first.</p>
       </div>
@@ -749,6 +789,7 @@ function setTab(t) {
   for (const b of $$('#tabs button')) b.setAttribute('aria-selected', b.dataset.tab === t);
   for (const v of $$('.view')) v.hidden = v.id !== 'v-' + t;
   if (t === 'charts') renderCharts();
+  if (t === 'build') renderBuild();
   if (t === 'lens') renderLens();
   if (t === 'cmp') renderCmp();
   if (t === 'drill' && !RUN) renderDrillHome();
@@ -932,6 +973,171 @@ document.addEventListener('keydown', e => {
   if (UI.tab === 'charts' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); stopPlay(); setStep(curIdx() + (e.key === 'ArrowLeft' ? -1 : 1)); }
   if (UI.tab === 'drill' && RUN) drillKey(e);
 });
+
+/* ---------- SPOT BUILDER ---------- */
+/* Rebuilds the action tree from each spot's history, so any line that leads to a stored spot can be clicked through */
+const BIDX = new Map(), BDEP = new Map();
+let bSel = null, bPrev = null, bMsg = '';
+function bDepths(gt) { if (!BDEP.has(gt)) BDEP.set(gt, [...new Set(SPOTS.filter(s => s.gt === gt).map(s => s.dp))].sort((a, b) => a - b)); return BDEP.get(gt); }
+function bIndex(gt, dp) {
+  const key = gt + '|' + dp; let ix = BIDX.get(key); if (ix) return ix;
+  ix = { at: new Map(), kids: new Map() };
+  for (const sp of SPOTS) {
+    if (sp.gt !== gt || sp.dp !== dp) continue;
+    ix.at.set(sp.hist, sp);
+    const cs = sp.hist ? sp.hist.split('-') : [];
+    for (let i = 0; i < cs.length; i++) { const pre = cs.slice(0, i).join('-'); let m = ix.kids.get(pre); if (!m) ix.kids.set(pre, m = new Map()); m.set(cs[i], (m.get(cs[i]) || 0) + 1); }
+  }
+  BIDX.set(key, ix); return ix;
+}
+const codeKind = (c, dp) => c === 'F' || c === 'C' || c === 'X' ? c : c === 'RAI' || parseFloat(c.slice(1)) >= dp - 0.2 ? 'J' : 'R';
+/* the chosen line is stored as {code, kind}; at another stack the same kind of action is used when the exact size isn't there */
+function bResolve(seq, gt, dp) {
+  const ix = bIndex(gt, dp), codes = [];
+  for (const { c, k } of seq) {
+    const m = ix.kids.get(codes.join('-')); if (!m) break;
+    let pick = m.has(c) && codeKind(c, dp) === k ? c : null, best = -1;
+    if (!pick) for (const [cc, cnt] of m) if (codeKind(cc, dp) === k && cnt > best) { pick = cc; best = cnt; }
+    if (!pick) break;
+    codes.push(pick);
+  }
+  return codes;
+}
+function bWalk(codes, n) {
+  let queue = [...Array(n).keys()], raises = 0, limps = 0; const folded = new Set(), who = [];
+  for (const c of codes) {
+    const p = queue.shift(); who.push(p);
+    if (c === 'F') { folded.add(p); continue; }
+    if (c === 'C' || c === 'X') { if (!raises) limps++; continue; }
+    raises++; queue = []; for (let k = 1; k < n; k++) { const q = (p + k) % n; if (!folded.has(q)) queue.push(q); }
+  }
+  return { who, queue, raises, limps };
+}
+function bActLabel(c, W, dp) {
+  const k = codeKind(c, dp);
+  if (k === 'F') return 'Fold'; if (k === 'X') return 'Check'; if (k === 'J') return 'All-in';
+  if (k === 'C') return W.raises ? 'Call' : 'Limp';
+  return (W.raises ? (W.raises + 2) + '-bet ' : W.limps ? 'Raise ' : 'Open ') + fmtBB(parseFloat(c.slice(1)));
+}
+function bState() {
+  const gt = bGt(), dp = UI.bDp, ps = bPseudo(gt);
+  const seq = UI.bSeq || [], codes = bResolve(seq, gt, dp), W = bWalk(codes, ps.n), ix = bIndex(gt, dp), hist = codes.join('-');
+  return { gt, dp, ps, names: bNames(ps), seq, codes, W, ix, hist, actor: W.queue[0], spot: ix.at.get(hist) || null, cut: codes.length < seq.length };
+}
+/* folds added by tapping a later seat are marked s:1, so Undo steps back to the last action you picked */
+/* the dealer button sits at the bottom so the table never turns while you build a hand */
+function bTableHTML(S) {
+  const T = tableState({ ...S.ps, dp: S.dp, hist: S.hist, hero: S.actor ?? -1 }), n = T.n, { cx, cy, rx, ry, potY } = TBL, em = v => v.toFixed(2) + 'em';
+  const base = T.btn >= 0 ? T.btn : n - 3;
+  let out = '';
+  for (let i = 0; i < n; i++) {
+    const k = (i - base + n) % n, th = (90 + k * 360 / n) * Math.PI / 180, ux = Math.cos(th), uy = Math.sin(th);
+    const x = cx + rx * ux, y = cy + ry * uy, me = i === S.actor, s = T.st[i], kc = s && 'RJCX'.includes(s) ? s : '';
+    const kv = kc ? `;--k:var(--k-${kc})` : '';
+    out += `<button type="button" class="ts${me ? ' me' : ''}${s === 'F' && !me ? ' f' : ''}${kc && !me ? ' act' : ''}" data-seat="${i}" style="left:${em(x)};top:${em(y)}${kv}"><b>${S.names[i]}</b><span>${me ? 'to act' : s ? T.word[i] : num(S.dp - T.bet[i])}</span></button>`;
+    const lab = T.bet[i] > 0 && s !== 'F' ? num(T.bet[i]) : '', hw = (lab.length * 0.62 + 1.7) / 2;
+    let bx, by;
+    if (Math.abs(uy) >= 0.5) { by = y - Math.sign(uy) * 2.7; bx = x + (cx - x) * 0.15; }
+    else { bx = x - Math.sign(ux) * (2.7 + hw + 0.35); by = y + (potY - y) * 0.2; }
+    if (lab) out += `<div class="tb" style="left:${em(bx)};top:${em(by)}${kv}"><i></i><span>${lab}</span></div>`;
+    if (i === T.btn) {
+      let dx = bx, dy = by;
+      if (Math.abs(uy) >= 0.5) dx = bx + (Math.abs(ux) < 0.2 ? 1 : Math.sign(ux)) * (hw + 1.1); else dy = by + 1.9;
+      out += `<div class="tdlr" style="left:${em(dx)};top:${em(dy)}"><span>D</span></div>`;
+    }
+  }
+  out += `<div class="tpot" style="left:${em(cx)};top:${em(cy)}"><b>${S.dp}<small>bb</small></b><span>Pot ${Math.round(T.pot * 10) / 10}</span></div>`;
+  return `<div class="tblw"><div class="tbl"><div class="felt"></div>${out}</div></div>`;
+}
+function renderBuild() {
+  const games = bGames();
+  if (!games.length) { $('#v-build').innerHTML = '<div class="empty-state">No range data loaded.</div>'; return; }
+  if (!games.some(g => g.key === UI.bGame)) { UI.bGame = games[0].key; UI.bSeq = []; }
+  UI.bSeq = UI.bSeq || [];
+  $('#b-game').innerHTML = games.map(g => `<button data-g="${g.key}" aria-pressed="${g.key === UI.bGame}">${g.label}</button>`).join('');
+  $('#b-sub').innerHTML = bSub();
+  const dps = bDepths(bGt()), want = UI.bDp || 20;
+  if (!dps.includes(UI.bDp)) UI.bDp = dps.reduce((b, d) => Math.abs(d - want) < Math.abs(b - want) ? d : b, dps[0]);
+  const sl = $('#b-slider'); sl.max = dps.length - 1; sl.value = dps.indexOf(UI.bDp);
+  $('#b-ticks').innerHTML = ticksHTML(dps, UI.bDp, $('#b-ticks').clientWidth || 300);
+  renderBuildSpot();
+}
+function renderBuildSpot() {
+  const S = bState();
+  $('#b-dp').textContent = S.dp;
+  $$('#b-ticks span').forEach(s => s.classList.toggle('on', +s.textContent === S.dp));
+  $('#b-table').innerHTML = bTableHTML(S);
+  const kids = S.ix.kids.get(S.hist);
+  const opts = kids ? [...kids.keys()].sort((a, b) => KORD[codeKind(b, S.dp)] - KORD[codeKind(a, S.dp)] || parseFloat(a.slice(1)) - parseFloat(b.slice(1))) : [];
+  $('#b-who').innerHTML = S.actor == null ? 'Everyone has acted.' : `<b>${S.names[S.actor]}</b> to act${opts.length ? '' : '. No later spots are stored from here.'}`;
+  $('#b-acts').innerHTML = opts.map(c => `<button data-c="${c}" class="${bPrev && bPrev.seat === S.actor && bPrev.code === c ? 'prev' : ''}" style="background:${kColor(codeKind(c, S.dp))}">${bActLabel(c, S.W, S.dp)}</button>`).join('');
+  const notes = [];
+  if (S.cut) notes.push(`At ${S.dp}bb the rest of that line isn't in the solutions.`);
+  if (bMsg) notes.push(bMsg);
+  $('#b-note').textContent = notes.join(' ');
+  bMsg = '';
+  $('#b-back').disabled = !S.codes.length;
+  const sp = S.spot;
+  $('#b-grid').hidden = !sp; $('#b-legend').hidden = !sp; $('#b-empty').hidden = !!sp;
+  $('#b-title').textContent = sp ? `${S.names[S.actor]} · ${bFamLabel(sp)}` : S.actor == null ? 'Hand over' : `${S.names[S.actor]} to act`;
+  if (sp) {
+    const sit = bSit(sp);
+    bGrid.show(sp, { marks: g => (g === bSel ? 'sel' : '') });
+    $('#b-legend').innerHTML = legendHTML([...new Set(sp.order.map(a => sp.A[a].kind))]);
+    $('#b-info').innerHTML = `<div class="panel"><h3>${sp.dp}bb · ${esc(sitLabel(sit))}</h3>${stableMixHTML(sp, sit ? sit.spots : [sp])}<div style="margin-top:12px"><button class="btn ghost small" id="b-open">Open in ${sp.tag === 'icm8' ? 'ICM stages' : 'Charts'} →</button></div></div><div class="panel"><h3>Hand</h3>${handDetailHTML(sp, bSel)}</div>`;
+  } else {
+    $('#b-empty').textContent = S.actor == null ? 'The betting is closed. Tap a seat to change what happened.' : `No stored ranges for ${S.names[S.actor]} here. Tap a later seat, or pick an action.`;
+    $('#b-info').innerHTML = '';
+  }
+  saveUI();
+}
+function bTapSeat(s) {
+  const S = bState(), qi = S.W.queue.indexOf(s);
+  if (qi === 0) return;
+  if (qi > 0) {
+    const cur = S.codes.slice(), seq = S.seq.slice(0, S.codes.length);
+    for (let t = 0; t < qi; t++) {
+      const m = S.ix.kids.get(cur.join('-'));
+      if (!m || !m.has('F')) { bMsg = `No stored line has ${S.names[S.W.queue[t]]} folding here.`; break; }
+      cur.push('F'); seq.push({ c: 'F', k: 'F', s: 1 });
+    }
+    UI.bSeq = seq; bPrev = null; renderBuildSpot(); return;
+  }
+  const last = S.W.who.lastIndexOf(s);
+  if (last >= 0) { UI.bSeq = S.seq.slice(0, last); bPrev = { seat: s, code: S.codes[last] }; renderBuildSpot(); }
+}
+const bGrid = new Grid($('#b-grid'), { onCell: g => { bSel = g; renderBuildSpot(); } });
+$('#b-game').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const before = bNames(bPseudo(bGt())).join();
+  UI.bGame = b.dataset.g;
+  if (bNames(bPseudo(bGt())).join() !== before) UI.bSeq = [];
+  bPrev = null; renderBuild();
+});
+$('#b-slider').addEventListener('input', e => { UI.bDp = bDepths(bGt())[+e.target.value]; renderBuildSpot(); });
+$('#b-table').addEventListener('click', e => { const b = e.target.closest('[data-seat]'); if (b) bTapSeat(+b.dataset.seat); });
+$('#b-acts').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; const S = bState(); UI.bSeq = [...S.seq.slice(0, S.codes.length), { c: b.dataset.c, k: codeKind(b.dataset.c, S.dp) }]; bPrev = null; renderBuildSpot(); });
+$('#b-back').addEventListener('click', () => {
+  const S = bState(), q = S.seq.slice(0, S.codes.length), skip = () => { while (q.length && q[q.length - 1].s) q.pop(); };
+  skip(); q.pop(); UI.bSeq = q; bPrev = null; renderBuildSpot();
+});
+$('#b-reset').addEventListener('click', () => { UI.bSeq = []; bPrev = null; renderBuildSpot(); });
+$('#b-info').addEventListener('click', e => {
+  const l = e.target.closest('[data-lens]'); if (l) { UI.lens = +l.dataset.lens; setTab('lens'); return; }
+  if (e.target.closest('#b-open')) { const S = bState(); if (S.spot) openInCharts(S.spot, bSel); }
+});
+function bGames() { return ['reg', 'str'].filter(t => SPOTS.some(s => s.tag === t)).map(t => ({ key: t, label: GAMES[t].label })); }
+function bGt() {
+  const opens = OPENS[UI.bGame];
+  if (!opens.includes(UI.bOpen)) UI.bOpen = opens.includes(GAMES[UI.bGame].defOpen) ? GAMES[UI.bGame].defOpen : opens[0];
+  const s = SPOTS.find(x => x.tag === UI.bGame && x.open === UI.bOpen); return s.gt;
+}
+function bSub() { bGt(); return `<p class="eyebrow">Open size</p><div class="chips">${OPENS[UI.bGame].map(o => `<button data-o="${o}" aria-pressed="${o === UI.bOpen}">${o}</button>`).join('')}</div>`; }
+function bPseudo(gt) { const s = SPOTS.find(x => x.gt === gt); return { n: s.n, tag: s.tag, gt, open: s.open }; }
+function bNames(ps) { return P(ps.tag); }
+function bSit(sp) { return sp.sit || SITS.get(sp.sitKey); }
+function bFamLabel(sp) { return famLabel(sp.fam, sp.tag); }
+$('#b-sub').addEventListener('click', e => { const b = e.target.closest('[data-o]'); if (!b) return; UI.bOpen = b.dataset.o; bPrev = null; renderBuild(); });
 
 /* ---------- HAND LENS ---------- */
 const lGrid = new Grid($('#l-grid'), { onCell: g => { UI.lens = g; saveUI(); renderLens(); } });
@@ -1436,6 +1642,6 @@ if (mq.addEventListener) mq.addEventListener('change', recolor);
 new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 Progress.init();
 if (!SPOTS.length) document.querySelector('main').innerHTML = '<div class="empty-state">Range data didn’t load. Make sure cash-data.js sits next to this page.</div>';
-else setTab(['charts', 'lens', 'cmp', 'drill', 'method'].includes(UI.tab) ? UI.tab : 'charts');
+else setTab(['charts', 'build', 'lens', 'cmp', 'drill', 'method'].includes(UI.tab) ? UI.tab : 'charts');
 Progress.connect();
 </script>
