@@ -1483,10 +1483,12 @@ function handWeights(spot) {
   }
   return (spot._w = w);
 }
+/* right: the solver's main play (35%+). Mixes: the solver uses it at least 1% of the time. A 0% action that is
+   worth the same as the best one gets half credit too, labelled as such. Anything else is a mistake. */
 function grade(spot, g, a) {
-  const f = spot.f[a][g], L = spot.loss[a][g];
+  const f = spot.f[a][g];
   if (f >= 0.35) return 'good';
-  if (f >= 0.08 || L <= 0.05) return 'ok';
+  if (f >= 0.01 || spot.loss[a][g] < 0.005) return 'ok';
   return 'bad';
 }
 function pickQuick(R) {
@@ -1637,7 +1639,8 @@ function renderQuick() {
 function buzz() { try { if (window.RangeLabNative) window.RangeLabNative.vibrate(); else if (navigator.vibrate) navigator.vibrate([45, 70, 45]); } catch (e) { } }
 function verdictHTML(sp, g, a, gr) {
   const L = sp.loss[a][g];
-  return `<div class="verdict ${gr}">${gr === 'good' ? '✓ Correct' : gr === 'ok' ? '≈ Fine, it mixes' : '✗ Mistake'}${L >= 0.01 ? `<span class="evloss">−${L.toFixed(2)}bb</span>` : ''}</div>`;
+  const okText = sp.f[a][g] >= 0.01 ? '≈ Fine, it mixes' : '≈ Same EV, but the solver never plays it';
+  return `<div class="verdict ${gr}">${gr === 'good' ? '✓ Correct' : gr === 'ok' ? okText : '✗ Mistake'}${L >= 0.01 ? `<span class="evloss">−${L.toFixed(2)}bb</span>` : ''}</div>`;
 }
 /* every action for this hand, best first: how often the solver takes it and the EV it gives up against the best move */
 function evTableHTML(sp, g, a) {
