@@ -11,11 +11,11 @@ html.app main.wrap{flex:1;min-height:0;overflow-y:auto;max-width:none;width:100%
 .home-link{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);background:var(--surface);color:var(--fg);text-decoration:none;font:600 24px/1 var(--f-body);padding-bottom:3px}
 html.app .brand{margin-right:auto;min-width:0}
 html.app .brand b{font-size:20px}
-html.app .tabs button{padding:10px 14px}
+html.app .tabs button{padding:10px 12px}
 html.app .chips button,html.app .seg button{min-height:38px}
 html.app .icon-btn{width:44px;height:44px}
 html.app .icon-btn.play{height:44px}
-html.app .acts button{min-height:64px;font-size:16px}
+html.app .acts button{min-height:56px;font-size:16px}
 html.app .ladder-q button{min-height:44px}
 html.app .sync{display:none}
 
@@ -64,8 +64,8 @@ html.app .sync{display:none}
   html.app .drill-home>.panel{overflow-y:auto;max-height:100%;min-height:0}
   html.app .qbar{flex:none}
   html.app .q{flex:1;min-height:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:32px;align-items:start}
-  html.app .q>*{overflow-y:auto;max-height:100%;min-height:0;padding-bottom:16px}
-  html.app .q>.panel{padding-bottom:16px}
+  html.app .q>*{overflow-y:auto;max-height:100%;min-height:0;padding-bottom:10px}
+  html.app .q>.panel{padding-bottom:12px}
   html.app #d-run>.panel{flex:0 1 auto;min-height:0;overflow-y:auto;margin-bottom:16px}
 
   /* Method */

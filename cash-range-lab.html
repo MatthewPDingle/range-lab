@@ -257,7 +257,8 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .tbl .pcard .st{font-size:2.2em}
 .tcap{position:absolute;left:0;top:0;font-size:.85em;line-height:1.3;color:var(--muted);max-width:8.5em}
 .tcap b{color:var(--fg);font-weight:700}
-.verdict{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;font-weight:700;font-size:17px;flex-wrap:wrap}
+.verdict{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;font-weight:700;font-size:17px;flex-wrap:wrap}
+.board.qtable{gap:10px}
 .verdict.good{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
 .verdict.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
 .verdict.bad{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
@@ -298,11 +299,15 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .brow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .binfo{display:flex;flex-direction:column;gap:14px}
 .verdict .evloss{margin-left:auto;font:800 22px/1 var(--f-mono)}
-.evt{display:flex;flex-direction:column;gap:3px}
-.evr{display:grid;grid-template-columns:12px minmax(0,1fr) auto 3.4em 5em;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:13.5px}
+.evt{display:flex;flex-direction:column;gap:1px}
+.evr{display:grid;grid-template-columns:12px minmax(0,1fr) auto 3.4em 5em;align-items:center;gap:8px;padding:2px 8px;border-radius:6px;font-size:13px;line-height:1.3}
 .evr.evh{padding:0 8px 2px;font:600 10.5px/1 var(--f-body);color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
 .evr b{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.evr em{font:700 10px/1 var(--f-body);font-style:normal;text-transform:uppercase;letter-spacing:.04em;padding:3px 6px;border-radius:999px;background:var(--fg);color:var(--bg)}
+.evr em{font:700 10px/1 var(--f-body);font-style:normal;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:999px;background:var(--fg);color:var(--bg)}
+#q-verdict{display:flex;flex-direction:column;gap:10px}
+#q-verdict:empty{display:none}
+.qnext{display:flex;gap:10px}
+.qnext .btn{flex:1}
 .evr .fq,.evr .ev{text-align:right;font:500 12px var(--f-mono);color:var(--muted)}
 .evr .ev{font-weight:700;font-size:13px;color:var(--fg)}
 .evr.top .ev{color:var(--good)}
@@ -317,7 +322,7 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
       <button role="tab" data-tab="charts">Charts</button>
       <button role="tab" data-tab="build">Spot builder</button>
       <button role="tab" data-tab="lens">Hand lens</button>
-      <button role="tab" data-tab="cmp">Straddle effect</button>
+      <button role="tab" data-tab="cmp">Straddle</button>
       <button role="tab" data-tab="drill">Drill</button>
       <button role="tab" data-tab="method">Method</button>
     </nav>
@@ -1508,7 +1513,7 @@ function nextQuick() {
   R.cur = { spot: item.spot, g: item.g, combo: dealCombo(GRID[item.g]), t0: performance.now(), answered: false };
   const c = R.cur, sp = c.spot;
   const btns = sp.btnOrder.map((a, i) => `<button data-a="${a}" style="background:${kColor(sp.A[a].kind)}">${actLabel(sp, a)}</button>`).join('');
-  $('#d-run').innerHTML = runHeader() + `<div class="q"><div class="panel board qtable">${tableHTML(sp, cardsHTML(c.g, c.combo))}<div class="acts" id="q-acts">${btns}</div></div><div id="q-fb" class="fb"><div class="panel kbd-tip"><p class="small muted" style="margin:0">Keys: 1–${sp.btnOrder.length} to act, Space or Enter for the next hand.</p></div></div></div>`;
+  $('#d-run').innerHTML = runHeader() + `<div class="q"><div class="panel board qtable">${tableHTML(sp, cardsHTML(c.g, c.combo))}<div class="acts" id="q-acts">${btns}</div><div id="q-verdict"></div></div><div id="q-fb" class="fb"><div class="panel kbd-tip"><p class="small muted" style="margin:0">Keys: 1–${sp.btnOrder.length} to act, Space or Enter for the next hand.</p></div></div></div>`;
   bindRunHeader();
   $('#q-acts').onclick = e => { const b = e.target.closest('button'); if (b) answerQuick(+b.dataset.a); };
 }
@@ -1538,12 +1543,9 @@ function answerQuick(a) {
   $$('#q-acts button').forEach(b => { b.disabled = true; if (+b.dataset.a === a) b.classList.add('chosen'); });
   const freq = sp.order.filter(x => sp.f[x][g] >= 0.01).map(x => `${actLabel(sp, x, true)} ${pct(sp.f[x][g])}`).join(' · ');
   const L = sp.loss[a][g], best = sp.prim[g], fam = LADDERS.find(l => l.cells.includes(g));
-  $('#q-fb').innerHTML = `${verdictHTML(sp, g, a, gr)}
-    <div class="panel"><p class="eyebrow">${GRID[g]}: EV of each action</p>${evTableHTML(sp, g, a)}</div>
-    <div class="panel"><p class="eyebrow">${GRID[g]} in this spot</p><div class="grid mini" id="q-grid" style="max-width:440px"></div>
-    <p class="small" style="margin:10px 0 0"><b>${fam ? fam.short : ''} that play here:</b> <span class="mono">${fam ? ladderNotation(fam, x => playsAt(sp, x)).join(', ') || 'none' : ''}</span></p>
-</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="q-next">Next hand ↵</button><button class="btn ghost" id="q-chart">Open chart</button></div>`;
+  $('#q-verdict').innerHTML = `${verdictHTML(sp, g, a, gr)}<div class="qnext"><button class="btn primary" id="q-next">Next hand ↵</button><button class="btn ghost" id="q-chart">Open chart</button></div>`;
+  $('#q-fb').innerHTML = `<div class="panel"><p class="eyebrow">${GRID[g]}: EV of each action</p>${evTableHTML(sp, g, a)}</div>
+    <div class="panel"><p class="eyebrow">${GRID[g]} in this spot</p><div class="grid mini" id="q-grid" style="max-width:440px"></div></div>`;
   new Grid($('#q-grid')).show(sp, { marks: x => x === g ? 'target' : '' });
   $('#q-next').onclick = () => nextItem();
   $('#q-chart').onclick = () => openInCharts(sp, g);
