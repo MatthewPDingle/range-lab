@@ -442,6 +442,7 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
           <div class="form">
             <div><p class="eyebrow">Plan presets</p><div class="chips" id="d-presets"></div></div>
             <div><p class="eyebrow">Solutions</p><div class="seg" id="d-tag"><button data-tag="cev9">9-handed Chip EV</button><button data-tag="icm8">ICM stages (8-handed)</button></div></div>
+            <div id="d-phase-wrap" hidden><p class="eyebrow">Stages</p><div class="chips" id="d-phases"></div></div>
             <div><p class="eyebrow">Spots</p><div class="chips" id="d-fams"></div></div>
             <div><p class="eyebrow">Stacks (bb)</p><div class="chips" id="d-bands"></div></div>
             <div id="d-len-wrap"><p class="eyebrow">Length</p><div class="seg" id="d-len"><button data-len="20">20</button><button data-len="40">40</button><button data-len="80">80</button></div></div>
@@ -478,6 +479,7 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         <p class="eyebrow">Two-week plan</p>
         <table class="plan">
           <tr><th>Day 1–2</th><td>First in, 25–40bb. Charts with Changes on, then Paint three seats a day and Quick-fire “First in”, 21–50bb.</td></tr>
+          <tr><th>Deep stacks</th><td>For the opening levels: the “Deep stacks · 50–100” preset in Quick-fire, then Paint CO and BTN opens and BB vs BTN at 60 and 100bb.</td></tr>
           <tr><th>Day 3–4</th><td>First in, 10–20bb, where raising and shoving split. Thresholds view seat by seat, then the Numbers drill.</td></tr>
           <tr><th>Day 5</th><td>Under 10bb: shove or fold. Quick-fire 5–9bb plus Numbers.</td></tr>
           <tr><th>Day 6–7</th><td>Big blind: defending against opens and calling shoves. Paint BB vs BTN, CO and SB at 12, 18 and 25bb.</td></tr>
@@ -538,7 +540,7 @@ const KORD = { J: 0, B: 1, R: 2, C: 3, X: 4, F: 5 };
 const KNAME = { J: 'All-in', B: 'Bigger raise', R: 'Raise', C: 'Call', X: 'Check', F: 'Fold' };
 const BANDS = [
   { id: 'b5', label: '5–9', lo: 0, hi: 9 }, { id: 'b10', label: '10–12', lo: 10, hi: 12 }, { id: 'b13', label: '13–16', lo: 13, hi: 16 },
-  { id: 'b17', label: '17–20', lo: 17, hi: 20 }, { id: 'b21', label: '21–25', lo: 21, hi: 25 }, { id: 'b30', label: '30–50', lo: 26, hi: 50 }, { id: 'b60', label: '60–100', lo: 51, hi: 999 },
+  { id: 'b17', label: '17–20', lo: 17, hi: 20 }, { id: 'b21', label: '21–25', lo: 21, hi: 25 }, { id: 'b30', label: '30–49', lo: 26, hi: 49 }, { id: 'b60', label: '50–100', lo: 50, hi: 999 },
 ];
 const bandOf = dp => BANDS.find(b => dp >= b.lo && dp <= b.hi).id;
 const SUITSYM = { s: '♠', h: '♥', d: '♦', c: '♣' };
@@ -825,6 +827,7 @@ function handDetailHTML(spot, g) {
 /* ---------- state ---------- */
 const UI = Object.assign({ tab: 'charts', cFam: 'RFI', cSit: null, cDp: 20, cMode: 'strategy', cMetric: null, lens: GIDX['KJo'], iFam: 'RFI', iSit: null, iDp: 20, iPhase: 2, dMode: 'quick', dTag: 'cev9', dFams: FAM_ORDER, dBands: BANDS.map(b => b.id), dLen: 40 }, load('v600-ui') || {});
 const saveUI = () => store('v600-ui', UI);
+if (['RFI', 'BBvsOpen', 'BBvsLimp', 'BBvsJam', 'vsOpen', 'vsJam', 'OpenVsJam', 'OpenVs3bet', 'Squeeze'].every(f => UI.dFams.includes(f)) && !UI.dFams.includes('ThreebetVs4bet')) UI.dFams = [...UI.dFams, 'ThreebetVs4bet', 'ThreebetVsJam'];
 
 /* ---------- tabs ---------- */
 function setTab(t) {
@@ -1364,11 +1367,14 @@ function recordAnswer(spot, g, grade) {
 
 /* ---------- DRILL ---------- */
 let RUN = null;
-function drillCfg() { return { mode: UI.dMode, tag: UI.dTag, fams: new Set(UI.dFams), bands: new Set(UI.dBands), len: UI.dLen }; }
-function poolFor(cfg) { return SPOTS.filter(s => s.tag === cfg.tag && cfg.fams.has(s.fam) && cfg.bands.has(bandOf(s.dp))); }
+/* ICM decks leave out the 8-handed Chip EV baseline unless it's picked under Stages */
+const ICM_ONLY = () => PHASES.filter(p => p.gt !== 'MTTGeneral_8m').map(p => p.gt);
+function drillCfg() { return { mode: UI.dMode, tag: UI.dTag, fams: new Set(UI.dFams), bands: new Set(UI.dBands), phases: new Set(UI.dPhases || ICM_ONLY()), len: UI.dLen }; }
+const inDeck = (s, cfg) => s.tag === cfg.tag && cfg.fams.has(s.fam) && cfg.bands.has(bandOf(s.dp)) && (s.tag !== 'icm8' || cfg.phases.has(s.gt));
+function poolFor(cfg) { return SPOTS.filter(s => inDeck(s, cfg)); }
 function dueCount(cfg) {
   const now = Date.now() / 60000; let n = 0;
-  for (const [k, v] of Object.entries(Progress.data.items)) { if (v[1] > now) continue; const it = itemFromKey(k); if (it && it.spot.tag === cfg.tag && cfg.fams.has(it.spot.fam) && cfg.bands.has(bandOf(it.spot.dp))) n++; }
+  for (const [k, v] of Object.entries(Progress.data.items)) { if (v[1] > now) continue; const it = itemFromKey(k); if (it && inDeck(it.spot, cfg)) n++; }
   return n;
 }
 function renderDrillHome() {
@@ -1379,6 +1385,9 @@ function renderDrillHome() {
   $('#d-fams').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${UI.dFams.includes(f)}">${FAM[f].label}</button>`).join('');
   const bands = BANDS.filter(b => SPOTS.some(s => s.tag === UI.dTag && bandOf(s.dp) === b.id));
   $('#d-bands').innerHTML = bands.map(b => `<button data-b="${b.id}" aria-pressed="${UI.dBands.includes(b.id)}">${b.label}</button>`).join('');
+  const phases = UI.dPhases || ICM_ONLY();
+  $('#d-phase-wrap').hidden = UI.dTag !== 'icm8';
+  $('#d-phases').innerHTML = PHASES.filter(p => SPOTS.some(s => s.gt === p.gt)).map(p => `<button data-g="${p.gt}" aria-pressed="${phases.includes(p.gt)}">${p.gt === 'MTTGeneral_8m' ? 'Chip EV' : p.short}</button>`).join('');
   for (const b of $$('#d-len button')) b.setAttribute('aria-pressed', +b.dataset.len === UI.dLen);
   const same = (a, c) => a.length === c.length && a.every(x => c.includes(x));
   for (const b of $$('#d-presets button')) { const p = PRESETS[+b.dataset.p]; b.setAttribute('aria-pressed', p.tag === UI.dTag && same(p.fams, UI.dFams) && same(p.bands, UI.dBands)); }
@@ -1412,10 +1421,12 @@ $('#d-modes').addEventListener('click', e => { const b = e.target.closest('.mode
 $('#d-tag').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.dTag = b.dataset.tag; renderDrillHome(); });
 $('#d-fams').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const f = b.dataset.f; UI.dFams = UI.dFams.includes(f) ? UI.dFams.filter(x => x !== f) : [...UI.dFams, f]; renderDrillHome(); });
 $('#d-bands').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const f = b.dataset.b; UI.dBands = UI.dBands.includes(f) ? UI.dBands.filter(x => x !== f) : [...UI.dBands, f]; renderDrillHome(); });
+$('#d-phases').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const g = b.dataset.g, cur = UI.dPhases || ICM_ONLY(); UI.dPhases = cur.includes(g) ? cur.filter(x => x !== g) : [...cur, g]; renderDrillHome(); });
 $('#d-len').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.dLen = +b.dataset.len; renderDrillHome(); });
 $('#d-heat').addEventListener('click', e => { const b = e.target.closest('[data-hf]'); if (!b) return; UI.dFams = [b.dataset.hf]; UI.dBands = [b.dataset.hb]; UI.dMode = 'quick'; renderDrillHome(); startDrill(); });
 $('#d-start').addEventListener('click', () => startDrill());
 const PRESETS = [
+  { label: 'Deep stacks · 50–100', tag: 'cev9', fams: ['RFI', 'BBvsOpen', 'BBvsLimp', 'vsOpen', 'OpenVs3bet', 'ThreebetVs4bet', 'ThreebetVsJam', 'Squeeze'], bands: ['b60'] },
   { label: 'Day 1–2 · First in 21–50', tag: 'cev9', fams: ['RFI'], bands: ['b21', 'b30'] },
   { label: 'Day 3–4 · First in 10–20', tag: 'cev9', fams: ['RFI'], bands: ['b10', 'b13', 'b17'] },
   { label: 'Day 5 · Under 10bb', tag: 'cev9', fams: ['RFI', 'BBvsJam', 'vsJam', 'OpenVsJam'], bands: ['b5'] },
@@ -1425,7 +1436,7 @@ const PRESETS = [
   { label: 'Everything', tag: 'cev9', fams: FAM_ORDER, bands: BANDS.map(b => b.id) },
 ];
 $('#d-presets').innerHTML = PRESETS.map((p, i) => `<button data-p="${i}">${p.label}</button>`).join('');
-$('#d-presets').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const p = PRESETS[+b.dataset.p]; UI.dTag = p.tag; UI.dFams = [...p.fams]; UI.dBands = [...p.bands]; renderDrillHome(); });
+$('#d-presets').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const p = PRESETS[+b.dataset.p]; UI.dTag = p.tag; UI.dFams = [...p.fams]; UI.dBands = [...p.bands]; if (p.tag === 'icm8') UI.dPhases = ICM_ONLY(); renderDrillHome(); });
 
 /* hand weights: favour hands at the edges (mixed, or different from a neighbour in stack, seat-ladder or grid) */
 function handWeights(spot) {
@@ -1458,7 +1469,7 @@ function pickQuick(R) {
     for (const [k, v] of Object.entries(Progress.data.items)) {
       if (v[1] > now || R.recent.includes(k)) continue;
       const it = itemFromKey(k);
-      if (it && it.spot.tag === R.cfg.tag && R.cfg.fams.has(it.spot.fam) && R.cfg.bands.has(bandOf(it.spot.dp)) && inRange(it.spot, it.g)) due.push([v[1], it, k]);
+      if (it && inDeck(it.spot, R.cfg) && inRange(it.spot, it.g)) due.push([v[1], it, k]);
     }
     if (due.length) { due.sort((a, b) => a[0] - b[0]); return pick(due.slice(0, 6))[1]; }
   }
@@ -1566,6 +1577,7 @@ function tableSetup(spot) {
   return { names: POS[n], blinds: [[n - 2, 0.5], [n - 1, 1]], ante: 0.125 * n };
 }
 function tableCaption(spot) {
+  if (spot.gt === 'MTTGeneral_8m') return '<b>Chip EV</b><br>8-handed';
   if (spot.tag === 'icm8') return `<b>ICM · ${PHASES[PHASE_OF[spot.gt]].short}</b><br>8-handed`;
   return '<b>Chip EV</b><br>9-handed';
 }
