@@ -215,9 +215,11 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .mode[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:var(--accent-soft)}
 .form{display:flex;flex-direction:column;gap:16px;margin-top:16px}
 .heat{display:grid;gap:3px;font-size:11.5px;overflow-x:auto}
-.heat .hc{border-radius:4px;padding:6px 2px;text-align:center;font:600 11px/1.1 var(--f-mono);color:#fff;cursor:pointer;border:0}
+.heat .hc{border-radius:4px;padding:0 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font:600 11px/1 var(--f-mono);color:#fff;cursor:pointer;border:0;min-width:0}
+.heat .hc small{font-size:9.5px;font-weight:500;opacity:.8}
 .heat .hc.none{background:var(--surface-2);color:var(--faint);cursor:default}
-.heat .hl{font-weight:600;color:var(--muted);align-self:center;line-height:1.15;min-width:0}
+.heat button.hc.none{cursor:pointer}
+.heat .hl{font-weight:600;color:var(--muted);align-self:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .heat .hb{font-size:10.5px;text-align:center}
 
 .q{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
@@ -452,7 +454,7 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         </div>
         <div class="panel">
           <p class="eyebrow">Where you leak</p>
-          <p class="small muted" style="margin:0 0 10px">Quick-fire accuracy by spot and stack. Tap a square to drill just that.</p>
+          <p class="small muted" style="margin:0 0 10px">Big number: your Quick-fire score. Small: hands answered. Colour: EV lost per hand, green under 0.03bb, amber under 0.1bb, red above. Tap a square to drill it.</p>
           <div class="heat" id="d-heat"></div>
           <p class="eyebrow" style="margin-top:18px">Recent sessions</p>
           <div class="summary-list" id="d-log"></div>
@@ -541,7 +543,7 @@ const KORD = { J: 0, B: 1, R: 2, C: 3, X: 4, F: 5 };
 const KNAME = { J: 'All-in', B: 'Bigger raise', R: 'Raise', C: 'Call', X: 'Check', F: 'Fold' };
 const BANDS = [
   { id: 'b5', label: '5–9', lo: 0, hi: 9 }, { id: 'b10', label: '10–12', lo: 10, hi: 12 }, { id: 'b13', label: '13–16', lo: 13, hi: 16 },
-  { id: 'b17', label: '17–20', lo: 17, hi: 20 }, { id: 'b21', label: '21–25', lo: 21, hi: 25 }, { id: 'b30', label: '30–49', lo: 26, hi: 49 }, { id: 'b60', label: '50–100', lo: 50, hi: 999 },
+  { id: 'b17', label: '17–20', lo: 17, hi: 20 }, { id: 'b21', label: '21–25', lo: 21, hi: 25 }, { id: 'b30', label: '30–49', lo: 26, hi: 49 }, { id: 'b60', label: '50–100', short: '50+', lo: 50, hi: 999 },
 ];
 const bandOf = dp => BANDS.find(b => dp >= b.lo && dp <= b.hi).id;
 const SUITSYM = { s: '♠', h: '♥', d: '♦', c: '♣' };
@@ -1353,7 +1355,7 @@ const Progress = {
 const INTERVALS = [4, 20, 1440, 4320, 8640, 17280]; // minutes per box
 function itemKey(spot, g) { return spot.sitKey + '#' + spot.dp + '#' + GRID[g]; }
 function itemFromKey(k) { const [sk, dp, hn] = k.split('#'); const spot = SPOT_AT.get(sk + '|' + dp); return spot ? { spot, g: GIDX[hn] } : null; }
-function recordAnswer(spot, g, grade) {
+function recordAnswer(spot, g, grade, loss) {
   const k = itemKey(spot, g), now = Date.now() / 60000;
   const it = Progress.data.items[k] || [0, 0, 0, 0];
   if (grade === 'bad') { it[0] = 0; it[3]++; } else if (grade === 'good') it[0] = Math.min(5, it[0] + 1);
@@ -1361,12 +1363,22 @@ function recordAnswer(spot, g, grade) {
   Progress.data.items[k] = it;
   const sk = spot.fam + '|' + bandOf(spot.dp) + '|' + spot.tag;
   const st = Progress.data.stats[sk] || [0, 0, 0];
-  st[0]++; if (grade === 'good') st[1]++; else if (grade === 'ok') st[2]++;
+  st[0]++; if (grade === 'good') st[1]++; else if (grade === 'ok') st[2]++; if (loss != null) { st[3] = Math.round(((st[3] || 0) + loss) * 1000) / 1000; st[4] = (st[4] || 0) + 1; }
   Progress.data.stats[sk] = st;
   Progress.touch();
 }
 
 /* ---------- DRILL ---------- */
+const HEAT_LABEL = { RFI: 'First in', BBvsOpen: 'BB vs open', BBvsLimp: 'BB vs limp', BBvsJam: 'BB vs shove', vsOpen: 'vs open', vsJam: 'vs shove', OpenVsJam: 'Open → shove', OpenVs3bet: 'Open → 3-bet', ThreebetVs4bet: '3-bet → 4-bet', ThreebetVsJam: '3-bet → shove', Squeeze: 'Open + call' };
+/* leak map cell: big number = Quick-fire score, small = hands answered, colour = average EV lost per hand
+   (st = [answered, right, mixed-ok, EV lost in bb, answers with EV recorded]; older results without EV fall back to the score) */
+function heatCell(f, b, st) {
+  const acc = (st[1] + 0.5 * st[2]) / st[0], ev = st[4] ? st[3] / st[4] : null;
+  const col = ev != null ? (ev < 0.03 ? 'var(--good)' : ev < 0.1 ? 'var(--ok)' : 'var(--bad)') : (acc >= 0.85 ? 'var(--good)' : acc >= 0.7 ? 'var(--ok)' : 'var(--bad)');
+  const tip = `Score ${Math.round(acc * 100)}% · ${st[0]} hands · ` + (ev != null ? `loses ${ev.toFixed(2)}bb per hand` : 'EV loss not recorded yet');
+  return `<button class="hc" data-hf="${f}" data-hb="${b.id}" style="background:${col}" title="${tip}">${Math.round(acc * 100)}<small>${st[0]}</small></button>`;
+}
+const bandTitle = b => b.label.replace(/bb$/, '') + 'bb';
 let RUN = null;
 /* ICM decks leave out the 8-handed Chip EV baseline unless it's picked under Stages */
 const ICM_ONLY = () => PHASES.filter(p => p.gt !== 'MTTGeneral_8m').map(p => p.gt);
@@ -1400,17 +1412,15 @@ function renderDrillHome() {
   // heat map
   const famsAll = FAM_ORDER.filter(f => SPOTS.some(s => s.tag === UI.dTag && s.fam === f));
   const bandsAll = BANDS.filter(b => SPOTS.some(s => s.tag === UI.dTag && bandOf(s.dp) === b.id));
-  let html = `<div class="heat" style="grid-template-columns:minmax(64px,30%) repeat(${bandsAll.length},minmax(0,1fr))"><span></span>${bandsAll.map(b => `<span class="hl hb">${b.label.replace('–', '–<wbr>')}</span>`).join('')}`;
+  let html = `<div class="heat" style="grid-template-columns:minmax(64px,30%) repeat(${bandsAll.length},minmax(0,1fr));grid-template-rows:18px;grid-auto-rows:36px"><span></span>${bandsAll.map(b => `<span class="hl hb" title="${bandTitle(b)}">${b.short || b.label}</span>`).join('')}`;
   for (const f of famsAll) {
-    html += `<span class="hl">${FAM[f].label}</span>`;
+    html += `<span class="hl" title="${FAM[f].label}">${HEAT_LABEL[f] || FAM[f].label}</span>`;
     for (const b of bandsAll) {
       const has = SPOTS.some(s => s.tag === UI.dTag && s.fam === f && bandOf(s.dp) === b.id);
       const st = Progress.data.stats[f + '|' + b.id + '|' + UI.dTag];
       if (!has) { html += `<span class="hc none">·</span>`; continue; }
-      if (!st || !st[0]) { html += `<button class="hc none" data-hf="${f}" data-hb="${b.id}" style="cursor:pointer">–</button>`; continue; }
-      const acc = (st[1] + 0.5 * st[2]) / st[0];
-      const col = acc >= 0.85 ? 'var(--good)' : acc >= 0.7 ? 'var(--ok)' : 'var(--bad)';
-      html += `<button class="hc" data-hf="${f}" data-hb="${b.id}" style="background:${col}" title="${st[0]} answered">${Math.round(acc * 100)}<br><small style="opacity:.8">${st[0]}</small></button>`;
+      if (!st || !st[0]) { html += `<button class="hc none" data-hf="${f}" data-hb="${b.id}">–</button>`; continue; }
+      html += heatCell(f, b, st);
     }
   }
   $('#d-heat').innerHTML = html + '</div>';
@@ -1615,7 +1625,7 @@ function answerQuick(a) {
   R[gr]++; R.n++;
   if (gr === 'bad') { R.streak = 0; R.requeue.push({ spot: sp, g, at: R.n + 3 + rnd(4) }); R.misses.push({ spot: sp, g, note: `you ${actLabel(sp, a, true).toLowerCase()}, solver ${actLabel(sp, sp.prim[g], true).toLowerCase()} ${pct(sp.f[sp.prim[g]][g])}` }); }
   else { R.streak++; R.best = Math.max(R.best, R.streak); }
-  recordAnswer(sp, g, gr);
+  recordAnswer(sp, g, gr, sp.loss[a][g]);
   $$('#q-acts button').forEach(b => { b.disabled = true; if (+b.dataset.a === a) b.classList.add('chosen'); });
   const freq = sp.order.filter(x => sp.f[x][g] >= 0.01).map(x => `${actLabel(sp, x, true)} ${pct(sp.f[x][g])}`).join(' · ');
   const L = sp.loss[a][g];
