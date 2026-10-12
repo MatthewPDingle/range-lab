@@ -204,7 +204,8 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .heat{display:grid;gap:3px;font-size:11.5px;overflow-x:auto}
 .heat .hc{border-radius:4px;padding:6px 2px;text-align:center;font:600 11px/1.1 var(--f-mono);color:#fff;cursor:pointer;border:0}
 .heat .hc.none{background:var(--surface-2);color:var(--faint)}
-.heat .hl{font-weight:600;color:var(--muted);align-self:center;white-space:nowrap}
+.heat .hl{font-weight:600;color:var(--muted);align-self:center;line-height:1.15;min-width:0}
+.heat .hb{font-size:10.5px;text-align:center}
 .q{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:900px){.q{grid-template-columns:minmax(0,1fr)}}
 .qbar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:12px}
@@ -1335,7 +1336,7 @@ function renderDrillHome() {
   const cfg = drillCfg(), pool = poolFor(cfg), due = dueCount(cfg);
   $('#d-start').disabled = !pool.length;
   $('#d-due').textContent = !pool.length ? 'No spots match. Turn on more spots, stacks or open sizes.' : (UI.dMode === 'quick' ? (due ? `${due} review${due > 1 ? 's' : ''} due in this deck` : 'No reviews due. New edge hands only.') : `${pool.length} spots in this deck`);
-  let html = `<div class="heat" style="grid-template-columns:max-content repeat(${BANDS.length},minmax(48px,1fr))"><span></span>${BANDS.map(b => `<span class="hl" style="text-align:center">${b.label}</span>`).join('')}`;
+  let html = `<div class="heat" style="grid-template-columns:minmax(64px,30%) repeat(${BANDS.length},minmax(0,1fr))"><span></span>${BANDS.map(b => `<span class="hl hb">${b.label.replace('–', '–<wbr>')}</span>`).join('')}`;
   for (const f of fams) {
     html += `<span class="hl">${famLabel(f, UI.dTag)}</span>`;
     for (const b of BANDS) {

@@ -217,7 +217,8 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .heat{display:grid;gap:3px;font-size:11.5px;overflow-x:auto}
 .heat .hc{border-radius:4px;padding:6px 2px;text-align:center;font:600 11px/1.1 var(--f-mono);color:#fff;cursor:pointer;border:0}
 .heat .hc.none{background:var(--surface-2);color:var(--faint);cursor:default}
-.heat .hl{font-weight:600;color:var(--muted);align-self:center;white-space:nowrap}
+.heat .hl{font-weight:600;color:var(--muted);align-self:center;line-height:1.15;min-width:0}
+.heat .hb{font-size:10.5px;text-align:center}
 
 .q{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:900px){.q{grid-template-columns:minmax(0,1fr)}}
@@ -1399,7 +1400,7 @@ function renderDrillHome() {
   // heat map
   const famsAll = FAM_ORDER.filter(f => SPOTS.some(s => s.tag === UI.dTag && s.fam === f));
   const bandsAll = BANDS.filter(b => SPOTS.some(s => s.tag === UI.dTag && bandOf(s.dp) === b.id));
-  let html = `<div class="heat" style="grid-template-columns:max-content repeat(${bandsAll.length},minmax(44px,1fr))"><span></span>${bandsAll.map(b => `<span class="hl" style="text-align:center">${b.label}</span>`).join('')}`;
+  let html = `<div class="heat" style="grid-template-columns:minmax(64px,30%) repeat(${bandsAll.length},minmax(0,1fr))"><span></span>${bandsAll.map(b => `<span class="hl hb">${b.label.replace('–', '–<wbr>')}</span>`).join('')}`;
   for (const f of famsAll) {
     html += `<span class="hl">${FAM[f].label}</span>`;
     for (const b of bandsAll) {
