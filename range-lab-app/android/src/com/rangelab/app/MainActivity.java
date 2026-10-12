@@ -6,10 +6,15 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Insets;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.os.VibratorManager;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -35,6 +40,7 @@ public class MainActivity extends Activity {
         s.setTextZoom(100);
         s.setSupportZoom(false);
         s.setMediaPlaybackRequiresUserGesture(true);
+        web.addJavascriptInterface(new NativeBridge(), "RangeLabNative");
 
         web.setWebViewClient(new WebViewClient() {
             @Override
@@ -62,6 +68,17 @@ public class MainActivity extends Activity {
 
         if (state != null) web.restoreState(state);
         if (web.getUrl() == null) web.loadUrl(HOME);
+    }
+
+    /** Called from the drill pages: a short double buzz when you miss a question. */
+    private class NativeBridge {
+        @JavascriptInterface
+        public void vibrate() {
+            Vibrator v = Build.VERSION.SDK_INT >= 31
+                    ? ((VibratorManager) getSystemService(VIBRATOR_MANAGER_SERVICE)).getDefaultVibrator()
+                    : (Vibrator) getSystemService(VIBRATOR_SERVICE);
+            if (v != null && v.hasVibrator()) v.vibrate(VibrationEffect.createWaveform(new long[] {0, 45, 70, 45}, -1));
+        }
     }
 
     private boolean isDark() {

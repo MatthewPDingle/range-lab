@@ -297,6 +297,17 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .bact .acts button.prev{outline:3px solid var(--fg);outline-offset:2px}
 .brow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .binfo{display:flex;flex-direction:column;gap:14px}
+.verdict .evloss{margin-left:auto;font:800 22px/1 var(--f-mono)}
+.evt{display:flex;flex-direction:column;gap:3px}
+.evr{display:grid;grid-template-columns:12px minmax(0,1fr) auto 3.4em 5em;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:13.5px}
+.evr.evh{padding:0 8px 2px;font:600 10.5px/1 var(--f-body);color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
+.evr b{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evr em{font:700 10px/1 var(--f-body);font-style:normal;text-transform:uppercase;letter-spacing:.04em;padding:3px 6px;border-radius:999px;background:var(--fg);color:var(--bg)}
+.evr .fq,.evr .ev{text-align:right;font:500 12px var(--f-mono);color:var(--muted)}
+.evr .ev{font-weight:700;font-size:13px;color:var(--fg)}
+.evr.top .ev{color:var(--good)}
+.evr.you{background:var(--surface-2)}
+.evr.you:not(.top) .ev{color:var(--bad)}
 </style>
 
 <header class="top">
@@ -1501,19 +1512,34 @@ function nextQuick() {
   bindRunHeader();
   $('#q-acts').onclick = e => { const b = e.target.closest('button'); if (b) answerQuick(+b.dataset.a); };
 }
+/* a short double buzz on a miss: the Android app's native hook, else the web Vibration API */
+function buzz() { try { if (window.RangeLabNative) window.RangeLabNative.vibrate(); else if (navigator.vibrate) navigator.vibrate([45, 70, 45]); } catch (e) { } }
+function verdictHTML(sp, g, a, gr) {
+  const L = sp.loss[a][g];
+  return `<div class="verdict ${gr}">${gr === 'good' ? '✓ Correct' : gr === 'ok' ? '≈ Fine, it mixes' : '✗ Mistake'}${L >= 0.01 ? `<span class="evloss">−${L.toFixed(2)}bb</span>` : ''}</div>`;
+}
+/* every action for this hand, best first: how often the solver takes it and the EV it gives up against the best move */
+function evTableHTML(sp, g, a) {
+  const rows = [...sp.order].sort((x, y) => sp.loss[x][g] - sp.loss[y][g]).map(x => {
+    const L = sp.loss[x][g], top = L < 0.005;
+    return `<div class="evr${x === a ? ' you' : ''}${top ? ' top' : ''}"><i class="sw" style="background:${kColor(sp.A[x].kind)}"></i><b>${actLabel(sp, x)}</b><span>${x === a ? '<em>you</em>' : ''}</span><span class="fq">${pct(sp.f[x][g])}</span><span class="ev">${top ? 'best' : '−' + L.toFixed(2) + 'bb'}</span></div>`;
+  }).join('');
+  return `<div class="evt"><div class="evr evh"><span></span><span>Action</span><span></span><span style="text-align:right">Solver</span><span style="text-align:right">EV</span></div>${rows}</div>`;
+}
 function answerQuick(a) {
   const R = RUN, c = R.cur; if (!c || c.answered) return;
   c.answered = true; clearInterval(qTimer);
   const ms = performance.now() - c.t0; R.times.push(Math.min(ms, 20000));
   const sp = c.spot, g = c.g, gr = grade(sp, g, a);
   R[gr]++; R.n++;
-  if (gr === 'bad') { R.streak = 0; R.requeue.push({ spot: sp, g, at: R.n + 3 + rnd(4) }); R.misses.push({ spot: sp, g, note: `you ${actLabel(sp, a, true).toLowerCase()}, solver ${actLabel(sp, sp.prim[g], true).toLowerCase()} ${pct(sp.f[sp.prim[g]][g])}` }); }
+  if (gr === 'bad') { buzz(); R.streak = 0; R.requeue.push({ spot: sp, g, at: R.n + 3 + rnd(4) }); R.misses.push({ spot: sp, g, note: `you ${actLabel(sp, a, true).toLowerCase()}, solver ${actLabel(sp, sp.prim[g], true).toLowerCase()} ${pct(sp.f[sp.prim[g]][g])}, −${sp.loss[a][g].toFixed(2)}bb` }); }
   else { R.streak++; R.best = Math.max(R.best, R.streak); }
   recordAnswer(sp, g, gr, sp.loss[a][g]);
   $$('#q-acts button').forEach(b => { b.disabled = true; if (+b.dataset.a === a) b.classList.add('chosen'); });
   const freq = sp.order.filter(x => sp.f[x][g] >= 0.01).map(x => `${actLabel(sp, x, true)} ${pct(sp.f[x][g])}`).join(' · ');
   const L = sp.loss[a][g], best = sp.prim[g], fam = LADDERS.find(l => l.cells.includes(g));
-  $('#q-fb').innerHTML = `<div class="verdict ${gr}">${gr === 'good' ? '✓ Correct' : gr === 'ok' ? '≈ Fine, it mixes' : '✗ Mistake'}<small>${freq}${L < 0.01 ? '' : ` · costs ${L.toFixed(2)}bb`}</small></div>
+  $('#q-fb').innerHTML = `${verdictHTML(sp, g, a, gr)}
+    <div class="panel"><p class="eyebrow">${GRID[g]}: EV of each action</p>${evTableHTML(sp, g, a)}</div>
     <div class="panel"><p class="eyebrow">${GRID[g]} in this spot</p><div class="grid mini" id="q-grid" style="max-width:440px"></div>
     <p class="small" style="margin:10px 0 0"><b>${fam ? fam.short : ''} that play here:</b> <span class="mono">${fam ? ladderNotation(fam, x => playsAt(sp, x)).join(', ') || 'none' : ''}</span></p>
 </div>

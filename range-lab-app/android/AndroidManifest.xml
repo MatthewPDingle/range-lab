@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.rangelab.app"
-    android:versionCode="12"
-    android:versionName="1.7.3">
+    android:versionCode="13"
+    android:versionName="1.7.4">
 
     <uses-sdk android:minSdkVersion="30" android:targetSdkVersion="35" />
 
     <!-- Only used to fetch the display fonts when online; all range data ships inside the app. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- A short buzz when a drill answer is wrong. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:label="Range Lab"
