@@ -330,6 +330,8 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .evr.top .ev{color:var(--good)}
 .evr.you{background:var(--surface-2)}
 .evr.you:not(.top) .ev{color:var(--bad)}
+.ltop{margin:10px 0 0;font-size:15px}
+.ltop b{color:var(--accent);font-size:17px}
 </style>
 
 <header class="top">
@@ -412,6 +414,7 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         <div class="lens-pick">
           <label class="eyebrow" for="l-input">Hand</label>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="l-input" value="KJo" autocomplete="off" spellcheck="false"><div class="cards" id="l-cards"></div></div>
+          <p class="ltop" id="l-top"></p>
         </div>
       </div>
       <div><p class="eyebrow">Pick a hand</p><div class="grid mini" id="l-grid" style="width:min(340px,86vw)"></div></div>
@@ -1199,6 +1202,10 @@ function bSit(sp) { return sp.sit; }
 function bFamLabel(sp) { return FAM[sp.fam].label; }
 
 /* ---------- HAND LENS ---------- */
+/* how strong each starting hand is: [top % of the 1,326 combos ranked at or above it, % equity against a random hand].
+   Ranked by all-in equity vs a random hand (2,000,000 simulated deals per hand). */
+const HAND_TOP = {'AA':[0.5,85.2],'KK':[0.9,82.4],'QQ':[1.4,79.9],'JJ':[1.8,77.5],'TT':[2.3,75.0],'99':[2.7,72.1],'88':[3.2,69.2],'AKs':[3.5,67.1],'AQs':[3.8,66.2],'77':[4.2,66.2],'AJs':[4.5,65.4],'AKo':[5.4,65.3],'ATs':[5.7,64.6],'AQo':[6.6,64.3],'AJo':[7.5,63.6],'KQs':[7.8,63.4],'66':[8.3,63.2],'A9s':[8.6,62.8],'ATo':[9.5,62.7],'KJs':[9.8,62.5],'A8s':[10.1,62.0],'KTs':[10.4,61.8],'KQo':[11.3,61.4],'A7s':[11.6,61.0],'A9o':[12.5,60.8],'KJo':[13.4,60.5],'55':[13.9,60.3],'QJs':[14.2,60.2],'K9s':[14.5,60.0],'A5s':[14.8,60.0],'A6s':[15.1,59.9],'A8o':[16.0,59.9],'KTo':[16.9,59.7],'QTs':[17.2,59.4],'A4s':[17.5,59.0],'A7o':[18.4,58.9],'K8s':[18.7,58.4],'A3s':[19.0,58.2],'QJo':[19.9,58.1],'K9o':[20.8,57.8],'A6o':[21.7,57.7],'Q9s':[22.0,57.7],'A5o':[22.9,57.7],'K7s':[23.2,57.5],'JTs':[23.5,57.5],'A2s':[23.8,57.4],'QTo':[24.7,57.3],'44':[25.2,57.1],'A4o':[26.1,56.7],'K6s':[26.4,56.6],'K8o':[27.3,56.0],'Q8s':[27.6,55.9],'A3o':[28.5,55.9],'K5s':[28.8,55.8],'J9s':[29.1,55.6],'Q9o':[30.0,55.3],'JTo':[30.9,55.3],'K7o':[31.8,55.2],'A2o':[32.7,55.0],'K4s':[33.0,54.9],'Q7s':[33.3,54.3],'K6o':[34.2,54.2],'K3s':[34.5,54.1],'J8s':[34.8,54.1],'T9s':[35.1,54.0],'33':[35.6,53.7],'Q6s':[35.9,53.6],'Q8o':[36.8,53.5],'K5o':[37.7,53.4],'J9o':[38.6,53.3],'K2s':[38.9,53.2],'Q5s':[39.2,52.8],'T8s':[39.5,52.3],'K4o':[40.4,52.3],'J7s':[40.7,52.3],'Q4s':[41.0,51.8],'Q7o':[41.9,51.8],'J8o':[42.8,51.5],'T9o':[43.7,51.5],'K3o':[44.6,51.4],'Q6o':[45.6,51.0],'Q3s':[45.9,50.9],'98s':[46.2,50.8],'T7s':[46.5,50.6],'J6s':[46.8,50.6],'K2o':[47.7,50.5],'22':[48.1,50.3],'Q2s':[48.4,50.2],'Q5o':[49.3,50.2],'J5s':[49.6,50.0],'T8o':[50.5,49.7],'J7o':[51.4,49.7],'97s':[51.7,49.2],'Q4o':[52.6,49.1],'J4s':[52.9,49.1],'T6s':[53.2,48.9],'J3s':[53.5,48.2],'Q3o':[54.4,48.2],'98o':[55.4,48.1],'T7o':[56.3,47.9],'87s':[56.6,47.9],'J6o':[57.5,47.8],'96s':[57.8,47.5],'J2s':[58.1,47.4],'Q2o':[59.0,47.3],'T5s':[59.3,47.2],'J5o':[60.2,47.2],'T4s':[60.5,46.5],'97o':[61.4,46.3],'86s':[61.7,46.2],'J4o':[62.6,46.2],'T6o':[63.5,46.2],'95s':[63.8,45.7],'T3s':[64.1,45.7],'76s':[64.4,45.4],'J3o':[65.3,45.2],'87o':[66.2,45.1],'T2s':[66.5,44.8],'85s':[66.8,44.6],'96o':[67.7,44.4],'J2o':[68.6,44.3],'T5o':[69.5,44.3],'94s':[69.8,43.9],'75s':[70.1,43.7],'T4o':[71.0,43.5],'93s':[71.3,43.3],'86o':[72.2,43.2],'65s':[72.5,43.2],'84s':[72.9,42.7],'T3o':[73.8,42.6],'95o':[74.7,42.6],'92s':[75.0,42.5],'76o':[75.9,42.3],'74s':[76.2,41.9],'T2o':[77.1,41.7],'54s':[77.4,41.4],'85o':[78.3,41.4],'64s':[78.6,41.3],'83s':[78.9,40.8],'94o':[79.8,40.7],'75o':[80.7,40.5],'82s':[81.0,40.3],'93o':[81.9,40.0],'73s':[82.2,40.0],'65o':[83.1,39.9],'53s':[83.4,39.8],'63s':[83.7,39.6],'84o':[84.6,39.5],'92o':[85.5,39.1],'43s':[85.8,38.7],'74o':[86.7,38.6],'54o':[87.6,38.2],'72s':[87.9,38.1],'64o':[88.8,38.0],'52s':[89.1,37.9],'62s':[89.4,37.7],'83o':[90.3,37.5],'42s':[90.6,36.8],'82o':[91.6,36.8],'73o':[92.5,36.6],'53o':[93.4,36.3],'32s':[93.7,36.1],'63o':[94.6,36.0],'43o':[95.5,35.2],'72o':[96.4,34.5],'52o':[97.3,34.3],'62o':[98.2,34.0],'42o':[99.1,33.2],'32o':[100.0,32.2]};
+const handTopHTML = g => { const t = HAND_TOP[GRID[g]]; return t ? `<b>Top ${t[0].toFixed(1)}%</b> of starting hands <span class="muted">· ${t[1].toFixed(1)}% vs a random hand</span>` : ''; };
 const lGrid = new Grid($('#l-grid'), { onCell: g => { UI.lens = g; saveUI(); renderLens(); } });
 function cardsHTML(g, combo) {
   const n = GRID[g]; const c = combo || defaultCombo(n);
@@ -1250,6 +1257,7 @@ function renderLens() {
   const g = UI.lens;
   $('#l-input').value = GRID[g];
   $('#l-cards').innerHTML = cardsHTML(g);
+  $('#l-top').innerHTML = handTopHTML(g);
   lGrid.show(null, { bg: g2 => g2 === g ? 'var(--accent)' : (COMBOS[g2] === 6 ? 'var(--k-F)' : COMBOS[g2] === 4 ? 'color-mix(in srgb, var(--k-F) 70%, var(--empty))' : 'color-mix(in srgb, var(--k-F) 45%, var(--empty))') });
   $('#l-legend').innerHTML = legendHTML(['J', 'B', 'R', 'C', 'X', 'F']) + '<span><i class="sw" style="background:repeating-linear-gradient(45deg,var(--empty) 0 2px,transparent 2px 4px)"></i>Folded earlier</span>';
   const blocks = [
