@@ -117,9 +117,6 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .ticks{position:relative;height:16px;font:500 10px/1 var(--f-mono);color:var(--faint)}
 .ticks span{position:absolute;transform:translateX(-50%);top:3px;white-space:nowrap}
 .ticks span.on{color:var(--fg);font-weight:600}
-.clock-btns{display:flex;gap:6px}
-.icon-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);cursor:pointer;font-size:16px;display:grid;place-items:center}
-.icon-btn.play{width:auto;border-radius:999px;padding:0 12px;font-size:13px;font-weight:600;gap:6px;display:flex;align-items:center}
 .scn{font-size:15px;margin:0}
 .scn b{font-weight:700}
 .seats{display:flex;gap:4px;flex-wrap:wrap}
@@ -142,6 +139,11 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .cell.chg-in{box-shadow:inset 0 0 0 2.5px #3fe07a}
 .cell.chg-out{box-shadow:inset 0 0 0 2.5px #ff5d5d;opacity:.9}
 .cell.chg-sw{box-shadow:inset 0 0 0 2.5px #ffc04a}
+/* a selected hand keeps its ring on top of a change ring */
+.cell.sel.chg-in{box-shadow:inset 0 0 0 2.5px #3fe07a,inset 0 0 0 4.5px var(--fg)}
+.cell.sel.chg-out{box-shadow:inset 0 0 0 2.5px #ff5d5d,inset 0 0 0 4.5px var(--fg)}
+.cell.sel.chg-sw{box-shadow:inset 0 0 0 2.5px #ffc04a,inset 0 0 0 4.5px var(--fg)}
+#b-sub:empty{display:none}
 .cell.dimmed{opacity:.28}
 .cell.pop{animation:pop .42s ease-out}
 @keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.18);z-index:3}100%{transform:scale(1)}}
@@ -164,10 +166,6 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .mix-row{display:grid;grid-template-columns:96px 1fr 46px;align-items:center;gap:8px;font-size:13px}
 .bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
 .bar i{display:block;height:100%}
-.words{display:flex;flex-direction:column;gap:9px;font-size:13px}
-.words p{margin:0}
-.words b{display:inline-flex;align-items:center;gap:6px;margin-right:4px}
-.words .r{font-family:var(--f-mono);font-size:12.5px}
 .edges{display:grid;grid-template-columns:max-content 1fr;gap:5px 10px;font-size:12.5px;align-items:center}
 .edges .lad{display:flex;gap:2px;align-items:center;flex-wrap:wrap}
 .edges .lad i{width:10px;height:14px;border-radius:2px;display:inline-block}
@@ -430,7 +428,7 @@ html.app .ctl .frow .seg button{min-height:30px}
     <div class="lens-head">
       <div style="flex:1;min-width:260px">
         <h2 class="title">Hand lens</h2>
-        <p class="lede">One hand, every seat matchup. Rows are your seat, columns are the other player's seat, and each square shows what the hand does there. Letters: R = raise (3-bet, 4-bet), C = call, L = limp, AI = all-in, blank = fold. Striped squares mean you'd have folded the hand earlier.</p>
+        <p class="lede">One hand, every seat matchup. Rows are your seat, columns are the other player's seat, and each square shows what the hand does there. Letters: R = raise (3-bet, 4-bet), C = call, L = limp, X = check, AI = all-in, blank = fold. Striped squares mean you'd have folded the hand earlier.</p>
         <div class="lens-pick">
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="l-input" value="KTs" autocomplete="off" spellcheck="false" aria-label="Hand"><div class="cards" id="l-cards"></div></div>
           <p class="ltop" id="l-top"></p>
@@ -505,23 +503,23 @@ html.app .ctl .frow .seg button{min-height:30px}
     <div class="method">
       <div class="panel">
         <ol class="principles">
-          <li><div><h4>One seat map instead of seven charts</h4><p>Charts → First in → Seat map shows, for every hand, the earliest seat it opens from. KTo reads “HJ”: open it from the HJ and later. One chart covers the whole opening game. The same view for BB defence tells you the earliest opener you defend each hand against.</p></div></li>
+          <li><div><h4>Learn where each hand starts</h4><p>For every hand, learn the earliest seat it opens from: KTo starts in the HJ, so open it from the HJ and later. That one fact per hand covers the whole opening game. The Seats drill asks exactly this, and Hand lens shows one hand across every seat. BB defence works the same way: the earliest opener you defend each hand against.</p></div></li>
           <li><div><h4>Learn the edges</h4><p>Each range is a few ladders (pairs, Ax suited, Kx offsuit…). Memorise where each ladder stops in each seat. The Edges panel and the Edges drill train exactly that.</p></div></li>
           <li><div><h4>File it under the hand</h4><p>At the table you see your cards first. Hand lens shows one hand across every opener-versus-you matchup, so “A5s” becomes a small picture: open everywhere, 3-bet against late opens, call against early ones.</p></div></li>
-          <li><div><h4>Learn the adjustments as changes</h4><p>Start at 100bb with 3x opens. Then turn on Changes and slide to deeper stacks, bigger opens, or the straddle game. Only the ringed hands are new. That's how to handle live 5x opens without learning new charts from scratch.</p></div></li>
+          <li><div><h4>Learn the adjustments as changes</h4><p>Start at 100bb with 3x opens. Then move the open-size and stack sliders one notch at a time, or switch to the straddle game, and watch which hands change. That's how to handle live 5x opens without learning new charts from scratch.</p></div></li>
           <li><div><h4>Recall beats re-reading</h4><p>Paint ranges from memory and drill fast decisions on edge hands. Misses come back on a spaced schedule.</p></div></li>
         </ol>
       </div>
       <div class="panel">
         <p class="eyebrow">Suggested order</p>
         <table class="plan">
-          <tr><th>Step 1</th><td>First in at 100bb: the Seat map, then Paint each seat. Quick-fire “First in”.</td></tr>
+          <tr><th>Step 1</th><td>First in at 100bb: the Seats drill, then Paint each seat. Quick-fire “First in”.</td></tr>
           <tr><th>Step 2</th><td>Big blind against each opener: call or 3-bet. Seats drill on BB defence.</td></tr>
           <tr><th>Step 3</th><td>Facing an open from other seats: flat or 3-bet. Hand lens on suited aces and broadway hands.</td></tr>
           <tr><th>Step 4</th><td>Facing a 3-bet: in position and out of position. Edges drill.</td></tr>
           <tr><th>Step 5</th><td>4-bets and squeezes.</td></tr>
-          <tr><th>Step 6</th><td>Adjustments: deeper stacks, bigger opens, the straddle game. Changes mode on each.</td></tr>
-          <tr><th>Then</th><td>Mixed Quick-fire daily, red squares in “Where you leak” first.</td></tr>
+          <tr><th>Step 6</th><td>Adjustments: deeper stacks, bigger opens, the straddle game. Step the sliders one notch at a time.</td></tr>
+          <tr><th>Then</th><td>Mixed Quick-fire daily, the reddest squares in “Where you leak” first.</td></tr>
         </table>
         <p class="note" style="margin-top:14px">Every session: 10 minutes of Paint, Edges or Seats, then 15 minutes of Quick-fire. Reviews that are due come first automatically.</p>
         <p class="eyebrow" style="margin-top:18px">After a session</p>
@@ -671,7 +669,6 @@ function sitLabel(s) {
     default: return p[s.hero] + ' vs ' + p[s.vs];
   }
 }
-function spotDesc(spot) { return GAMES[spot.tag].desc + ' · ' + spot.dp + 'bb · ' + spot.open + ' opens'; }
 function simulate(spot) {
   const acts = spot.hist ? spot.hist.split('-') : [];
   let queue = [...Array(spot.n).keys()];
@@ -738,7 +735,6 @@ function ladderRuns(l, test) {
   return runs;
 }
 function ladderNotation(l, test) { const n = l.cells.map(g => GRID[g]); return ladderRuns(l, test).map(([a, b]) => a === 0 ? n[b] + '+' : a === b ? n[a] : n[a] + '–' + n[b]); }
-function rangeText(test) { const parts = []; for (const l of LADDERS) parts.push(...ladderNotation(l, test)); return parts.join(', '); }
 function topRunEdge(l, test) { let k = 0; while (k < l.cells.length && test(l.cells[k])) k++; return k - 1; }
 
 /* ---------- painting ---------- */
@@ -794,7 +790,6 @@ function mixOf(spot) {
   for (let g = 0; g < 169; g++) { const w = COMBOS[g] * (spot.reach ? spot.reach[g] : 1); W += w; for (let a = 0; a < spot.A.length; a++) tot[a] += w * spot.f[a][g]; }
   return [...tot].map(x => W ? x / W : 0);
 }
-function mixHTML(spot) { const m = mixOf(spot); return `<div class="mix">${spot.order.map(a => `<div class="mix-row"><span>${actLabel(spot, a)}</span><div class="bar"><i style="width:${(m[a] * 100).toFixed(1)}%;background:${kColor(spot.A[a].kind)}"></i></div><span class="mono">${pct(m[a])}</span></div>`).join('')}</div>`; }
 function kindLabel(spot, k) { return k === 'F' ? 'Fold' : k === 'X' ? 'Check' : k === 'C' ? (spot.fam === 'RFI' ? 'Limp' : 'Call') : k === 'J' ? 'All-in' : k === 'B' ? raiseWord(spot) + ' (big)' : raiseWord(spot); }
 /* one row per action type that exists anywhere in the series, so rows never appear or vanish while sliding */
 function stableMixHTML(spot, spots) {
@@ -808,15 +803,6 @@ function stableMixHTML(spot, spots) {
     const size = (k === 'R' || k === 'B') && idx.length ? ` <small class="muted">${fmtBB(spot.A[idx[0]].size)}</small>` : '';
     return `<div class="mix-row"><span style="${idx.length ? '' : 'color:var(--faint)'}">${kindLabel(spot, k)}${size}</span><div class="bar"><i style="width:${(v * 100).toFixed(1)}%;background:${kColor(k)}"></i></div><span class="mono">${pct(v)}</span></div>`;
   }).join('')}</div>`;
-}
-function wordsHTML(spot) {
-  const m = mixOf(spot);
-  const rows = spot.order.filter(a => a !== spot.defIdx && m[a] >= 0.005).map(a => `<p><b><i class="sw" style="background:${kColor(spot.A[a].kind)}"></i>${actLabel(spot, a, true)}</b><span class="r">${rangeText(g => inRange(spot, g) && spot.prim[g] === a && spot.f[a][g] >= 0.35) || '—'}</span></p>`);
-  const mixed = [];
-  for (let g = 0; g < 169; g++) { if (!inRange(spot, g)) continue; const mx = Math.max(...spot.order.map(a => spot.f[a][g])); if (mx < 0.72) mixed.push(g); }
-  mixed.sort((a, b) => COMBOS[b] - COMBOS[a]);
-  const mixTxt = mixed.slice(0, 16).map(g => `<span title="${spot.order.map(a => actLabel(spot, a, true) + ' ' + pct(spot.f[a][g])).join(', ')}">${GRID[g]}</span>`).join('');
-  return `<div class="words">${rows.join('')}</div>` + (mixed.length ? `<p class="eyebrow" style="margin:12px 0 4px">Mixed (play either way)</p><div class="taglist">${mixTxt}${mixed.length > 16 ? ` <span>+${mixed.length - 16}</span>` : ''}</div>` : '');
 }
 function edgesHTML(spot) {
   return `<div class="edges">${EDGE_LADDERS.map(l => `<span class="nm">${l.short}</span><div class="lad">${l.cells.map(g => `<i title="${GRID[g]}" style="background:${inRange(spot, g) ? cellBg(spot, g) : 'var(--empty)'}"></i>`).join('')}<span>${ladderNotation(l, g => playsAt(spot, g)).join(', ') || 'none'}</span></div>`).join('')}</div>`;
@@ -842,6 +828,11 @@ const UI = Object.assign({ tab: 'charts', cTag: 'reg', cFam: 'RFI', cSit: null, 
 const saveUI = () => store('cash-ui', UI);
 
 /* ---------- tabs ---------- */
+/* jumping to a tab from a link (Open in Hand lens, Open chart…) starts it at the top; in the app the panes scroll, not the window */
+function resetScroll() {
+  const m = document.querySelector('main'); if (m) m.scrollTop = 0;
+  $$('.view:not([hidden]) .stage, .view:not([hidden]) .rail, .view:not([hidden]) .ctl, .lens-head, .lens-blocks, .drill-home > .panel, .method > .panel').forEach(el => { el.scrollTop = 0; });
+}
 function setTab(t) {
   UI.tab = t; saveUI();
   for (const b of $$('#tabs button')) b.setAttribute('aria-selected', b.dataset.tab === t);
@@ -851,7 +842,7 @@ function setTab(t) {
   if (t === 'lens') renderLens();
   if (t === 'cmp') renderCmp();
   if (t === 'drill' && !RUN) renderDrillHome();
-  window.scrollTo({ top: 0 });
+  window.scrollTo({ top: 0 }); resetScroll();
 }
 $('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.tab); });
 const tagSeg = (el, cur) => { el.innerHTML = ['reg', 'str'].filter(t => SPOTS.some(s => s.tag === t)).map(t => `<button data-t="${t}" aria-pressed="${t === cur}">${GAMES[t].label}</button>`).join(''); };
@@ -868,15 +859,22 @@ function cCurSit() {
 const cFixed = () => UI.cAxis === 'open' ? UI.cDp : UI.cOpen;
 const curVal = () => UI.cAxis === 'open' ? UI.cOpen : UI.cDp;
 function cSeries() {
-  const sit = cCurSit();
+  const sit = cCurSit(), pref = UI.cPref && UI.cPref.tag === UI.cTag ? UI.cPref : null;
+  if (pref) { UI.cOpen = pref.open; UI.cDp = pref.dp; }
   if (!UI.cOpen || !OPENS[UI.cTag].includes(UI.cOpen)) UI.cOpen = GAMES[UI.cTag].defOpen;
   if (!DEPTHS[UI.cTag].includes(UI.cDp)) UI.cDp = 100;
+  if (!pref) UI.cPref = { tag: UI.cTag, open: UI.cOpen, dp: UI.cDp };  // remember the choice before any snapping
   let ser = series(sit, UI.cAxis, cFixed());
   if (!ser.length) {
-    // this spot doesn't come at the current open size and stack (BB vs limp has fewer): move to the nearest pair it has
+    // this spot doesn't come at the open size and stack you picked (BB vs limp has fewer): show the nearest pair it has
     const gap = s => Math.abs(Math.log(s.dp / UI.cDp)) + Math.abs(Math.log(openVal(s.open) / openVal(UI.cOpen)));
     const near = sit.spots.reduce((b, s) => gap(s) < gap(b) ? s : b, sit.spots[0]);
     UI.cOpen = near.open; UI.cDp = near.dp; ser = series(sit, UI.cAxis, cFixed());
+  }
+  if (ser.length < 2) {
+    // only one step this way (one open size at this stack, say): slide through the other axis instead
+    const other = UI.cAxis === 'open' ? 'depth' : 'open', alt = series(sit, other, other === 'open' ? UI.cDp : UI.cOpen);
+    if (alt.length > 1) { UI.cAxis = other; ser = alt; }
   }
   return ser;
 }
@@ -1018,7 +1016,8 @@ function mixChartSVG(ser, cur, axis) {
   }
   const ci = ser.indexOf(cur);
   const grid = [0.25, 0.5].map(v => `<line x1="${pad.l}" x2="${W - pad.r}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--line)" stroke-dasharray="2 3"/><text x="${pad.l - 4}" y="${ys(v) + 3}" text-anchor="end" font-size="9" fill="var(--faint)" font-family="var(--f-mono)">${v * 100}%</text>`).join('');
-  const lab = ser.map((sp, i) => `<text x="${xs(i)}" y="${H - 3}" text-anchor="middle" font-size="9" fill="${i === ci ? 'var(--fg)' : 'var(--faint)'}" font-family="var(--f-mono)">${axisVal(sp, axis)}</text>`).join('');
+  const shown = new Set(); for (const i of [ci, 0, n - 1, ...ser.keys()]) if (i >= 0 && [...shown].every(j => Math.abs(xs(j) - xs(i)) >= 24)) shown.add(i);
+  const lab = ser.map((sp, i) => !shown.has(i) ? '' : `<text x="${xs(i)}" y="${H - 3}" text-anchor="middle" font-size="9" fill="${i === ci ? 'var(--fg)' : 'var(--faint)'}" font-family="var(--f-mono)">${axisVal(sp, axis)}</text>`).join('');
   const hit = ser.map((sp, i) => `<rect x="${xs(i) - (W / n) / 2}" y="0" width="${W / n}" height="${H}" fill="transparent" data-v="${axisVal(sp, axis)}" style="cursor:pointer"></rect>`).join('');
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Share of hands played by action at each step" style="display:block;margin-top:12px">${grid}${paths.join('')}<line x1="${xs(ci)}" x2="${xs(ci)}" y1="${pad.t - 2}" y2="${H - pad.b}" stroke="var(--fg)" stroke-width="1.5"/>${lab}${hit}</svg><p class="small muted" style="margin:4px 0 0">Share of hands played, by action, at every ${axis === 'open' ? 'open size' : 'stack'}. Tap to jump.</p>`;
 }
@@ -1030,13 +1029,14 @@ function renderChartsRail() {
   $('#c-rail').innerHTML = parts.join('');
 }
 $('#c-rail').addEventListener('click', e => { const r = e.target.closest('rect[data-v]'); if (r) { stopPlay(); setStep(cSeries().findIndex(s => String(axisVal(s, UI.cAxis)) === r.dataset.v)); return; } const b = e.target.closest('[data-lens]'); if (b) { UI.lens = +b.dataset.lens; const sp = cCurSpot(); UI.lTag = sp.tag; UI.lDp = sp.dp; UI.lOpen = sp.open; setTab('lens'); } });
-$('#c-tag').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cTag = b.dataset.t; UI.cSit = null; UI.cOpen = GAMES[UI.cTag].defOpen; UI.cDp = 100; stopPlay(); renderCharts(); });
+$('#c-tag').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cTag = b.dataset.t; UI.cSit = null; UI.cOpen = GAMES[UI.cTag].defOpen; UI.cDp = 100; UI.cPref = null; stopPlay(); renderCharts(); });
 $('#c-fam').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cFam = b.dataset.f; UI.cSit = null; stopPlay(); renderCharts(); });
 $('#c-sit').addEventListener('click', e => { const b = e.target.closest('.seatpick button'); if (!b || b.disabled) return; const s = pickSeat(cSits(), cCurSit(), b.closest('.seatpick').dataset.k, +b.dataset.v); if (!s) return; UI.cSit = s.key; stopPlay(); renderCharts(); });
 function setStep(i, animate = true) {
   const ser = cSeries(); i = Math.max(0, Math.min(ser.length - 1, i));
   const v = axisVal(ser[i], UI.cAxis); if (String(v) === String(curVal())) return false;
-  if (UI.cAxis === 'open') UI.cOpen = v; else UI.cDp = v; saveUI();
+  if (UI.cAxis === 'open') UI.cOpen = v; else UI.cDp = v;
+  UI.cPref = { tag: UI.cTag, open: UI.cOpen, dp: UI.cDp }; saveUI();
   renderChartsGrid(animate); renderChartsRail();
   $$('#c-film figure').forEach(f => f.classList.toggle('on', f.dataset.v === String(v)));
   filmFollow();
@@ -1204,7 +1204,7 @@ $('#b-back').addEventListener('click', () => {
 });
 $('#b-reset').addEventListener('click', () => { UI.bSeq = []; bPrev = null; renderBuildSpot(); });
 $('#b-info').addEventListener('click', e => {
-  const l = e.target.closest('[data-lens]'); if (l) { UI.lens = +l.dataset.lens; setTab('lens'); return; }
+  const l = e.target.closest('[data-lens]'); if (l) { const S = bState(); UI.lens = +l.dataset.lens; if (S.spot) { UI.lTag = S.spot.tag; UI.lDp = S.spot.dp; UI.lOpen = S.spot.open; } setTab('lens'); return; }
   if (e.target.closest('#b-open')) { const S = bState(); if (S.spot) openInCharts(S.spot, bSel); }
 });
 function bGames() { return ['reg', 'str'].filter(t => SPOTS.some(s => s.tag === t)).map(t => ({ key: t, label: GAMES[t].label })); }
@@ -1279,8 +1279,8 @@ function renderLens() {
   const ser = (axis) => seats.slice(0, n - 1).map(c => { const s = SITS.get([tag, 'RFI', c, -1, -1].join('|')); return s ? { c, ser: series(s, axis, axis === 'open' ? dp : open) } : null; }).filter(Boolean);
   for (const axis of ['depth', 'open']) {
     const rows = ser(axis); if (!rows.length || rows[0].ser.length < 2) continue;
-    const labels = rows[0].ser.map(s => axis === 'open' ? s.open : s.dp);
-    blocks.push(`<section class="panel"><h3>First in by ${axis === 'open' ? 'open size' : 'stack'}</h3><p class="small muted" style="margin:0 0 8px">${axis === 'open' ? dp + 'bb deep.' : open + ' opens.'}</p><div class="mx"><div class="mx-row hd"><div class="mx-lab"></div><div class="mx-strip" style="--cols:${labels.length}">${labels.map(l => `<span class="d">${l}</span>`).join('')}</div></div>${rows.map(r => `<div class="mx-row"><div class="mx-lab"><b>${p[r.c]}</b></div><div class="mx-strip" style="--cols:${labels.length}">${r.ser.map(sp => inRange(sp, g) ? `<i class="c" style="background:${cellBg(sp, g)}" title="${esc(sp.order.map(a => actLabel(sp, a, true) + ' ' + pct(sp.f[a][g])).join(', '))}"></i>` : '<i class="c na"></i>').join('')}</div></div>`).join('')}</div></section>`);
+    const labels = rows[0].ser.map(s => axis === 'open' ? s.open : s.dp).reverse(), every = Math.ceil(labels.length / 8);  // biggest first, like the sliders
+    blocks.push(`<section class="panel"><h3>First in by ${axis === 'open' ? 'open size' : 'stack'}</h3><p class="small muted" style="margin:0 0 8px">${axis === 'open' ? dp + 'bb deep.' : open + ' opens.'}</p><div class="mx"><div class="mx-row hd"><div class="mx-lab"></div><div class="mx-strip" style="--cols:${labels.length}">${labels.map((l, i) => `<span class="d">${i % every ? '' : l}</span>`).join('')}</div></div>${rows.map(r => `<div class="mx-row"><div class="mx-lab"><b>${p[r.c]}</b></div><div class="mx-strip" style="--cols:${labels.length}">${[...r.ser].reverse().map(sp => inRange(sp, g) ? `<i class="c" style="background:${cellBg(sp, g)}" title="${esc(sp.order.map(a => actLabel(sp, a, true) + ' ' + pct(sp.f[a][g])).join(', '))}"></i>` : '<i class="c na"></i>').join('')}</div></div>`).join('')}</div></section>`);
   }
   $('#l-blocks').innerHTML = blocks.join('');
   saveUI();
@@ -1346,7 +1346,7 @@ function renderCmp() {
 $('#s-fam').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.sFam = b.dataset.f; UI.sSit = null; renderCmp(); saveUI(); });
 $('#s-sit').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.sSit = b.dataset.s; renderCmp(); saveUI(); });
 $('#s-dp').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.sDp = +b.dataset.d; renderCmp(); saveUI(); });
-$('#s-rail').addEventListener('click', e => { const b = e.target.closest('[data-lens]'); if (b) { UI.lens = +b.dataset.lens; setTab('lens'); } });
+$('#s-rail').addEventListener('click', e => { const b = e.target.closest('[data-lens]'); if (!b) return; const pair = cmpPair(UI.sFam, UI.sSit, UI.sDp), sp = /Straddle/.test((b.closest('.panel') || {}).textContent || '') ? pair[1] : pair[0]; UI.lens = +b.dataset.lens; if (sp) { UI.lTag = sp.tag; UI.lDp = sp.dp; UI.lOpen = sp.open; } setTab('lens'); });
 
 /* ---------- progress ---------- */
 const Progress = {
@@ -1433,27 +1433,28 @@ function renderDrillHome() {
   for (const b of $$('#d-modes .mode')) b.setAttribute('aria-pressed', b.dataset.mode === UI.dMode);
   tagSeg($('#d-tag'), UI.dTag);
   const fams = FAM_ORDER.filter(f => SPOTS.some(s => s.tag === UI.dTag && s.fam === f));
-  $('#d-fams').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${UI.dFams.includes(f)}">${famLabel(f, UI.dTag)}</button>`).join('');
-  $('#d-bands').innerHTML = BANDS.map(b => `<button data-b="${b.id}" aria-pressed="${UI.dBands.includes(b.id)}">${b.label}</button>`).join('');
+  $('#d-fams').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${UI.dFams.includes(f)}" title="${famLabel(f, UI.dTag)}">${heatLabel(f, UI.dTag)}</button>`).join('');
+  const bands = BANDS.filter(b => SPOTS.some(s => s.tag === UI.dTag && bandOf(s.dp) === b.id));  // Regular has no 50–90 or 400+
+  $('#d-bands').innerHTML = bands.map(b => `<button data-b="${b.id}" aria-pressed="${UI.dBands.includes(b.id)}">${b.label}</button>`).join('');
   $('#d-opens').innerHTML = OPENS[UI.dTag].map(o => `<button data-o="${o}" aria-pressed="${UI.dOpens.includes(o)}">${o}</button>`).join('');
   for (const b of $$('#d-len button')) b.setAttribute('aria-pressed', +b.dataset.len === UI.dLen);
   const same = (a, c) => a.length === c.length && a.every(x => c.includes(x));
-  $('#d-presets').innerHTML = PRESETS.map((p, i) => `<button data-p="${i}" aria-pressed="${same(p.fams.filter(f => fams.includes(f)), UI.dFams) && same(p.bands, UI.dBands)}">${p.label}</button>`).join('');
+  $('#d-presets').innerHTML = PRESETS.map((p, i) => !SPOTS.some(s => s.tag === UI.dTag && p.fams.includes(s.fam) && p.bands.includes(bandOf(s.dp))) ? '' : `<button data-p="${i}" aria-pressed="${same(p.fams.filter(f => fams.includes(f)), UI.dFams) && same(p.bands, UI.dBands)}">${p.label}</button>`).join('');
   $('#d-len-wrap').hidden = UI.dMode === 'paint';
   const cfg = drillCfg(), pool = poolFor(cfg), due = dueCount(cfg);
   $('#d-start').disabled = !pool.length;
   $('#d-due').textContent = !pool.length ? 'No spots match. Turn on more spots, stacks or open sizes.' : (UI.dMode === 'quick' ? (due ? `${due} review${due > 1 ? 's' : ''} due in this deck` : 'No reviews due. New edge hands only.') : `${pool.length} spots in this deck`);
   const heatBy = UI.dHeatBy === 'ev' ? 'ev' : 'score';
   for (const b of $$('#d-heat-by button')) b.setAttribute('aria-pressed', b.dataset.by === heatBy);
-  const sc = heatScale(fams.flatMap(f => BANDS.map(b => Progress.data.stats[f + '|' + b.id + '|' + UI.dTag])).filter(st => st && st[0]), heatBy);
+  const sc = heatScale(fams.flatMap(f => bands.map(b => Progress.data.stats[f + '|' + b.id + '|' + UI.dTag])).filter(st => st && st[0]), heatBy);
   $('#d-heat-key').innerHTML = heatKeyHTML(sc);
   $('#d-heat-note').textContent = heatBy === 'ev'
     ? 'Big number: EV lost per hand, in bb (.12 = 0.12bb). Small: hands answered. Colour: green loses nothing, red is your worst square. Tap a square to drill it.'
     : 'Big number: your Quick-fire score (%). Small: hands answered. Colour: green is a perfect score, red is your worst square. Tap a square to drill it.';
-  let html = `<div class="heat" style="grid-template-columns:minmax(64px,30%) repeat(${BANDS.length},minmax(0,1fr));grid-template-rows:18px;grid-auto-rows:36px"><span></span>${BANDS.map(b => `<span class="hl hb" title="${bandTitle(b)}">${b.short || b.label}</span>`).join('')}`;
+  let html = `<div class="heat" style="grid-template-columns:minmax(64px,30%) repeat(${bands.length},minmax(0,1fr));grid-template-rows:18px;grid-auto-rows:36px"><span></span>${bands.map(b => `<span class="hl hb" title="${bandTitle(b)}">${b.short || b.label}</span>`).join('')}`;
   for (const f of fams) {
     html += `<span class="hl" title="${famLabel(f, UI.dTag)}">${heatLabel(f, UI.dTag)}</span>`;
-    for (const b of BANDS) {
+    for (const b of bands) {
       const has = SPOTS.some(s => s.tag === UI.dTag && s.fam === f && bandOf(s.dp) === b.id);
       const st = Progress.data.stats[f + '|' + b.id + '|' + UI.dTag];
       if (!has) { html += '<span class="hc none">·</span>'; continue; }
@@ -1473,7 +1474,7 @@ $('#d-opens').addEventListener('click', e => { const b = e.target.closest('butto
 $('#d-len').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.dLen = +b.dataset.len; renderDrillHome(); });
 $('#d-presets').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const p = PRESETS[+b.dataset.p]; UI.dFams = [...p.fams]; UI.dBands = [...p.bands]; UI.dOpens = [GAMES[UI.dTag].defOpen]; renderDrillHome(); });
 $('#d-heat-by').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.dHeatBy = b.dataset.by; renderDrillHome(); });
-$('#d-heat').addEventListener('click', e => { const b = e.target.closest('[data-hf]'); if (!b) return; UI.dFams = [b.dataset.hf]; UI.dBands = [b.dataset.hb]; UI.dMode = 'quick'; renderDrillHome(); startDrill(); });
+$('#d-heat').addEventListener('click', e => { const b = e.target.closest('[data-hf]'); if (!b) return; const f = b.dataset.hf, hb = b.dataset.hb; UI.dFams = [f]; UI.dBands = [hb]; UI.dOpens = OPENS[UI.dTag].filter(o => SPOTS.some(s => s.tag === UI.dTag && s.fam === f && s.open === o && bandOf(s.dp) === hb)); UI.dMode = 'quick'; renderDrillHome(); startDrill(); });
 $('#d-start').addEventListener('click', () => startDrill());
 
 function neighbours(spot) {
@@ -1531,7 +1532,7 @@ function endDrill() {
   $$('[data-mi]').forEach(b => b.onclick = () => { const m = R.misses[+b.dataset.mi]; openInCharts(m.spot, m.g); });
   R.ended = true;
 }
-function openInCharts(spot, g) { UI.cTag = spot.tag; UI.cFam = spot.fam; UI.cSit = spot.sitKey; UI.cAxis = 'depth'; UI.cDp = spot.dp; UI.cOpen = spot.open; cSel = g; RUN = null; setTab('charts'); }
+function openInCharts(spot, g) { UI.cTag = spot.tag; UI.cFam = spot.fam; UI.cSit = spot.sitKey; UI.cAxis = 'depth'; UI.cDp = spot.dp; UI.cOpen = spot.open; UI.cPref = { tag: spot.tag, open: spot.open, dp: spot.dp }; cSel = g; RUN = null; setTab('charts'); }
 function nextItem() { const R = RUN; if (!R) return; if (R.n >= R.total) return endDrill(); ({ quick: nextQuick, paint: nextPaint, edges: nextEdge, seats: nextSeat })[R.cfg.mode](); }
 function runHeader() {
   const R = RUN, done = R.good + R.ok + R.bad, acc = done ? Math.round(100 * (R.good + 0.5 * R.ok) / done) + '%' : '–';
@@ -1595,7 +1596,6 @@ function tableSetup(spot) {
 }
 function tableCaption(spot) { return `<b>${GAMES[spot.tag].label}</b><br>${spot.open} opens`; }
 function boardTop(spot) { return `<div class="board-top"><div class="stack-big">${spot.dp}<small>bb</small></div><div class="board-meta"><b>${esc(P(spot.tag)[spot.hero])}</b><span>${GAMES[spot.tag].label} · ${spot.open} opens</span></div></div><div class="seats">${seatsHTML(spot)}</div><p class="scn">${narrate(spot)}</p>`; }
-let qTimer = null;
 function nextQuick() {
   const R = RUN; let item = null;
   const ri = R.requeue.findIndex(x => x.at <= R.n); if (ri >= 0) item = R.requeue.splice(ri, 1)[0];
@@ -1626,7 +1626,7 @@ function evTableHTML(sp, g, a) {
 }
 function answerQuick(a) {
   const R = RUN, c = R.cur; if (!c || c.answered) return;
-  c.answered = true; clearInterval(qTimer);
+  c.answered = true;
   const ms = performance.now() - c.t0; R.times.push(Math.min(ms, 20000));
   const sp = c.spot, g = c.g, gr = grade(sp, g, a);
   R[gr]++; R.n++;
@@ -1672,7 +1672,7 @@ function renderPaint() {
   $('#p-br').onclick = e => { const b = e.target.closest('button'); if (!b) return; c.brush = +b.dataset.a; $$('#p-br button').forEach(x => x.setAttribute('aria-pressed', +x.dataset.a === c.brush)); };
   let painting = false, val = null; const el = $('#p-grid');
   const apply = target => { const cell = target && target.closest && target.closest('.cell'); if (!cell || c.answered) return; const g = +cell.dataset.g; if (!inRange(sp, g)) return; if (val === null) val = c.painted[g] === c.brush ? sp.defIdx : c.brush; if (c.painted[g] !== val) { c.painted[g] = val; cell.style.background = paintBg(g); } };
-  el.addEventListener('pointerdown', e => { if (c.answered) return; painting = true; val = null; el.setPointerCapture(e.pointerId); apply(e.target); e.preventDefault(); });
+  el.addEventListener('pointerdown', e => { if (c.answered) return; painting = true; val = null; try { el.setPointerCapture(e.pointerId); } catch (err) { } apply(e.target); e.preventDefault(); });
   el.addEventListener('pointermove', e => { if (painting) apply(document.elementFromPoint(e.clientX, e.clientY)); });
   const stop = () => { painting = false; val = null; }; el.addEventListener('pointerup', stop); el.addEventListener('pointercancel', stop);
   $('#p-clear').onclick = () => { c.painted.fill(sp.defIdx); redraw(); };
@@ -1773,6 +1773,10 @@ const mq = window.matchMedia('(prefers-color-scheme: dark)');
 const recolor = () => { readColors(); if (UI.tab === 'charts') renderFilm(); };
 if (mq.addEventListener) mq.addEventListener('change', recolor);
 new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+/* the phone folds and unfolds without reloading: re-lay out the visible tab so slider ticks and thumbnails fit the new width */
+let resizeT = null;
+window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (UI.tab === 'charts') renderCharts(); else if (UI.tab === 'build') renderBuild(); else if (UI.tab === 'icm' && typeof renderIcm === 'function') renderIcm(); }, 200); });
 Progress.init();
 if (!SPOTS.length) document.querySelector('main').innerHTML = '<div class="empty-state">Range data didn’t load. Make sure cash-data.js sits next to this page.</div>';
 else setTab(['charts', 'build', 'lens', 'cmp', 'drill', 'method'].includes(UI.tab) ? UI.tab : 'charts');

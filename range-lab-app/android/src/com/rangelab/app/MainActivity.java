@@ -111,7 +111,9 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (web.canGoBack()) web.goBack();
+        // On the home page Back leaves the app; the ‹ link back to home adds history, which would otherwise loop
+        String url = web.getUrl();
+        if (url != null && !url.equals(HOME) && web.canGoBack()) web.goBack();
         else super.onBackPressed();
     }
 

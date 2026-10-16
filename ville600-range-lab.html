@@ -70,7 +70,7 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chips button,.seg button{border:1px solid var(--line);background:var(--surface);padding:6px 11px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;color:var(--fg)}
 .chips button[aria-pressed="true"]{background:var(--fg);border-color:var(--fg);color:var(--bg)}
-.chips button:disabled{opacity:.4;cursor:default}
+.chips button:disabled,.seg button:disabled{opacity:.4;cursor:default}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--surface);gap:2px;flex-wrap:wrap}
 .seg button{border:0;padding:5px 12px}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
@@ -115,9 +115,6 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .ticks{position:relative;height:16px;font:500 10px/1 var(--f-mono);color:var(--faint)}
 .ticks span{position:absolute;transform:translateX(-50%);top:3px;white-space:nowrap}
 .ticks span.on{color:var(--fg);font-weight:600}
-.clock-btns{display:flex;gap:6px}
-.icon-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);cursor:pointer;font-size:16px;display:grid;place-items:center}
-.icon-btn.play{width:auto;border-radius:999px;padding:0 12px;font-size:13px;font-weight:600;gap:6px;display:flex;align-items:center}
 
 /* scenario + seats */
 .scn{font-size:15px;margin:0}
@@ -144,6 +141,11 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .cell.chg-in{box-shadow:inset 0 0 0 2.5px #3fe07a}
 .cell.chg-out{box-shadow:inset 0 0 0 2.5px #ff5d5d;opacity:.9}
 .cell.chg-sw{box-shadow:inset 0 0 0 2.5px #ffc04a}
+/* a selected hand keeps its ring on top of a change ring */
+.cell.sel.chg-in{box-shadow:inset 0 0 0 2.5px #3fe07a,inset 0 0 0 4.5px var(--fg)}
+.cell.sel.chg-out{box-shadow:inset 0 0 0 2.5px #ff5d5d,inset 0 0 0 4.5px var(--fg)}
+.cell.sel.chg-sw{box-shadow:inset 0 0 0 2.5px #ffc04a,inset 0 0 0 4.5px var(--fg)}
+#b-sub:empty{display:none}
 .cell.dimmed{opacity:.28}
 .cell.pop{animation:pop .42s ease-out}
 @keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.18);z-index:3}100%{transform:scale(1)}}
@@ -169,10 +171,6 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .mix-row{display:grid;grid-template-columns:86px 1fr 46px;align-items:center;gap:8px;font-size:13px}
 .bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
 .bar i{display:block;height:100%}
-.words{display:flex;flex-direction:column;gap:9px;font-size:13px}
-.words p{margin:0}
-.words b{display:inline-flex;align-items:center;gap:6px;margin-right:4px}
-.words .r{font-family:var(--f-mono);font-size:12.5px}
 .edges{display:grid;grid-template-columns:max-content 1fr;gap:5px 10px;font-size:12.5px;align-items:center}
 .edges .lad{display:flex;gap:2px;align-items:center;flex-wrap:wrap}
 .edges .lad i{width:10px;height:14px;border-radius:2px;display:inline-block}
@@ -343,6 +341,21 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* Charts filters: compact rows with the label on the left; seats as one strip per role */
 .ctl.tight{gap:10px}
 html.app .charts>.ctl.tight{gap:8px}
+#c-scn,#i-scn{line-height:1.25;min-height:2.5em}
+.clock.dual{flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:8px;padding:4px 12px}
+.drow{display:flex;align-items:center;gap:12px}
+.dval{flex:none;width:100px;display:flex;align-items:baseline;gap:4px}
+.dval b{font:800 28px/1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--fg)}
+.dval small{font:600 12px/1 var(--f-display);color:var(--muted);text-transform:uppercase;white-space:nowrap}
+.drow.on .dval b{color:var(--accent)}
+.dmid{flex:1;min-width:0;display:flex;flex-direction:column}
+.dmid .ticks{height:14px}
+.dmid input[type=range]{width:100%;accent-color:var(--accent);margin:0;direction:rtl}
+.seg.grow{display:flex;flex:1;flex-wrap:nowrap;gap:2px;padding:2px;border-radius:10px}
+.seg.grow button{flex:1 1 auto;min-width:0;min-height:30px;padding:0 5px;border-radius:8px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.app .seg.grow button{min-height:30px}
+/* unfolded app: ICM stages fits its left pane without scrolling */
+@media (min-width:600px){html.app #v-icm .stage{gap:6px;padding-bottom:2px}html.app #v-icm .film{scrollbar-width:none;padding-bottom:0}html.app #v-icm .film figure{padding:1px 3px;gap:2px}}
 .frow{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;align-items:center}
 .frow[hidden]{display:none}
 .flab{font:700 10.5px/1.15 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -448,22 +461,21 @@ html.app .ctl .frow .seg button{min-height:30px}
   <!-- ICM -->
   <section class="view" id="v-icm" hidden>
     <h2 class="title">ICM stages</h2>
-    <p class="lede">The same spot, same stacks, five points in a 1,000-player event. Learn Chip EV first, then learn ICM as a tax: the ringed hands are the ones that change from Chip EV. These solutions are 8-handed.</p>
+    <p class="lede">The same spot and stacks at five points of a 1,000-player event, 8-handed. Learn Chip EV first, then ICM as a tax: ringed hands are the ones that change from Chip EV.</p>
     <div class="charts">
-      <aside class="ctl">
-        <div><p class="eyebrow">Spot</p><div class="chips" id="i-fam"></div></div>
-        <div><p class="eyebrow" id="i-sit-lab">Your seat</p><div class="chips" id="i-sit"></div></div>
-        <div><p class="eyebrow">Stack</p><div class="chips" id="i-dp"></div></div>
+      <aside class="ctl tight">
+        <div class="chips tight" id="i-fam" role="group" aria-label="Spot"></div>
+        <div class="srows" id="i-sit"></div>
       </aside>
       <div class="stage">
-        <div class="clock">
-          <div class="clock-num" style="min-width:auto"><b id="i-dpb">20</b><small>bb</small></div>
-          <div class="clock-mid"><p class="eyebrow" style="margin:0">Tournament stage</p><div class="seg" id="i-phase"></div></div>
-        </div>
         <p class="scn" id="i-scn"></p>
         <div class="grid" id="i-grid"></div>
         <div class="legend" id="i-legend"></div>
         <div><p class="eyebrow">All stages</p><div class="film" id="i-film"></div></div>
+        <div class="clock dual">
+          <div class="drow"><div class="seg grow" id="i-phase" role="group" aria-label="Tournament stage"></div></div>
+          <div class="drow on"><div class="dval"><b id="i-dpb">20</b><small>bb</small></div><div class="dmid"><input type="range" id="i-dp-sl" min="0" max="9" step="1" aria-label="Stack depth"><div class="ticks" id="i-dp-ticks"></div></div></div>
+        </div>
       </div>
       <aside class="rail" id="i-rail"></aside>
     </div>
@@ -512,8 +524,8 @@ html.app .ctl .frow .seg button{min-height:30px}
       <div class="panel">
         <ol class="principles" style="padding:0;margin:0">
           <li><div><h4>Learn the shape, not 169 cells</h4><p>Every range is a handful of ladders: pairs, Ax suited, Kx offsuit and so on. In each ladder you only need the edge, the weakest hand still in. The Edges panel on the Charts tab gives you those edges for every spot.</p></div></li>
-          <li><div><h4>Learn in steps, not whole charts</h4><p>Pick a stack you know well, say 25bb. Turn on Changes and step the stack clock down one notch at a time. Only the ringed hands need learning at each step, and they change in a predictable order: small pairs and weak suited aces turn into shoves first, offsuit broadways last.</p></div></li>
-          <li><div><h4>File it under the hand</h4><p>At the table you look at K9o before you think about charts. Hand lens turns each hand into rules like “CO: ≤13 Jam · 14–40 Raise”. Learn those rules for the 25–30 hands that keep changing; the rest are always played or always folded.</p></div></li>
+          <li><div><h4>Learn in steps, not whole charts</h4><p>Pick a stack you know well, say 25bb, and step the stack slider down one notch at a time, watching the thumbnails. Only a few hands change at each step, and in a predictable order: small pairs and weak suited aces turn into shoves first, offsuit broadways last.</p></div></li>
+          <li><div><h4>File it under the hand</h4><p>At the table you look at K9o before you think about charts. Hand lens shows one hand in every seat at every stack, and the Numbers drill turns it into rules like “CO: ≤13 Jam · 14–40 Raise”. Learn those rules for the 25–30 hands that keep changing; the rest are always played or always folded.</p></div></li>
           <li><div><h4>Recall it, don't re-read it</h4><p>Re-reading charts mostly trains recognition. Painting a range from memory and deciding fast on edge hands trains recall, which is what you use at the table. Drill picks edge hands and brings your misses back on a spaced schedule.</p></div></li>
           <li><div><h4>Add ICM last</h4><p>Lock in the Chip EV ranges first, then learn ICM as the hands that drop out. The bubble and final table mostly cut calls and marginal opens; shoving ranges change less than calling ranges.</p></div></li>
         </ol>
@@ -521,19 +533,19 @@ html.app .ctl .frow .seg button{min-height:30px}
       <div class="panel">
         <p class="eyebrow">Two-week plan</p>
         <table class="plan">
-          <tr><th>Day 1–2</th><td>First in, 25–40bb. Charts with Changes on, then Paint three seats a day and Quick-fire “First in”, 21–50bb.</td></tr>
+          <tr><th>Day 1–2</th><td>First in, 25–40bb. Charts, stepping the stack slider down from 40bb, then Paint three seats a day and Quick-fire “First in”, 21–50bb.</td></tr>
           <tr><th>Deep stacks</th><td>For the opening levels: the “Deep stacks · 50–100” preset in Quick-fire, then Paint CO and BTN opens and BB vs BTN at 60 and 100bb.</td></tr>
-          <tr><th>Day 3–4</th><td>First in, 10–20bb, where raising and shoving split. Thresholds view seat by seat, then the Numbers drill.</td></tr>
+          <tr><th>Day 3–4</th><td>First in, 10–20bb, where raising and shoving split. Hand lens on the hands that switch, then the Numbers drill.</td></tr>
           <tr><th>Day 5</th><td>Under 10bb: shove or fold. Quick-fire 5–9bb plus Numbers.</td></tr>
           <tr><th>Day 6–7</th><td>Big blind: defending against opens and calling shoves. Paint BB vs BTN, CO and SB at 12, 18 and 25bb.</td></tr>
           <tr><th>Day 8–9</th><td>Facing opens: reshoves and 3-bets, then calling off when you open and get shoved on. Edges drill.</td></tr>
           <tr><th>Day 10–11</th><td>ICM stages tab, then Quick-fire with the ICM solutions.</td></tr>
-          <tr><th>Day 12–13</th><td>Only the red squares in your “Where you leak” map.</td></tr>
+          <tr><th>Day 12–13</th><td>Only the reddest squares in your “Where you leak” map.</td></tr>
           <tr><th>Day 14</th><td>Light review. Hand lens on the hands you miss most. No new material.</td></tr>
         </table>
         <p class="note" style="margin-top:14px">Every day: 10 minutes of Paint or Edges, then 15 minutes of Quick-fire. Reviews that are due come first automatically.</p>
         <p class="eyebrow" style="margin-top:18px">At the table</p>
-        <p style="margin:0 0 8px">Run the same order every hand: <b>stack in bb → seat → hand → that hand's number.</b> Drill in that order too: read the stack clock before the cards.</p>
+        <p style="margin:0 0 8px">Run the same order every hand: <b>stack in bb → seat → hand → that hand's number.</b> Drill in that order too: read the stack before the cards.</p>
         <p class="eyebrow" style="margin-top:18px">After a session</p>
         <p style="margin:0 0 8px">Rebuild the hands you weren't sure about in Spot builder: tap the seats in the order they acted, then slide the stack. Do it on a break or after play; live events don't allow checking charts during a hand.</p>
         <p class="eyebrow" style="margin-top:18px">About the numbers</p>
@@ -741,11 +753,6 @@ function ladderNotation(l, test) {
   const n = l.cells.map(g => GRID[g]);
   return ladderRuns(l, test).map(([a, b]) => a === 0 ? n[b] + '+' : a === b ? n[a] : n[a] + '–' + n[b]);
 }
-function rangeText(test) {
-  const parts = [];
-  for (const l of LADDERS) parts.push(...ladderNotation(l, test));
-  return parts.join(', ');
-}
 function topRunEdge(l, test) { // index of the weakest hand in the run that starts at the top of the ladder; -1 = none
   let k = 0; while (k < l.cells.length && test(l.cells[k])) k++;
   return k - 1;
@@ -818,10 +825,6 @@ function mixOf(spot) {
   for (let g = 0; g < 169; g++) { const w = COMBOS[g] * (spot.reach ? spot.reach[g] : 1); W += w; for (let a = 0; a < spot.A.length; a++) tot[a] += w * spot.f[a][g]; }
   return [...tot].map(x => W ? x / W : 0);
 }
-function mixHTML(spot) {
-  const m = mixOf(spot);
-  return `<div class="mix">${spot.order.map(a => `<div class="mix-row"><span>${actLabel(spot, a)}</span><div class="bar"><i style="width:${(m[a] * 100).toFixed(1)}%;background:${kColor(spot.A[a].kind)}"></i></div><span class="mono">${pct(m[a])}</span></div>`).join('')}</div>`;
-}
 function kindLabel(spot, k) { return k === 'F' ? 'Fold' : k === 'X' ? 'Check' : k === 'C' ? (spot.fam === 'RFI' ? 'Limp' : 'Call') : k === 'J' ? 'All-in' : k === 'B' ? raiseWord(spot) + ' (big)' : raiseWord(spot); }
 /* one row per action type that exists anywhere in the series, so rows never appear or vanish while sliding */
 function stableMixHTML(spot, spots) {
@@ -835,22 +838,6 @@ function stableMixHTML(spot, spots) {
     const size = (k === 'R' || k === 'B') && idx.length ? ` <small class="muted">${fmtBB(spot.A[idx[0]].size)}</small>` : '';
     return `<div class="mix-row"><span style="${idx.length ? '' : 'color:var(--faint)'}">${kindLabel(spot, k)}${size}</span><div class="bar"><i style="width:${(v * 100).toFixed(1)}%;background:${kColor(k)}"></i></div><span class="mono">${pct(v)}</span></div>`;
   }).join('')}</div>`;
-}
-function wordsHTML(spot) {
-  const m = mixOf(spot);
-  const rows = spot.order.filter(a => a !== spot.defIdx && m[a] >= 0.005).map(a => {
-    const txt = rangeText(g => inRange(spot, g) && spot.prim[g] === a && spot.f[a][g] >= 0.35);
-    return `<p><b><i class="sw" style="background:${kColor(spot.A[a].kind)}"></i>${actLabel(spot, a, true)}</b><span class="r">${txt || '—'}</span></p>`;
-  });
-  const mixed = [];
-  for (let g = 0; g < 169; g++) {
-    if (!inRange(spot, g)) continue;
-    const fs = spot.order.map(a => spot.f[a][g]); const mx = Math.max(...fs);
-    if (mx < 0.72) mixed.push(g);
-  }
-  mixed.sort((a, b) => COMBOS[b] - COMBOS[a]);
-  const mixTxt = mixed.slice(0, 16).map(g => `<span title="${spot.order.map(a => actLabel(spot, a, true) + ' ' + pct(spot.f[a][g])).join(', ')}">${GRID[g]}</span>`).join('');
-  return `<div class="words">${rows.join('')}</div>` + (mixed.length ? `<p class="eyebrow" style="margin:12px 0 4px">Mixed (play either way)</p><div class="taglist">${mixTxt}${mixed.length > 16 ? ` <span>+${mixed.length - 16}</span>` : ''}</div>` : '');
 }
 function edgesHTML(spot) {
   const rows = EDGE_LADDERS.map(l => {
@@ -873,6 +860,11 @@ const saveUI = () => store('v600-ui', UI);
 if (['RFI', 'BBvsOpen', 'BBvsLimp', 'BBvsJam', 'vsOpen', 'vsJam', 'OpenVsJam', 'OpenVs3bet', 'Squeeze'].every(f => UI.dFams.includes(f)) && !UI.dFams.includes('ThreebetVs4bet')) UI.dFams = [...UI.dFams, 'ThreebetVs4bet', 'ThreebetVsJam'];
 
 /* ---------- tabs ---------- */
+/* jumping to a tab from a link (Open in Hand lens, Open chart…) starts it at the top; in the app the panes scroll, not the window */
+function resetScroll() {
+  const m = document.querySelector('main'); if (m) m.scrollTop = 0;
+  $$('.view:not([hidden]) .stage, .view:not([hidden]) .rail, .view:not([hidden]) .ctl, .lens-head, .lens-blocks, .drill-home > .panel, .method > .panel').forEach(el => { el.scrollTop = 0; });
+}
 function setTab(t) {
   UI.tab = t; saveUI();
   for (const b of $$('#tabs button')) b.setAttribute('aria-selected', b.dataset.tab === t);
@@ -882,7 +874,7 @@ function setTab(t) {
   if (t === 'lens') renderLens();
   if (t === 'icm') renderIcm();
   if (t === 'drill' && !RUN) renderDrillHome();
-  window.scrollTo({ top: 0 });
+  window.scrollTo({ top: 0 }); resetScroll();
 }
 $('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.tab); });
 
@@ -897,7 +889,9 @@ function cCurSit() {
 }
 function cCurSpot() {
   const s = cCurSit(); if (!s) return null;
-  let best = s.spots[0]; for (const sp of s.spots) if (Math.abs(sp.dp - UI.cDp) < Math.abs(best.dp - UI.cDp)) best = sp;
+  if (UI.cDpPref == null) UI.cDpPref = UI.cDp;
+  const want = UI.cDpPref;  // the stack you picked; a spot without it shows the nearest one
+  let best = s.spots[0]; for (const sp of s.spots) if (Math.abs(sp.dp - want) < Math.abs(best.dp - want)) best = sp;
   return best;
 }
 function ticksHTML(depths, cur, width) {
@@ -985,8 +979,8 @@ function rankChartSVG(sp, spots) {
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Combos you continue with that hold each rank, by action" style="display:block;margin-top:14px">${lines}${cols}</svg><p class="small muted" style="margin:4px 0 0">Combos you continue with (of all 1,326) that hold each rank, by action. Any one rank is in 198 combos.</p>`;
 }
 /* keep the highlighted thumbnail in view; scrolls the strip only, never the page */
-function filmFollow() {
-  const el = $('#c-film'), on = $('figure.on', el); if (!on || !el.clientWidth) return;
+function filmFollow(el = $('#c-film')) {
+  const on = $('figure.on', el); if (!on || !el.clientWidth) return;
   const d = on.getBoundingClientRect().left - el.getBoundingClientRect().left - (el.clientWidth - on.offsetWidth) / 2;
   if (Math.abs(d) > 1) el.scrollLeft += d;
 }
@@ -1060,7 +1054,7 @@ $('#c-sit').addEventListener('click', e => { const b = e.target.closest('.seatpi
 function setDepthIdx(i, animate = true) {
   const sit = cCurSit(); i = Math.max(0, Math.min(sit.depths.length - 1, i));
   if (sit.depths[i] === UI.cDp) return false;
-  UI.cDp = sit.depths[i]; saveUI();
+  UI.cDp = UI.cDpPref = sit.depths[i]; saveUI();
   $('#c-slider').value = i;
   $$('#c-ticks span').forEach(s => s.classList.toggle('on', +s.textContent === UI.cDp));
   renderChartsGrid(animate); renderChartsRail();
@@ -1273,7 +1267,7 @@ function ruleText(sit, g) {
 /* every depth to 25bb, then a lighter sample so deep stacks don't crowd the strip */
 const LENS_DEEP = new Set([32, 36, 40, 46, 50, 56, 60, 80, 100]);
 function lensMatrix(title, sits, g, note) {
-  const depths = [...new Set(sits.flatMap(s => s.depths))].filter(d => d <= 25 || LENS_DEEP.has(d)).sort((a, b) => a - b);
+  const depths = [...new Set(sits.flatMap(s => s.depths))].filter(d => d <= 25 || LENS_DEEP.has(d)).sort((a, b) => b - a);  // deepest first, like the sliders
   const keyD = new Set([5, 10, 15, 20, 25, 40, 100]);
   const shown = (d, i) => keyD.has(d) || i === 0 || i === depths.length - 1;
   const head = `<div class="mx-row hd"><div class="mx-lab"></div><div class="mx-strip" style="--cols:${depths.length}">${depths.map((d, i) => `<span class="d ${keyD.has(d) ? 'k' : ''}">${shown(d, i) ? d : ''}</span>`).join('')}</div></div>`;
@@ -1324,28 +1318,30 @@ $('#l-input').addEventListener('change', e => {
 });
 
 /* ---------- ICM ---------- */
-const iGrid = new Grid($('#i-grid'), { onCell: g => { iSel = g; renderIcmRail(); } });
-let iSel = null;
+const iGrid = new Grid($('#i-grid'), { onCell: g => { iSel = g; renderIcm(); } });
+let iSel = null, iDps = [], iPh = 0;
 function icmSits(fam) { return sitsWhere(s => s.tag === 'icm8' && s.fam === fam && s.gt === PHASES[0].gt); }
 function icmSpot(base, phase, dp) { return SPOT_AT.get(['icm8', PHASES[phase].gt, base.fam, base.hero, base.vs, base.caller, dp].join('|')); }
 function renderIcm() {
   const fams = FAM_ORDER.filter(f => icmSits(f).length);
   if (!fams.length) { $('#v-icm').innerHTML = '<div class="empty-state">No ICM data loaded.</div>'; return; }
   if (!fams.includes(UI.iFam)) UI.iFam = fams[0];
-  $('#i-fam').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${f === UI.iFam}">${FAM[f].label}</button>`).join('');
+  $('#i-fam').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${f === UI.iFam}" title="${FAM[f].label}">${HEAT_LABEL[f] || FAM[f].label}</button>`).join('');
   const sits = icmSits(UI.iFam);
   let base = sits.find(s => s.key === UI.iSit) || sits.find(s => s.fam !== 'RFI' || s.hero === 4) || sits[0]; UI.iSit = base.key;
-  $('#i-sit-lab').textContent = FAM[UI.iFam].seat;
-  $('#i-sit').innerHTML = sits.map(s => `<button data-s="${s.key}" aria-pressed="${s.key === base.key}">${sitLabel(s)}</button>`).join('');
-  const dps = [...new Set(PHASES.flatMap((p, i) => { const sk = ['icm8', p.gt, base.fam, base.hero, base.vs, base.caller].join('|'); const s = SITS.get(sk); return s ? s.depths : []; }))].sort((a, b) => b - a);
-  if (!dps.includes(UI.iDp)) UI.iDp = dps.includes(20) ? 20 : dps[0];
-  $('#i-dp').innerHTML = dps.map(d => `<button data-d="${d}" aria-pressed="${d === UI.iDp}">${d}bb</button>`).join('');
+  $('#i-sit').innerHTML = seatRowsHTML(sits, base, POS[base.n]);
+  const dps = iDps = [...new Set(PHASES.flatMap((p, i) => { const sk = ['icm8', p.gt, base.fam, base.hero, base.vs, base.caller].join('|'); const s = SITS.get(sk); return s ? s.depths : []; }))].sort((a, b) => a - b);
+  if (UI.iDpPref == null) UI.iDpPref = UI.iDp || 20;
+  const wantD = UI.iDpPref;  // the stack you picked; a spot without it shows the nearest one
+  UI.iDp = dps.reduce((b, d) => Math.abs(d - wantD) < Math.abs(b - wantD) ? d : b, dps[0]);
+  const sl = $('#i-dp-sl'); sl.max = Math.max(0, dps.length - 1); sl.value = dps.indexOf(UI.iDp); sl.disabled = dps.length < 2;
+  $('#i-dp-ticks').innerHTML = ticksHTML(dps, UI.iDp, $('#i-dp-ticks').clientWidth || 260);
   const avail = PHASES.map((p, i) => !!icmSpot(base, i, UI.iDp));
-  if (!avail[UI.iPhase]) UI.iPhase = avail.lastIndexOf(true);
-  $('#i-phase').innerHTML = PHASES.map((p, i) => `<button data-p="${i}" aria-pressed="${i === UI.iPhase}" ${avail[i] ? '' : 'disabled'}>${p.short}</button>`).join('');
+  iPh = avail[UI.iPhase] ? UI.iPhase : avail.lastIndexOf(true);  // shown stage; your pick stays for the next stack
+  $('#i-phase').innerHTML = PHASES.map((p, i) => `<button data-p="${i}" aria-pressed="${i === iPh}" ${avail[i] ? '' : 'disabled'}>${p.short}</button>`).join('');
   $('#i-dpb').textContent = UI.iDp;
-  const sp = icmSpot(base, UI.iPhase, UI.iDp), ref = icmSpot(base, 0, UI.iDp);
-  $('#i-scn').innerHTML = narrate(sp) + ` <span class="muted">· ${PHASES[UI.iPhase].label}</span>`;
+  const sp = icmSpot(base, iPh, UI.iDp), ref = icmSpot(base, 0, UI.iDp);
+  $('#i-scn').innerHTML = narrate(sp) + ` <span class="muted">· ${PHASES[iPh].label}</span>`;
   const kinds = [...new Set(sp.order.map(a => sp.A[a].kind))];
   $('#i-legend').innerHTML = legendHTML(kinds) + '<span><i class="sw" style="box-shadow:inset 0 0 0 2px #ff5d5d"></i>Dropped vs Chip EV</span><span><i class="sw" style="box-shadow:inset 0 0 0 2px #3fe07a"></i>Added</span><span><i class="sw" style="box-shadow:inset 0 0 0 2px #ffc04a"></i>Switched</span>';
   iGrid.show(sp, {
@@ -1356,20 +1352,21 @@ function renderIcm() {
     }
   });
   const film = $('#i-film');
-  film.innerHTML = PHASES.map((p, i) => { const s = icmSpot(base, i, UI.iDp); return s ? `<figure data-p="${i}" class="${i === UI.iPhase ? 'on' : ''}"><canvas></canvas><figcaption>${p.short} · ${pct(1 - mixOf(s)[s.defIdx])}</figcaption></figure>` : ''; }).join('');
+  film.innerHTML = PHASES.map((p, i) => { const s = icmSpot(base, i, UI.iDp); return s ? `<figure data-p="${i}" class="${i === iPh ? 'on' : ''}"><canvas></canvas><figcaption>${p.short} · ${pct(1 - mixOf(s)[s.defIdx])}</figcaption></figure>` : ''; }).join('');
   $$('figure', film).forEach(f => { const s = icmSpot(base, +f.dataset.p, UI.iDp); drawMini($('canvas', f), s, 5); });
+  filmFollow(film);
   renderIcmRail();
   saveUI();
 }
 function renderIcmRail() {
   const base = SITS.get(UI.iSit); if (!base) return;
-  const sp = icmSpot(base, UI.iPhase, UI.iDp);
-  const bars = PHASES.map((p, i) => { const s = icmSpot(base, i, UI.iDp); if (!s) return ''; const m = mixOf(s); const play = 1 - m[s.defIdx]; return `<div class="mix-row"><span>${p.short}</span><div class="bar"><i style="width:${(play * 100).toFixed(1)}%;background:${i === UI.iPhase ? 'var(--accent)' : 'var(--muted)'}"></i></div><span class="mono">${pct(play)}</span></div>`; }).join('');
+  const sp = icmSpot(base, iPh, UI.iDp);
+  const bars = PHASES.map((p, i) => { const s = icmSpot(base, i, UI.iDp); if (!s) return ''; const m = mixOf(s); const play = 1 - m[s.defIdx]; return `<div class="mix-row"><span>${p.short}</span><div class="bar"><i style="width:${(play * 100).toFixed(1)}%;background:${i === iPh ? 'var(--accent)' : 'var(--muted)'}"></i></div><span class="mono">${pct(play)}</span></div>`; }).join('');
   $('#i-rail').innerHTML = `<div class="panel"><h3>How much you play</h3><p class="small muted" style="margin:-4px 0 10px">Share of hands that don't fold, at each stage.</p><div class="mix">${bars}</div></div><div class="panel"><h3>Hand</h3>${handDetailHTML(sp, iSel)}</div>`;
 }
 $('#i-fam').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.iFam = b.dataset.f; UI.iSit = null; renderIcm(); });
-$('#i-sit').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.iSit = b.dataset.s; renderIcm(); });
-$('#i-dp').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.iDp = +b.dataset.d; renderIcm(); });
+$('#i-sit').addEventListener('click', e => { const b = e.target.closest('.seatpick button'); if (!b || b.disabled) return; const sits = icmSits(UI.iFam), s = pickSeat(sits, SITS.get(UI.iSit) || sits[0], b.closest('.seatpick').dataset.k, +b.dataset.v); if (!s) return; UI.iSit = s.key; renderIcm(); });
+$('#i-dp-sl').addEventListener('input', e => { const d = iDps[+e.target.value]; if (d == null || d === UI.iDp) return; UI.iDp = UI.iDpPref = d; renderIcm(); });
 $('#i-phase').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; UI.iPhase = +b.dataset.p; renderIcm(); });
 $('#i-film').addEventListener('click', e => { const f = e.target.closest('figure'); if (!f) return; UI.iPhase = +f.dataset.p; renderIcm(); });
 $('#i-rail').addEventListener('click', e => { const b = e.target.closest('[data-lens]'); if (b) { UI.lens = +b.dataset.lens; setTab('lens'); } });
@@ -1468,7 +1465,7 @@ function renderDrillHome() {
   for (const b of $$('#d-modes .mode')) b.setAttribute('aria-pressed', b.dataset.mode === UI.dMode);
   for (const b of $$('#d-tag button')) b.setAttribute('aria-pressed', b.dataset.tag === UI.dTag);
   const fams = FAM_ORDER.filter(f => SPOTS.some(s => s.tag === UI.dTag && s.fam === f));
-  $('#d-fams').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${UI.dFams.includes(f)}">${FAM[f].label}</button>`).join('');
+  $('#d-fams').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${UI.dFams.includes(f)}" title="${FAM[f].label}">${HEAT_LABEL[f] || FAM[f].label}</button>`).join('');
   const bands = BANDS.filter(b => SPOTS.some(s => s.tag === UI.dTag && bandOf(s.dp) === b.id));
   $('#d-bands').innerHTML = bands.map(b => `<button data-b="${b.id}" aria-pressed="${UI.dBands.includes(b.id)}">${b.label}</button>`).join('');
   const phases = UI.dPhases || ICM_ONLY();
@@ -1597,8 +1594,8 @@ function endDrill() {
   R.ended = true;
 }
 function openInCharts(spot, g) {
-  if (spot.tag === 'icm8') { UI.iFam = spot.fam; UI.iSit = [spot.tag, PHASES[0].gt, spot.fam, spot.hero, spot.vs, spot.caller].join('|'); UI.iDp = spot.dp; UI.iPhase = PHASE_OF[spot.gt]; iSel = g; RUN = null; setTab('icm'); return; }
-  UI.cFam = spot.fam; UI.cSit = spot.sitKey; UI.cDp = spot.dp; cSel = g; RUN = null; setTab('charts');
+  if (spot.tag === 'icm8') { UI.iFam = spot.fam; UI.iSit = [spot.tag, PHASES[0].gt, spot.fam, spot.hero, spot.vs, spot.caller].join('|'); UI.iDp = UI.iDpPref = spot.dp; UI.iPhase = PHASE_OF[spot.gt]; iSel = g; RUN = null; setTab('icm'); return; }
+  UI.cFam = spot.fam; UI.cSit = spot.sitKey; UI.cDp = UI.cDpPref = spot.dp; cSel = g; RUN = null; setTab('charts');
 }
 function nextItem() {
   const R = RUN; if (!R) return;
@@ -1678,7 +1675,6 @@ function boardTop(spot) {
 }
 
 /* quick-fire */
-let qTimer = null;
 function nextQuick() {
   const R = RUN;
   let item = null;
@@ -1715,7 +1711,7 @@ function evTableHTML(sp, g, a) {
 }
 function answerQuick(a) {
   const R = RUN, c = R.cur; if (!c || c.answered) return;
-  c.answered = true; clearInterval(qTimer);
+  c.answered = true;
   const ms = performance.now() - c.t0; R.times.push(Math.min(ms, 20000));
   const sp = c.spot, g = c.g, gr = grade(sp, g, a);
   R[gr]++; R.n++;
@@ -1773,7 +1769,7 @@ function renderPaint() {
   let painting = false, val = null;
   const el = $('#p-grid');
   const apply = (target) => { const cell = target && target.closest && target.closest('.cell'); if (!cell || c.answered) return; const g = +cell.dataset.g; if (!inRange(sp, g)) return; if (val === null) val = c.painted[g] === c.brush ? sp.defIdx : c.brush; if (c.painted[g] !== val) { c.painted[g] = val; cell.style.background = paintBg(g); } };
-  el.addEventListener('pointerdown', e => { if (c.answered) return; painting = true; val = null; el.setPointerCapture(e.pointerId); apply(e.target); e.preventDefault(); });
+  el.addEventListener('pointerdown', e => { if (c.answered) return; painting = true; val = null; try { el.setPointerCapture(e.pointerId); } catch (err) { } apply(e.target); e.preventDefault(); });
   el.addEventListener('pointermove', e => { if (!painting) return; apply(document.elementFromPoint(e.clientX, e.clientY)); });
   const stop = () => { painting = false; val = null; };
   el.addEventListener('pointerup', stop); el.addEventListener('pointercancel', stop);
@@ -1880,11 +1876,11 @@ function nextNumber() {
 function renderNumber() {
   const R = RUN, c = R.cur, sit = c.sit, sp = sit.spots[0];
   const verb = c.metric === 'C' ? 'call the shove' : 'shove';
-  const where = { RFI: `first in from the <b>${POS[sit.n][sit.hero]}</b>`, BBvsJam: `in the BB against a <b>${POS[sit.n][sit.vs]}</b> shove`, vsJam: `in the <b>${POS[sit.n][sit.hero]}</b> against a <b>${POS[sit.n][sit.vs]}</b> shove`, OpenVsJam: `after opening <b>${POS[sit.n][sit.hero]}</b> and getting shoved on by the <b>${POS[sit.n][sit.vs]}</b>`, BBvsOpen: `in the BB against a <b>${POS[sit.n][sit.vs]}</b> open`, vsOpen: `in the <b>${POS[sit.n][sit.hero]}</b> against a <b>${POS[sit.n][sit.vs]}</b> open`, Squeeze: `facing <b>${POS[sit.n][sit.vs]}</b> open + <b>${POS[sit.n][sit.caller]}</b> call`, OpenVs3bet: 'after opening and facing a 3-bet' }[sit.fam] || '';
+  const where = { RFI: `first in from the <b>${POS[sit.n][sit.hero]}</b>`, BBvsJam: `in the BB against a <b>${POS[sit.n][sit.vs]}</b> shove`, vsJam: `in the <b>${POS[sit.n][sit.hero]}</b> against a <b>${POS[sit.n][sit.vs]}</b> shove`, OpenVsJam: `after opening <b>${POS[sit.n][sit.hero]}</b> and getting shoved on by the <b>${POS[sit.n][sit.vs]}</b>`, BBvsOpen: `in the BB against a <b>${POS[sit.n][sit.vs]}</b> open`, vsOpen: `in the <b>${POS[sit.n][sit.hero]}</b> against a <b>${POS[sit.n][sit.vs]}</b> open`, Squeeze: `facing <b>${POS[sit.n][sit.vs]}</b> open + <b>${POS[sit.n][sit.caller]}</b> call`, OpenVs3bet: `after opening <b>${POS[sit.n][sit.hero]}</b> and facing a 3-bet from the <b>${POS[sit.n][sit.vs]}</b>`, ThreebetVs4bet: `after 3-betting the <b>${POS[sit.n][sit.vs]}</b> open from the <b>${POS[sit.n][sit.hero]}</b> and facing a 4-bet`, ThreebetVsJam: `after 3-betting the <b>${POS[sit.n][sit.vs]}</b> open from the <b>${POS[sit.n][sit.hero]}</b> and getting shoved on` }[sit.fam] || '';
   $('#d-run').innerHTML = runHeader() + `<div class="q"><div class="panel board"><div class="cards">${cardsHTML(c.g, c.combo)}</div>
     <p style="margin:0;font-size:17px">${where.charAt(0).toUpperCase() + where.slice(1)}: up to how many bb do you <b>${verb}</b> with <b>${GRID[c.g]}</b> at least half the time?</p>
     <p class="small muted" style="margin:0">${tableDesc(sp)}. Pick the deepest stack.</p>
-    <div class="ladder-q" id="n-opts">${c.ds.map(d => `<button data-d="${d}">${d}</button>`).join('')}<button data-d="0">Never</button></div></div>
+    <div class="ladder-q" id="n-opts">${[...c.ds].reverse().map(d => `<button data-d="${d}">${d}</button>`).join('')}<button data-d="0">Never</button></div></div>
     <div id="n-fb" class="fb"></div></div>`;
   bindRunHeader();
   $('#n-opts').onclick = e => { const b = e.target.closest('button'); if (!b || c.answered) return; answerNumber(+b.dataset.d); };
@@ -1898,7 +1894,7 @@ function answerNumber(d) {
   if (gr === 'bad') R.misses.push({ spot: c.sit.spots.find(s => s.dp === (truth || c.ds[0])) || c.sit.spots[0], g: c.g, note: `threshold ${truth || 'never'}` });
   $$('#n-opts button').forEach(b => { const v = +b.dataset.d; b.disabled = true; if (v === d) b.classList.add('pick'); if (v === truth) b.classList.add('ans'); });
   const g = c.g, sit = c.sit;
-  const strip = `<div class="mx"><div class="mx-row hd" style="min-width:0"><div class="mx-lab"></div><div class="mx-strip" style="--cols:${sit.depths.length}">${sit.depths.map(x => `<span class="d">${x}</span>`).join('')}</div></div><div class="mx-row" style="min-width:0"><div class="mx-lab"><b>${GRID[g]}</b></div><div class="mx-strip" style="--cols:${sit.depths.length}">${sit.spots.map(sp => inRange(sp, g) ? `<i class="c" style="background:${cellBg(sp, g)}" title="${sp.dp}bb"></i>` : '<i class="c na"></i>').join('')}</div></div></div>`;
+  const strip = `<div class="mx"><div class="mx-row hd" style="min-width:0"><div class="mx-lab"></div><div class="mx-strip" style="--cols:${sit.depths.length}">${[...sit.depths].reverse().map(x => `<span class="d">${x}</span>`).join('')}</div></div><div class="mx-row" style="min-width:0"><div class="mx-lab"><b>${GRID[g]}</b></div><div class="mx-strip" style="--cols:${sit.depths.length}">${[...sit.spots].reverse().map(sp => inRange(sp, g) ? `<i class="c" style="background:${cellBg(sp, g)}" title="${sp.dp}bb"></i>` : '<i class="c na"></i>').join('')}</div></div></div>`;
   $('#n-fb').innerHTML = `<div class="verdict ${gr}">${gr === 'good' ? '✓ Right number' : gr === 'ok' ? '≈ One step off' : '✗ Off'}<small>Answer: ${truth ? truth + 'bb' : 'never'}</small></div>
     <div class="panel"><p class="eyebrow">${GRID[g]} at every stack</p>${strip}<p class="small" style="margin:10px 0 0"><b>Rule:</b> ${esc(ruleText(sit, g))}</p></div>
     <div><button class="btn primary" id="n-next">Next ↵</button></div>`;
@@ -1911,6 +1907,10 @@ const mq = window.matchMedia('(prefers-color-scheme: dark)');
 const recolor = () => { readColors(); if (UI.tab === 'charts') renderFilm(); if (UI.tab === 'icm') renderIcm(); };
 if (mq.addEventListener) mq.addEventListener('change', recolor);
 new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+/* the phone folds and unfolds without reloading: re-lay out the visible tab so slider ticks and thumbnails fit the new width */
+let resizeT = null;
+window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (UI.tab === 'charts') renderCharts(); else if (UI.tab === 'build') renderBuild(); else if (UI.tab === 'icm' && typeof renderIcm === 'function') renderIcm(); }, 200); });
 Progress.init();
 if (!SPOTS.length) { document.querySelector('main').innerHTML = '<div class="empty-state">Range data didn’t load. Make sure data.js sits next to this page.</div>'; }
 else { setTab(['charts', 'build', 'lens', 'icm', 'drill', 'method'].includes(UI.tab) ? UI.tab : 'charts'); }

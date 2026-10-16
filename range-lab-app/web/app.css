@@ -13,8 +13,6 @@ html.app .brand{margin-right:auto;min-width:0}
 html.app .brand b{font-size:20px}
 html.app .tabs button{padding:10px 12px}
 html.app .chips button,html.app .seg button{min-height:38px}
-html.app .icon-btn{width:44px;height:44px}
-html.app .icon-btn.play{height:44px}
 html.app .acts button{min-height:56px;font-size:16px}
 html.app .ladder-q button{min-height:44px}
 html.app .sync{display:none}
