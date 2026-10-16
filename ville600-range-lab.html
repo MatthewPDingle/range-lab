@@ -332,6 +332,14 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .evr.you:not(.top) .ev{color:var(--bad)}
 .ltop{margin:10px 0 0;font-size:15px}
 .ltop b{color:var(--accent);font-size:17px}
+.heat-head{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;margin:0 0 7px}
+.heat-head .eyebrow{margin:0}
+.heat-head .seg button{padding:4px 10px;font-size:12px}
+.heat-key{display:flex;align-items:center;gap:8px;margin:0 0 8px;font:500 11px/1 var(--f-mono);color:var(--muted);white-space:nowrap}
+.heat-key:empty{display:none}
+.heat-key i{flex:0 1 120px;min-width:40px;height:8px;border-radius:999px;background:linear-gradient(90deg,var(--good),var(--ok),var(--bad));background:linear-gradient(90deg in oklch,var(--good),var(--bad))}
+.heat button.hc:not(.none):not(.nodata){text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.heat .hc.nodata{background:var(--surface-2);color:var(--muted)}
 </style>
 
 <header class="top">
@@ -472,11 +480,10 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
           </div>
         </div>
         <div class="panel">
-          <p class="eyebrow">Where you leak</p>
-          <p class="small muted" style="margin:0 0 10px">Big number: your Quick-fire score. Small: hands answered. Colour: EV lost per hand, green under 0.03bb, amber under 0.1bb, red above. Tap a square to drill it.</p>
+          <div class="heat-head"><p class="eyebrow">Where you leak</p><div class="seg" id="d-heat-by" role="group" aria-label="Colour the squares by"><button data-by="score">Score</button><button data-by="ev">EV lost</button></div></div>
+          <p class="small muted" style="margin:0 0 8px">Big number: your Quick-fire score. Small: hands answered. Colour: green is perfect, red is your worst square, by score or by EV lost per hand. Tap a square to drill it.</p>
+          <div class="heat-key" id="d-heat-key"></div>
           <div class="heat" id="d-heat"></div>
-          <p class="eyebrow" style="margin-top:18px">Recent sessions</p>
-          <div class="summary-list" id="d-log"></div>
         </div>
       </div>
     </div>
@@ -847,7 +854,7 @@ function handDetailHTML(spot, g) {
 }
 
 /* ---------- state ---------- */
-const UI = Object.assign({ tab: 'charts', cFam: 'RFI', cSit: null, cDp: 20, cMode: 'strategy', cMetric: null, lens: GIDX['KJo'], iFam: 'RFI', iSit: null, iDp: 20, iPhase: 2, dMode: 'quick', dTag: 'cev9', dFams: FAM_ORDER, dBands: BANDS.map(b => b.id), dLen: 40 }, load('v600-ui') || {});
+const UI = Object.assign({ tab: 'charts', cFam: 'RFI', cSit: null, cDp: 20, cMode: 'strategy', cMetric: null, lens: GIDX['KJo'], iFam: 'RFI', iSit: null, iDp: 20, iPhase: 2, dMode: 'quick', dTag: 'cev9', dFams: FAM_ORDER, dBands: BANDS.map(b => b.id), dLen: 40, dHeatBy: 'score' }, load('v600-ui') || {});
 const saveUI = () => store('v600-ui', UI);
 if (['RFI', 'BBvsOpen', 'BBvsLimp', 'BBvsJam', 'vsOpen', 'vsJam', 'OpenVsJam', 'OpenVs3bet', 'Squeeze'].every(f => UI.dFams.includes(f)) && !UI.dFams.includes('ThreebetVs4bet')) UI.dFams = [...UI.dFams, 'ThreebetVs4bet', 'ThreebetVsJam'];
 
@@ -1394,13 +1401,24 @@ function recordAnswer(spot, g, grade, loss) {
 
 /* ---------- DRILL ---------- */
 const HEAT_LABEL = { RFI: 'First in', BBvsOpen: 'BB vs open', BBvsLimp: 'BB vs limp', BBvsJam: 'BB vs shove', vsOpen: 'vs open', vsJam: 'vs shove', OpenVsJam: 'Open → shove', OpenVs3bet: 'Open → 3-bet', ThreebetVs4bet: '3-bet → 4-bet', ThreebetVsJam: '3-bet → shove', Squeeze: 'Open + call' };
-/* leak map cell: big number = Quick-fire score, small = hands answered, colour = average EV lost per hand
-   (st = [answered, right, mixed-ok, EV lost in bb, answers with EV recorded]; older results without EV fall back to the score) */
-function heatCell(f, b, st) {
-  const acc = (st[1] + 0.5 * st[2]) / st[0], ev = st[4] ? st[3] / st[4] : null;
-  const col = ev != null ? (ev < 0.03 ? 'var(--good)' : ev < 0.1 ? 'var(--ok)' : 'var(--bad)') : (acc >= 0.85 ? 'var(--good)' : acc >= 0.7 ? 'var(--ok)' : 'var(--bad)');
+/* leak map cell: big number = Quick-fire score, small = hands answered
+   (st = [answered, right, mixed-ok, EV lost in bb, answers with EV recorded]; results from before EV was recorded have none) */
+const heatAcc = st => (st[1] + 0.5 * st[2]) / st[0], heatEv = st => st[4] ? st[3] / st[4] : null;
+/* the colour runs from green (a perfect score, or no EV lost) to red (the worst square on the map), by score or by EV */
+function heatScale(stats, by) {
+  if (by === 'ev') { const evs = stats.map(heatEv).filter(v => v != null); return { by, worst: evs.length ? Math.max(...evs) : null }; }
+  return { by, worst: stats.length ? Math.min(...stats.map(heatAcc)) : null };
+}
+function heatCell(f, b, st, sc) {
+  const acc = heatAcc(st), ev = heatEv(st);
+  const t = sc.by === 'ev' ? (ev == null ? null : sc.worst > 0 ? ev / sc.worst : 0) : (sc.worst < 1 ? (1 - acc) / (1 - sc.worst) : 0);
+  const bg = t == null ? '' : ` style="background:color-mix(in oklch,var(--bad) ${Math.round(t * 100)}%,var(--good))"`;
   const tip = `Score ${Math.round(acc * 100)}% · ${st[0]} hands · ` + (ev != null ? `loses ${ev.toFixed(2)}bb per hand` : 'EV loss not recorded yet');
-  return `<button class="hc" data-hf="${f}" data-hb="${b.id}" style="background:${col}" title="${tip}">${Math.round(acc * 100)}<small>${st[0]}</small></button>`;
+  return `<button class="hc${t == null ? ' nodata' : ''}" data-hf="${f}" data-hb="${b.id}"${bg} title="${tip}">${Math.round(acc * 100)}<small>${st[0]}</small></button>`;
+}
+function heatKeyHTML(sc) {
+  if (sc.worst == null) return '';
+  return sc.by === 'ev' ? `<span>Perfect 0bb</span><i></i><span>Worst ${sc.worst.toFixed(2)}bb a hand</span>` : `<span>Perfect 100%</span><i></i><span>Worst ${Math.round(sc.worst * 100)}%</span>`;
 }
 const bandTitle = b => b.label.replace(/bb$/, '') + 'bb';
 let RUN = null;
@@ -1436,6 +1454,10 @@ function renderDrillHome() {
   // heat map
   const famsAll = FAM_ORDER.filter(f => SPOTS.some(s => s.tag === UI.dTag && s.fam === f));
   const bandsAll = BANDS.filter(b => SPOTS.some(s => s.tag === UI.dTag && bandOf(s.dp) === b.id));
+  const heatBy = UI.dHeatBy === 'ev' ? 'ev' : 'score';
+  for (const b of $$('#d-heat-by button')) b.setAttribute('aria-pressed', b.dataset.by === heatBy);
+  const sc = heatScale(famsAll.flatMap(f => bandsAll.map(b => Progress.data.stats[f + '|' + b.id + '|' + UI.dTag])).filter(st => st && st[0]), heatBy);
+  $('#d-heat-key').innerHTML = heatKeyHTML(sc);
   let html = `<div class="heat" style="grid-template-columns:minmax(64px,30%) repeat(${bandsAll.length},minmax(0,1fr));grid-template-rows:18px;grid-auto-rows:36px"><span></span>${bandsAll.map(b => `<span class="hl hb" title="${bandTitle(b)}">${b.short || b.label}</span>`).join('')}`;
   for (const f of famsAll) {
     html += `<span class="hl" title="${FAM[f].label}">${HEAT_LABEL[f] || FAM[f].label}</span>`;
@@ -1444,12 +1466,10 @@ function renderDrillHome() {
       const st = Progress.data.stats[f + '|' + b.id + '|' + UI.dTag];
       if (!has) { html += `<span class="hc none">·</span>`; continue; }
       if (!st || !st[0]) { html += `<button class="hc none" data-hf="${f}" data-hb="${b.id}">–</button>`; continue; }
-      html += heatCell(f, b, st);
+      html += heatCell(f, b, st, sc);
     }
   }
   $('#d-heat').innerHTML = html + '</div>';
-  const log = Progress.data.log.slice(-6).reverse();
-  $('#d-log').innerHTML = log.length ? log.map(l => `<div>${new Date(l[0]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · ${({ quick: 'Quick-fire', paint: 'Paint', edges: 'Edges', numbers: 'Numbers' })[l[1]]} · ${l[2]} done · <b>${l[3]}%</b></div>`).join('') : '<p class="small muted" style="margin:0">No sessions yet.</p>';
   saveUI();
 }
 $('#d-modes').addEventListener('click', e => { const b = e.target.closest('.mode'); if (!b) return; UI.dMode = b.dataset.mode; renderDrillHome(); });
@@ -1458,6 +1478,7 @@ $('#d-fams').addEventListener('click', e => { const b = e.target.closest('button
 $('#d-bands').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const f = b.dataset.b; UI.dBands = UI.dBands.includes(f) ? UI.dBands.filter(x => x !== f) : [...UI.dBands, f]; renderDrillHome(); });
 $('#d-phases').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const g = b.dataset.g, cur = UI.dPhases || ICM_ONLY(); UI.dPhases = cur.includes(g) ? cur.filter(x => x !== g) : [...cur, g]; renderDrillHome(); });
 $('#d-len').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.dLen = +b.dataset.len; renderDrillHome(); });
+$('#d-heat-by').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.dHeatBy = b.dataset.by; renderDrillHome(); });
 $('#d-heat').addEventListener('click', e => { const b = e.target.closest('[data-hf]'); if (!b) return; UI.dFams = [b.dataset.hf]; UI.dBands = [b.dataset.hb]; UI.dMode = 'quick'; renderDrillHome(); startDrill(); });
 $('#d-start').addEventListener('click', () => startDrill());
 const PRESETS = [
