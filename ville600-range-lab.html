@@ -111,7 +111,7 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .clock-num b{font:800 64px/0.9 var(--f-display);font-variant-numeric:tabular-nums;color:var(--accent)}
 .clock-num small{font:600 18px/1 var(--f-display);color:var(--muted);text-transform:uppercase}
 .clock-mid{flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px}
-.clock-mid input[type=range]{width:100%;accent-color:var(--accent);margin:0}
+.clock-mid input[type=range]{width:100%;accent-color:var(--accent);margin:0;direction:rtl}
 .ticks{position:relative;height:16px;font:500 10px/1 var(--f-mono);color:var(--faint)}
 .ticks span{position:absolute;transform:translateX(-50%);top:3px;white-space:nowrap}
 .ticks span.on{color:var(--fg);font-weight:600}
@@ -372,15 +372,15 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         <p class="note">9-handed, 12.5% big-blind ante, Chip EV, everyone with the same stack. Playing 8-handed? Use UTG+1 as your UTG.</p>
       </aside>
       <div class="stage">
-        <div class="clock">
-          <div class="clock-num"><b id="c-dp">20</b><small>bb</small></div>
-          <div class="clock-mid"><input type="range" id="c-slider" min="0" max="10" step="1" aria-label="Effective stack"><div class="ticks" id="c-ticks"></div></div>
-        </div>
         <p class="scn" id="c-scn"></p>
         <div class="seats" id="c-seats"></div>
         <div class="grid" id="c-grid"></div>
         <div class="legend" id="c-legend"></div>
         <div><p class="eyebrow">Every stack depth for this spot</p><div class="film" id="c-film"></div></div>
+        <div class="clock">
+          <div class="clock-num"><b id="c-dp">20</b><small>bb</small></div>
+          <div class="clock-mid"><input type="range" id="c-slider" min="0" max="10" step="1" aria-label="Effective stack"><div class="ticks" id="c-ticks"></div></div>
+        </div>
       </div>
       <aside class="rail" id="c-rail"></aside>
     </div>
@@ -395,15 +395,15 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         <p class="small muted" style="margin:0">Tap a seat to skip ahead to it: everyone before it folds. Then pick that player's action under the table. Tap a seat that already acted to change what it did.</p>
       </aside>
       <div class="stage">
-        <div class="clock">
-          <div class="clock-num"><b id="b-dp">20</b><small>bb</small></div>
-          <div class="clock-mid"><input type="range" id="b-slider" min="0" max="10" step="1" aria-label="Stack depth"><div class="ticks" id="b-ticks"></div></div>
-        </div>
         <div id="b-table"></div>
         <div class="bact">
           <div class="bwho" id="b-who"></div>
           <div class="acts" id="b-acts"></div>
           <div class="brow"><button class="btn ghost small" id="b-back">Undo</button><button class="btn ghost small" id="b-reset">Start over</button><span class="small muted" id="b-note"></span></div>
+        </div>
+        <div class="clock">
+          <div class="clock-num"><b id="b-dp">20</b><small>bb</small></div>
+          <div class="clock-mid"><input type="range" id="b-slider" min="0" max="10" step="1" aria-label="Stack depth"><div class="ticks" id="b-ticks"></div></div>
         </div>
       </div>
       <aside class="rail" id="b-rail">
@@ -888,7 +888,7 @@ function cCurSpot() {
 }
 function ticksHTML(depths, cur, width) {
   const n = depths.length; if (!n) return '';
-  const posOf = i => n > 1 ? i / (n - 1) : 0.5;
+  const posOf = i => n > 1 ? 1 - i / (n - 1) : 0.5;  // biggest on the left, like the slider
   const minGap = 26 / Math.max(width, 120);
   const chosen = [];
   const tryAdd = i => { if (i < 0 || chosen.includes(i)) return; if (chosen.every(j => Math.abs(posOf(j) - posOf(i)) >= minGap)) chosen.push(i); };
@@ -970,8 +970,9 @@ function renderChartsGrid(animate) {
 function renderFilm() {
   const sit = cCurSit(), sp = cCurSpot();
   const el = $('#c-film');
-  el.innerHTML = sit.spots.map(s => `<figure data-dp="${s.dp}" class="${s === sp ? 'on' : ''}"><canvas></canvas><figcaption>${s.dp}</figcaption></figure>`).join('');
-  $$('canvas', el).forEach((cv, i) => drawMini(cv, sit.spots[i], 4));
+  const spots = [...sit.spots].reverse();  // deepest first, like the slider
+  el.innerHTML = spots.map(s => `<figure data-dp="${s.dp}" class="${s === sp ? 'on' : ''}"><canvas></canvas><figcaption>${s.dp}</figcaption></figure>`).join('');
+  $$('canvas', el).forEach((cv, i) => drawMini(cv, spots[i], 4));
   const on = $('figure.on', el); if (on) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 function changesHTML(sp) {
@@ -992,7 +993,7 @@ function changesHTML(sp) {
 function mixChartSVG(sit, cur) {
   const W = 300, H = 96, pad = { l: 26, r: 6, t: 6, b: 16 };
   const n = sit.spots.length; if (n < 2) return '';
-  const xs = i => pad.l + (W - pad.l - pad.r) * (i / (n - 1));
+  const xs = i => pad.l + (W - pad.l - pad.r) * (1 - i / (n - 1));  // deepest on the left, like the slider
   const ys = v => pad.t + (H - pad.t - pad.b) * (1 - v);
   const kinds = ['J', 'B', 'R', 'C', 'X'];
   const mixes = sit.spots.map(sp => { const m = mixOf(sp); const o = {}; kinds.forEach(k => o[k] = 0); sp.A.forEach((a, i) => { if (a.kind !== 'F') o[a.kind] += m[i]; }); return o; });
@@ -1043,7 +1044,7 @@ $('#c-film').addEventListener('click', e => { const f = e.target.closest('figure
 function stopPlay() { if (cPlay) { clearInterval(cPlay); cPlay = null; } }
 document.addEventListener('keydown', e => {
   if (e.target && e.target.closest && e.target.closest('input,textarea')) return;
-  if (UI.tab === 'charts' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); stopPlay(); setDepthIdx(cCurSpot().idx + (e.key === 'ArrowLeft' ? -1 : 1)); }
+  if (UI.tab === 'charts' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); stopPlay(); setDepthIdx(cCurSpot().idx + (e.key === 'ArrowLeft' ? 1 : -1)); }
   if (UI.tab === 'drill' && RUN) drillKey(e);
 });
 
