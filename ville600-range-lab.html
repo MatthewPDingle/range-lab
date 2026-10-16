@@ -194,6 +194,9 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .mx-lines i{position:relative}
 .mx-lines i.on::after{content:"";position:absolute;left:50%;top:15px;bottom:2px;width:1px;margin-left:-.5px;background:color-mix(in srgb,var(--fg) 45%,transparent)}
 .mx-row.hd{border-top:0;padding-bottom:2px}
+/* the stack labels repeat under the last row; the marker lines stop above them */
+.mx-row.hd.ft{border-top:1px solid var(--line);padding:4px 0 0}
+.mx-in.has-ft .mx-lines i.on::after{bottom:18px}
 .mx-row.mx-grp{border-top:0;padding:10px 0 0}
 .mx-grp .mx-lab{font:700 10.5px/1.2 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
 .mx-lab b{font:600 13px var(--f-mono)}
@@ -1286,7 +1289,7 @@ function lensMatrix(title, sits, g, note) {
     }).join('');
     return head + `<div class="mx-row"><div class="mx-lab"><b>${esc(group ? sitLabel(s).replace(/^\S+ /, '') : sitLabel(s))}</b></div><div class="mx-strip" style="--cols:${depths.length}">${cells}</div></div>`;
   }).join('');
-  return `<section class="panel"><h3 style="font:800 18px/1.1 var(--f-display);text-transform:uppercase;margin:0 0 4px">${title}</h3>${note ? `<p class="small muted" style="margin:0 0 8px">${note}</p>` : ''}<div class="mx"><div class="mx-in">${head}${rows}${lines}</div></div></section>`;
+  return `<section class="panel"><h3 style="font:800 18px/1.1 var(--f-display);text-transform:uppercase;margin:0 0 4px">${title}</h3>${note ? `<p class="small muted" style="margin:0 0 8px">${note}</p>` : ''}<div class="mx"><div class="mx-in has-ft">${head}${rows}${head.replace('mx-row hd', 'mx-row hd ft')}${lines}</div></div></section>`;
 }
 function renderLens() {
   const g = UI.lens;
