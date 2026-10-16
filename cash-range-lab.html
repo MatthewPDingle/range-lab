@@ -177,7 +177,7 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .taglist span{display:inline-block;padding:0 5px;border-radius:4px;background:var(--surface-2);margin:0 3px 3px 0}
 .lens-head{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}
 .lens-pick{display:flex;flex-direction:column;gap:12px}
-.lens-pick input{font:600 16px var(--f-mono);padding:8px 10px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--fg);width:120px}
+.lens-pick #l-input{font:600 16px var(--f-mono);padding:8px 10px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--fg);width:120px}
 .lens-blocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));gap:16px}
 .lens-blocks h3{font:800 18px/1.1 var(--f-display);text-transform:uppercase;margin:0 0 4px}
 .tri{display:grid;gap:3px;overflow-x:auto;padding-bottom:4px}
@@ -318,7 +318,9 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .evr.top .ev{color:var(--good)}
 .evr.you{background:var(--surface-2)}
 .evr.you:not(.top) .ev{color:var(--bad)}
-.ltop{margin:10px 0 0;font-size:15px}
+.ltop{margin:0;font-size:14px}
+.lens-hand{display:flex;gap:10px;align-items:center}
+.lens-hand #l-input{width:96px}
 .ltop b{color:var(--accent);font-size:17px}
 .heat-head{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;margin:0 0 7px}
 .heat-head .eyebrow{margin:0}
@@ -356,6 +358,16 @@ html.app .ctl .frow .seg button{min-height:30px}
 .seatpick button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
 .seatpick button.off{color:var(--muted)}
 .seatpick button:disabled{opacity:.22;cursor:default}
+/* unfolded app: Hand lens keeps the hand grid in the lower left, full width, with the controls above it */
+@media (min-width:600px){
+  html.app #v-lens .lens-pick{gap:10px}
+  html.app #v-lens .lens-grid{margin-top:auto;padding-top:10px;align-self:stretch}
+  html.app #v-lens .lens-head>div:first-child{align-self:stretch;flex:none}
+  html.app #v-lens #l-grid{width:100%!important;max-width:none}
+  html.app #v-lens #l-cards .pcard{width:60px;height:84px}
+  html.app #v-lens #l-cards .pcard .rk{font-size:36px}
+  html.app #v-lens #l-cards .pcard .st{font-size:24px}
+}
 </style>
 
 <header class="top">
@@ -428,16 +440,17 @@ html.app .ctl .frow .seg button{min-height:30px}
     <div class="lens-head">
       <div style="flex:1;min-width:260px">
         <h2 class="title">Hand lens</h2>
-        <p class="lede">One hand, every seat matchup. Rows are your seat, columns are the other player's seat, and each square shows what the hand does there. Letters: R = raise (3-bet, 4-bet), C = call, L = limp, X = check, AI = all-in, blank = fold. Striped squares mean you'd have folded the hand earlier.</p>
         <div class="lens-pick">
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="l-input" value="KTs" autocomplete="off" spellcheck="false" aria-label="Hand"><div class="cards" id="l-cards"></div></div>
+          <div class="lens-hand"><input id="l-input" value="KTs" autocomplete="off" spellcheck="false" aria-label="Hand"><div class="cards" id="l-cards"></div></div>
           <p class="ltop" id="l-top"></p>
-          <div><p class="eyebrow">Game</p><div class="seg" id="l-tag"></div></div>
-          <div><p class="eyebrow">Stack</p><div class="chips" id="l-dp"></div></div>
-          <div><p class="eyebrow">Open size</p><div class="chips" id="l-open"></div></div>
+          <div class="frow"><span class="flab">Game</span><div class="seg" id="l-tag"></div></div>
+          <div class="clock dual">
+            <div class="drow on"><div class="dval"><b id="l-open-v">3</b><small id="l-open-u">x open</small></div><div class="dmid"><input type="range" id="l-open-sl" min="0" max="5" step="1" aria-label="Open size"><div class="ticks" id="l-open-ticks"></div></div></div>
+            <div class="drow on"><div class="dval"><b id="l-dp-v">100</b><small>bb</small></div><div class="dmid"><input type="range" id="l-dp-sl" min="0" max="6" step="1" aria-label="Stack depth"><div class="ticks" id="l-dp-ticks"></div></div></div>
+          </div>
         </div>
       </div>
-      <div><p class="eyebrow">Pick a hand</p><div class="grid mini" id="l-grid" style="width:min(340px,86vw)"></div></div>
+      <div class="lens-grid"><p class="eyebrow">Pick a hand</p><div class="grid mini" id="l-grid" style="width:min(340px,86vw)"></div></div>
     </div>
     <div class="legend" id="l-legend" style="margin-bottom:12px"></div>
     <div class="lens-blocks" id="l-blocks"></div>
@@ -1258,10 +1271,17 @@ function renderLens() {
   $('#l-cards').innerHTML = cardsHTML(g);
   $('#l-top').innerHTML = handTopHTML(g);
   tagSeg($('#l-tag'), tag);
-  $('#l-dp').innerHTML = DEPTHS[tag].map(d => `<button data-d="${d}" aria-pressed="${d === dp}" ${has(open, d) ? '' : 'disabled'}>${d}bb</button>`).join('');
-  $('#l-open').innerHTML = OPENS[tag].map(o => `<button data-o="${o}" aria-pressed="${o === open}" ${has(o, dp) ? '' : 'disabled'}>${o}</button>`).join('');
+  // open-size and stack sliders (biggest on the left), over the steps this game has at the other setting
+  const opens = lOpens = OPENS[tag].filter(o => has(o, dp)), dps = lDps = DEPTHS[tag].filter(d => has(open, d));
+  $('#l-open-v').textContent = open.replace(/x|bb/, ''); $('#l-open-u').textContent = open.endsWith('x') ? 'x open' : 'bb open';
+  $('#l-dp-v').textContent = dp;
+  const so = $('#l-open-sl'), sd = $('#l-dp-sl');
+  so.max = Math.max(0, opens.length - 1); so.value = opens.indexOf(open); so.disabled = opens.length < 2;
+  sd.max = Math.max(0, dps.length - 1); sd.value = dps.indexOf(dp); sd.disabled = dps.length < 2;
+  $('#l-open-ticks').innerHTML = ticksHTML(opens, open, $('#l-open-ticks').clientWidth || 260);
+  $('#l-dp-ticks').innerHTML = ticksHTML(dps, dp, $('#l-dp-ticks').clientWidth || 260);
   lGrid.show(null, { bg: g2 => g2 === g ? 'var(--accent)' : (COMBOS[g2] === 6 ? 'var(--k-F)' : COMBOS[g2] === 4 ? 'color-mix(in srgb, var(--k-F) 70%, var(--empty))' : 'color-mix(in srgb, var(--k-F) 45%, var(--empty))') });
-  $('#l-legend').innerHTML = legendHTML(['J', 'B', 'R', 'C', 'X', 'F']) + '<span><i class="sw" style="background:repeating-linear-gradient(45deg,var(--empty) 0 2px,transparent 2px 4px)"></i>Folded earlier</span><span>“~” = mixed</span>';
+  $('#l-legend').innerHTML = legendHTML(['J', 'B', 'R', 'C', 'X', 'F']) + '<span><i class="sw" style="background:repeating-linear-gradient(45deg,var(--empty) 0 2px,transparent 2px 4px)"></i>Folded earlier</span><span>“~” = mixed</span><span><b>R</b>&nbsp;raise · <b>C</b>&nbsp;call · <b>L</b>&nbsp;limp · <b>X</b>&nbsp;check · <b>AI</b>&nbsp;all-in · blank = fold</span>';
   const at = (fam, hero, vs, caller = -1) => SPOT_AT.get([tag, fam, hero, vs, caller].join('|') + '|' + open + '|' + dp);
   const seats = [...Array(n).keys()];
   const blocks = [];
@@ -1293,8 +1313,9 @@ $('#l-input').addEventListener('change', e => {
   if (GIDX[v] != null) { UI.lens = GIDX[v]; renderLens(); } else e.target.value = GRID[UI.lens];
 });
 $('#l-tag').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.lTag = b.dataset.t; UI.lOpen = null; renderLens(); });
-$('#l-dp').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.disabled) return; UI.lDp = +b.dataset.d; renderLens(); });
-$('#l-open').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.disabled) return; UI.lOpen = b.dataset.o; renderLens(); });
+let lOpens = [], lDps = [];
+$('#l-open-sl').addEventListener('input', e => { const o = lOpens[+e.target.value]; if (o && o !== UI.lOpen) { UI.lOpen = o; renderLens(); } });
+$('#l-dp-sl').addEventListener('input', e => { const d = lDps[+e.target.value]; if (d && d !== UI.lDp) { UI.lDp = d; renderLens(); } });
 
 /* ---------- STRADDLE EFFECT ---------- */
 const sGa = new Grid($('#s-ga'), { onCell: g => { sSel = g; renderCmp(); } }), sGb = new Grid($('#s-gb'), { onCell: g => { sSel = g; renderCmp(); } });
