@@ -103,10 +103,16 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .clock-num small{font:600 18px/1 var(--f-display);color:var(--muted);text-transform:uppercase}
 .clock-mid{flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px}
 .clock-mid input[type=range]{width:100%;accent-color:var(--accent);margin:0;direction:rtl}
-.clock-sub{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:6px;font-size:12px;color:var(--muted)}
-.clock-sub .sub-lab{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-right:4px}
-.clock-sub button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 9px;font:600 12px var(--f-mono);color:var(--fg);cursor:pointer;min-height:30px}
-.clock-sub button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+/* Charts: open size and stack depth, one slider each */
+.clock.dual{flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:2px;padding:4px 12px}
+.drow{display:flex;align-items:center;gap:12px}
+.dval{flex:none;width:100px;display:flex;align-items:baseline;gap:4px}
+.dval b{font:800 28px/1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--fg)}
+.dval small{font:600 12px/1 var(--f-display);color:var(--muted);text-transform:uppercase;white-space:nowrap}
+.drow.on .dval b{color:var(--accent)}
+.dmid{flex:1;min-width:0;display:flex;flex-direction:column}
+.dmid .ticks{height:14px}
+.dmid input[type=range]{width:100%;accent-color:var(--accent);margin:0;direction:rtl}
 .ticks{position:relative;height:16px;font:500 10px/1 var(--f-mono);color:var(--faint)}
 .ticks span{position:absolute;transform:translateX(-50%);top:3px;white-space:nowrap}
 .ticks span.on{color:var(--fg);font-weight:600}
@@ -323,6 +329,15 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .heat-key i{flex:0 1 120px;min-width:40px;height:8px;border-radius:999px;background:linear-gradient(90deg,var(--good),var(--ok),var(--bad));background:linear-gradient(90deg in oklch,var(--good),var(--bad))}
 .heat button.hc:not(.none):not(.nodata){text-shadow:0 1px 2px rgba(0,0,0,.45)}
 .heat .hc.nodata{background:var(--surface-2);color:var(--muted)}
+/* unfolded app: the left pane fits without scrolling at full chart and thumbnail size. The colour legend
+   (the action bars on the right show the same colours) and the thumbnail caption (the slider box says it) are left out. */
+@media (min-width:600px){
+  html.app #v-charts .stage{gap:6px;padding-bottom:2px}
+  html.app #v-charts .scn{line-height:1.3}
+  html.app #v-charts #c-legend,html.app #v-charts #c-film-lab{display:none}
+  html.app #v-charts .film{scrollbar-width:none;padding-bottom:0}
+  html.app #v-charts .film figure{padding:2px 3px;gap:2px}
+}
 </style>
 
 <header class="top">
@@ -347,7 +362,6 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         <div><p class="eyebrow">Game</p><div class="seg" id="c-tag"></div></div>
         <div><p class="eyebrow">Spot</p><div class="chips" id="c-fam"></div></div>
         <div><p class="eyebrow" id="c-sit-lab">Your seat</p><div class="chips" id="c-sit"></div></div>
-        <div><p class="eyebrow">Slide through</p><div class="seg" id="c-axis"><button data-a="depth">Stack depth</button><button data-a="open">Open size</button></div></div>
         <div><p class="eyebrow">Show</p><div class="seg" id="c-mode">
           <button data-m="strategy">Strategy</button><button data-m="changes">Changes</button><button data-m="seats">Seat map</button></div>
           <p class="small muted" id="c-mode-help" style="margin:8px 0 0"></p>
@@ -361,9 +375,9 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         <div class="grid" id="c-grid"></div>
         <div class="legend" id="c-legend"></div>
         <div><p class="eyebrow" id="c-film-lab">Every step for this spot</p><div class="film" id="c-film"></div></div>
-        <div class="clock">
-          <div class="clock-num"><b id="c-val">100</b><small id="c-unit">bb</small></div>
-          <div class="clock-mid"><input type="range" id="c-slider" min="0" max="6" step="1" aria-label="Axis value"><div class="ticks" id="c-ticks"></div><div class="clock-sub" id="c-sub"></div></div>
+        <div class="clock dual">
+          <div class="drow" data-axis="open"><div class="dval"><b id="c-open-v">3</b><small id="c-open-u">x open</small></div><div class="dmid"><input type="range" id="c-open-sl" min="0" max="5" step="1" aria-label="Open size"><div class="ticks" id="c-open-ticks"></div></div></div>
+          <div class="drow" data-axis="depth"><div class="dval"><b id="c-dp-v">100</b><small>bb</small></div><div class="dmid"><input type="range" id="c-dp-sl" min="0" max="6" step="1" aria-label="Stack depth"><div class="ticks" id="c-dp-ticks"></div></div></div>
         </div>
       </div>
       <aside class="rail" id="c-rail"></aside>
@@ -877,7 +891,6 @@ function renderCharts() {
   const canSeats = ['RFI', 'BBvsOpen', 'vsOpen'].includes(UI.cFam);
   if (!canSeats && UI.cMode === 'seats') UI.cMode = 'strategy';
   for (const b of $$('#c-mode button')) { b.setAttribute('aria-pressed', b.dataset.m === UI.cMode); if (b.dataset.m === 'seats') b.disabled = !canSeats; }
-  for (const b of $$('#c-axis button')) b.setAttribute('aria-pressed', b.dataset.a === UI.cAxis);
   $('#c-metric-wrap').hidden = UI.cMode !== 'seats' || UI.cFam === 'RFI';
   if (UI.cFam === 'RFI') UI.cMetric = 'P';
   $('#c-metric').innerHTML = [['P', 'Continue'], ['R', '3-bet or more']].map(([k, l]) => `<button data-k="${k}" aria-pressed="${k === UI.cMetric}">${l}</button>`).join('');
@@ -887,23 +900,22 @@ function renderCharts() {
     seats: UI.cFam === 'RFI' ? 'Each hand shows the earliest seat it opens (or limps) from. One chart for every seat.' : 'Each hand shows the earliest opener you continue against from your seat (or 3-bet, if chosen).',
   }[UI.cMode];
   $('#c-note').textContent = GAMES[UI.cTag].desc + '.' + (UI.cTag === 'str' ? ' The straddler (STR) acts last preflop.' : '');
-  const ser = cSeries(), sp = cCurSpot(); if (UI.cAxis === 'open') UI.cOpen = sp.open; else UI.cDp = sp.dp;
-  for (const b of $$('#c-axis button')) b.setAttribute('aria-pressed', b.dataset.a === UI.cAxis);
-  const sl = $('#c-slider'); sl.max = Math.max(0, ser.length - 1); sl.value = ser.indexOf(sp); sl.disabled = ser.length < 2;
-  $('#c-ticks').innerHTML = ticksHTML(ser.map(s => axisVal(s, UI.cAxis)), curVal(), $('#c-ticks').clientWidth || 300);
+  const sp = cCurSpot(); UI.cOpen = sp.open; UI.cDp = sp.dp;
   $('#c-film-lab').textContent = UI.cAxis === 'open' ? `Every open size at ${UI.cDp}bb` : `Every stack depth with ${UI.cOpen} opens`;
   renderChartsGrid(false); renderFilm(); renderChartsRail(); saveUI();
 }
+/* two sliders: every open size at this stack, and every stack at this open size */
 function renderClock(sp) {
-  const sit = SITS.get(sp.sitKey);
-  if (UI.cAxis === 'open') { const v = sp.open; $('#c-val').textContent = v.replace(/x|bb/, ''); $('#c-unit').textContent = v.endsWith('x') ? 'x open' : 'bb open'; }
-  else { $('#c-val').textContent = sp.dp; $('#c-unit').textContent = 'bb'; }
-  // chips for the axis the slider isn't moving
-  const vals = UI.cAxis === 'open' ? [...new Set(sit.spots.filter(s => s.open === sp.open).map(s => s.dp))].sort((a, b) => a - b) : [...new Set(sit.spots.filter(s => s.dp === sp.dp).map(s => s.open))].sort((a, b) => openVal(a) - openVal(b));
-  const cur = UI.cAxis === 'open' ? sp.dp : sp.open;
-  $('#c-sub').innerHTML = `<span class="sub-lab">${UI.cAxis === 'open' ? 'Stack' : 'Open'}</span>` + vals.map(v => `<button data-ov="${v}" aria-pressed="${String(v) === String(cur)}">${UI.cAxis === 'open' ? v + 'bb' : v}</button>`).join('');
+  const sit = SITS.get(sp.sitKey), os = series(sit, 'open', sp.dp), ds = series(sit, 'depth', sp.open);
+  $('#c-open-v').textContent = sp.open.replace(/x|bb/, ''); $('#c-open-u').textContent = sp.open.endsWith('x') ? 'x open' : 'bb open';
+  $('#c-dp-v').textContent = sp.dp;
+  const so = $('#c-open-sl'), sd = $('#c-dp-sl');
+  so.max = Math.max(0, os.length - 1); so.value = os.indexOf(sp); so.disabled = os.length < 2;
+  sd.max = Math.max(0, ds.length - 1); sd.value = ds.indexOf(sp); sd.disabled = ds.length < 2;
+  $('#c-open-ticks').innerHTML = ticksHTML(os.map(s => s.open), sp.open, $('#c-open-ticks').clientWidth || 260);
+  $('#c-dp-ticks').innerHTML = ticksHTML(ds.map(s => s.dp), sp.dp, $('#c-dp-ticks').clientWidth || 260);
+  for (const r of $$('.clock.dual .drow')) r.classList.toggle('on', r.dataset.axis === UI.cAxis);
 }
-$('#c-sub').addEventListener('click', e => { const b = e.target.closest('[data-ov]'); if (!b) return; if (UI.cAxis === 'open') UI.cDp = +b.dataset.ov; else UI.cOpen = b.dataset.ov; stopPlay(); renderCharts(); });
 function renderChartsGrid(animate) {
   const sp = cCurSpot(); if (!sp) return;
   renderClock(sp);
@@ -981,21 +993,21 @@ $('#c-rail').addEventListener('click', e => { const r = e.target.closest('rect[d
 $('#c-tag').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cTag = b.dataset.t; UI.cSit = null; UI.cOpen = GAMES[UI.cTag].defOpen; UI.cDp = 100; stopPlay(); renderCharts(); });
 $('#c-fam').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cFam = b.dataset.f; UI.cSit = null; stopPlay(); renderCharts(); });
 $('#c-sit').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cSit = b.dataset.s; stopPlay(); renderCharts(); });
-$('#c-axis').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cAxis = b.dataset.a; stopPlay(); renderCharts(); });
 $('#c-mode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; UI.cMode = b.dataset.m; renderCharts(); });
 $('#c-metric').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cMetric = b.dataset.k; renderCharts(); });
 function setStep(i, animate = true) {
   const ser = cSeries(); i = Math.max(0, Math.min(ser.length - 1, i));
   const v = axisVal(ser[i], UI.cAxis); if (String(v) === String(curVal())) return false;
   if (UI.cAxis === 'open') UI.cOpen = v; else UI.cDp = v; saveUI();
-  $('#c-slider').value = i;
-  $$('#c-ticks span').forEach(s => s.classList.toggle('on', s.textContent === String(v)));
   renderChartsGrid(animate); renderChartsRail();
   $$('#c-film figure').forEach(f => f.classList.toggle('on', f.dataset.v === String(v)));
   return true;
 }
 const curIdx = () => cSeries().indexOf(cCurSpot());
-$('#c-slider').addEventListener('input', e => { stopPlay(); setStep(+e.target.value); });
+/* the thumbnails, change rings and side chart follow whichever slider was moved last */
+function slideAxis(axis, i) { stopPlay(); if (UI.cAxis !== axis) { UI.cAxis = axis; renderCharts(); } setStep(i); }
+$('#c-open-sl').addEventListener('input', e => slideAxis('open', +e.target.value));
+$('#c-dp-sl').addEventListener('input', e => slideAxis('depth', +e.target.value));
 $('#c-film').addEventListener('click', e => { const f = e.target.closest('figure'); if (!f) return; stopPlay(); const ser = cSeries(); setStep(ser.findIndex(s => String(axisVal(s, UI.cAxis)) === f.dataset.v)); });
 function stopPlay() { if (cPlay) { clearInterval(cPlay); cPlay = null; } }
 document.addEventListener('keydown', e => {
