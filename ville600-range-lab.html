@@ -978,9 +978,9 @@ function rankCombos(sp) {
   }
   RANK_COMBOS.set(sp, by); return by;
 }
-function rankChartSVG(sp, spots) {
+function rankChartSVG(sp, spots, ghost) {
   const kinds = ['J', 'B', 'R', 'C', 'X'], sum = o => kinds.reduce((t, k) => t + o[k], 0);
-  const by = rankCombos(sp), tot = by.map(sum);
+  const by = rankCombos(sp), tot = by.map(sum), gtot = ghost ? rankCombos(ghost).map(sum) : null;
   if (!tot.some(v => v >= 0.5)) return '';
   const kName = k => { const i = sp.A.findIndex(x => x.kind === k); return i >= 0 ? actLabel(sp, i, true) : KNAME[k]; };
   // one scale for every stack (and open size) of this spot, so the bars grow and shrink as you slide
@@ -994,9 +994,9 @@ function rankChartSVG(sp, spots) {
     const x = pad.l + cw * r + (cw - bw) / 2, cx = (x + bw / 2).toFixed(1); let base = 0, rects = '';
     for (const k of kinds) { const v = o[k]; if (!(v > 0)) continue; rects += `<rect x="${x.toFixed(1)}" y="${ys(base + v).toFixed(1)}" width="${bw.toFixed(1)}" height="${(ys(base) - ys(base + v)).toFixed(1)}" fill="${kColor(k)}"/>`; base += v; }
     const parts = kinds.filter(k => o[k] >= 0.5).map(k => `${kName(k)} ${Math.round(o[k])}`).join(' · ');
-    return `<g><title>${RANKS[r]}: ${Math.round(tot[r])} of the 198 combos with ${/[A8]/.test(RANKS[r]) ? 'an' : 'a'} ${RANKS[r]} continue${parts ? ' (' + parts + ')' : ''}</title>${rects}<text x="${cx}" y="${(ys(tot[r]) - 2).toFixed(1)}" text-anchor="middle" font-size="8" fill="var(--muted)" font-family="var(--f-mono)">${Math.round(tot[r])}</text><text x="${cx}" y="${H - 2}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--fg)" font-family="var(--f-mono)">${RANKS[r]}</text></g>`;
+    return `<g><title>${RANKS[r]}: ${Math.round(tot[r])} of the 198 combos with ${/[A8]/.test(RANKS[r]) ? 'an' : 'a'} ${RANKS[r]} continue${parts ? ' (' + parts + ')' : ''}${gtot ? ' · Chip EV ' + Math.round(gtot[r]) : ''}</title>${rects}${gtot && gtot[r] >= 0.5 ? `<rect x="${x.toFixed(1)}" y="${ys(gtot[r]).toFixed(1)}" width="${bw.toFixed(1)}" height="${(ys(0) - ys(gtot[r])).toFixed(1)}" fill="none" stroke="var(--fg)" stroke-opacity=".55" stroke-dasharray="2 2"/>` : ''}<text x="${cx}" y="${(ys(gtot ? Math.max(tot[r], gtot[r]) : tot[r]) - 2).toFixed(1)}" text-anchor="middle" font-size="8" fill="var(--muted)" font-family="var(--f-mono)">${Math.round(tot[r])}</text><text x="${cx}" y="${H - 2}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--fg)" font-family="var(--f-mono)">${RANKS[r]}</text></g>`;
   }).join('');
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Combos you continue with that hold each rank, by action" style="display:block;margin-top:14px">${lines}${cols}</svg><p class="small muted" style="margin:4px 0 0">Combos you continue with (of all 1,326) that hold each rank, by action. Any one rank is in 198 combos.</p>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Combos you continue with that hold each rank, by action" style="display:block;margin-top:14px">${lines}${cols}</svg><p class="small muted" style="margin:4px 0 0">Combos you continue with (of all 1,326) that hold each rank, by action. Any one rank is in 198 combos.${ghost ? ' Dashed outline: Chip EV at this stack.' : ''}</p>`;
 }
 /* keep the highlighted thumbnail in view; scrolls the strip only, never the page */
 function filmFollow(el = $('#c-film')) {
@@ -1375,18 +1375,44 @@ function renderIcm() {
   renderIcmRail();
   saveUI();
 }
+/* ICM: how much of the range plays at each stage for this stack, stacked by action; tap a bar to switch stage */
+function stageChartSVG(base, dp, curPh) {
+  const kinds = ['J', 'B', 'R', 'C', 'X'], cols = PHASES.map((p, i) => ({ i, p, s: icmSpot(base, i, dp) }));
+  if (cols.filter(c => c.s).length < 2) return '';
+  const share = cols.map(c => { if (!c.s) return null; const m = mixOf(c.s), o = {}; kinds.forEach(k => { o[k] = 0; }); c.s.A.forEach((a, j) => { if (a.kind !== 'F') o[a.kind] += m[j]; }); return o; });
+  const tot = share.map(o => o ? kinds.reduce((t, k) => t + o[k], 0) : 0);
+  const W = 300, H = 92, pad = { l: 26, r: 4, t: 10, b: 14 }, cw = (W - pad.l - pad.r) / cols.length, bw = Math.min(34, cw * 0.6);
+  const top = Math.min(1, Math.max(0.25, Math.ceil(Math.max(...tot) * 4 - 1e-9) / 4)), ys = v => pad.t + (H - pad.t - pad.b) * (1 - v / top);
+  const grid = [0.25, 0.5, 0.75, 1].filter(v => v <= top + 1e-9).map(v => `<line x1="${pad.l}" x2="${W - pad.r}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--line)" stroke-dasharray="2 3"/><text x="${pad.l - 4}" y="${ys(v) + 3}" text-anchor="end" font-size="9" fill="var(--faint)" font-family="var(--f-mono)">${v * 100}%</text>`).join('');
+  const bars = cols.map((c, n) => {
+    const x = pad.l + cw * n + (cw - bw) / 2, cx = (x + bw / 2).toFixed(1), on = c.i === curPh;
+    const lab = `<text x="${cx}" y="${H - 2}" text-anchor="middle" font-size="8.5" font-weight="${on ? 700 : 400}" fill="${on ? 'var(--fg)' : 'var(--faint)'}" font-family="var(--f-mono)">${c.p.short === 'Final table' ? 'Final' : c.p.short}</text>`;
+    if (!c.s) return lab;
+    let b0 = 0, rects = '';
+    for (const k of kinds) { const v = share[n][k]; if (!(v > 0)) continue; rects += `<rect x="${x.toFixed(1)}" y="${ys(b0 + v).toFixed(1)}" width="${bw.toFixed(1)}" height="${(ys(b0) - ys(b0 + v)).toFixed(1)}" fill="${kColor(k)}" opacity="${on ? 1 : 0.55}"/>`; b0 += v; }
+    const parts = kinds.filter(k => share[n][k] >= 0.005).map(k => `${KNAME[k]} ${pct(share[n][k])}`).join(' · ');
+    return `<g data-p="${c.i}" style="cursor:pointer"><title>${c.p.label}: plays ${pct(tot[n])}${parts ? ' (' + parts + ')' : ''}</title><rect x="${(pad.l + cw * n).toFixed(1)}" y="0" width="${cw.toFixed(1)}" height="${H}" fill="transparent"/>${rects}<text x="${cx}" y="${(ys(tot[n]) - 2).toFixed(1)}" text-anchor="middle" font-size="8" fill="${on ? 'var(--fg)' : 'var(--muted)'}" font-family="var(--f-mono)">${Math.round(tot[n] * 100)}</text>${lab}</g>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Share of hands played at each stage, by action" style="display:block;margin-top:12px">${grid}${bars}</svg><p class="small muted" style="margin:4px 0 0">Share of hands played at each stage, by action, at ${dp}bb. Tap a bar to switch stage.</p>`;
+}
 function renderIcmRail() {
   const base = SITS.get(UI.iSit); if (!base) return;
-  const sp = icmSpot(base, iPh, UI.iDp);
-  const bars = PHASES.map((p, i) => { const s = icmSpot(base, i, UI.iDp); if (!s) return ''; const m = mixOf(s); const play = 1 - m[s.defIdx]; return `<div class="mix-row"><span>${p.short}</span><div class="bar"><i style="width:${(play * 100).toFixed(1)}%;background:${i === iPh ? 'var(--accent)' : 'var(--muted)'}"></i></div><span class="mono">${pct(play)}</span></div>`; }).join('');
-  $('#i-rail').innerHTML = `<div class="panel"><h3>How much you play</h3><p class="small muted" style="margin:-4px 0 10px">Share of hands that don't fold, at each stage.</p><div class="mix">${bars}</div></div><div class="panel"><h3>Hand</h3>${handDetailHTML(sp, iSel)}</div>`;
+  const sp = icmSpot(base, iPh, UI.iDp); if (!sp) return;
+  const stageSit = k => SITS.get(['icm8', PHASES[k].gt, base.fam, base.hero, base.vs, base.caller].join('|'));
+  const all = PHASES.flatMap((p, k) => (stageSit(k) || { spots: [] }).spots);  // every stage and stack: one scale for the charts
+  const chipEv = iPh !== 0 ? icmSpot(base, 0, UI.iDp) : null;
+  $('#i-rail').innerHTML = `<div class="panel"><h3>${UI.iDp}bb · ${esc(sitLabel(base))} · ${PHASES[iPh].short}</h3>${stableMixHTML(sp, all)}${stageChartSVG(base, UI.iDp, iPh)}${mixChartSVG(stageSit(iPh), sp)}${rankChartSVG(sp, all, chipEv)}</div><div class="panel"><h3>Hand</h3>${handDetailHTML(sp, iSel)}</div>`;
 }
 $('#i-fam').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.iFam = b.dataset.f; UI.iSit = null; renderIcm(); });
 scrubSeats($('#i-sit'), (k, v) => { const sits = icmSits(UI.iFam), s = pickSeat(sits, SITS.get(UI.iSit) || sits[0], k, v); if (!s || s.key === UI.iSit) return; UI.iSit = s.key; renderIcm(); });
 $('#i-dp-sl').addEventListener('input', e => { const d = iDps[+e.target.value]; if (d == null || d === UI.iDp) return; UI.iDp = UI.iDpPref = d; renderIcm(); });
 $('#i-phase').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; UI.iPhase = +b.dataset.p; renderIcm(); });
 $('#i-film').addEventListener('click', e => { const f = e.target.closest('figure'); if (!f) return; UI.iPhase = +f.dataset.p; renderIcm(); });
-$('#i-rail').addEventListener('click', e => { const b = e.target.closest('[data-lens]'); if (b) { UI.lens = +b.dataset.lens; setTab('lens'); } });
+$('#i-rail').addEventListener('click', e => {
+  const b = e.target.closest('[data-lens]'); if (b) { UI.lens = +b.dataset.lens; setTab('lens'); return; }
+  const st = e.target.closest('[data-p]'); if (st) { UI.iPhase = +st.dataset.p; renderIcm(); return; }
+  const r = e.target.closest('rect[data-dp]'); if (r) { UI.iDp = UI.iDpPref = +r.dataset.dp; renderIcm(); }
+});
 
 /* ---------- progress store (device + account) ---------- */
 const Progress = {
