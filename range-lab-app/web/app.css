@@ -12,6 +12,20 @@ html.app main.wrap{flex:1;min-height:0;overflow-y:auto;max-width:none;width:100%
 html.app .brand{margin-right:auto;min-width:0}
 html.app .brand b{font-size:20px}
 html.app .tabs button{padding:10px 12px}
+/* unfolded screen: one header row, the page tabs beside the title. Label widths vary with the phone's fonts, so
+   app.js tightens the tabs a step at a time (fit1-3) only when they would overflow, and wraps them as a last resort. */
+@media (min-width:600px){
+  html.app .top-in{flex-wrap:nowrap}
+  html.app .top-in .brand{flex:none}
+  html.app .top-in .tabs{flex:0 1 auto;min-width:0}
+  html.app .top-in.fit1 .tabs{gap:2px}
+  html.app .top-in.fit1 .tabs button{padding-inline:9px}
+  html.app .top-in.fit2{column-gap:10px}
+  html.app .top-in.fit2 .tabs button{padding-inline:8px;font-size:13px}
+  html.app .top-in.fit3 .brand span{display:none}
+  html.app .top-in.fit3 .tabs button{padding-inline:6px}
+  html.app .top-in.fitwrap{flex-wrap:wrap}
+}
 html.app .chips button,html.app .seg button{min-height:38px}
 html.app .acts button{min-height:56px;font-size:16px}
 html.app .ladder-q button{min-height:44px}
