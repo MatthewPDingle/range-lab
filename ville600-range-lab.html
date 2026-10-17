@@ -138,13 +138,6 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .cell .val{position:absolute;inset:0;display:grid;place-items:center;padding-top:28%;font:700 clamp(9px,1.5vw,16px)/1 var(--f-mono);z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.3)}
 .cell.sel{box-shadow:inset 0 0 0 2px var(--fg)}
 .cell.target{box-shadow:0 0 0 3px var(--accent),inset 0 0 0 1px var(--bg);z-index:2}
-.cell.chg-in{box-shadow:inset 0 0 0 2.5px #3fe07a}
-.cell.chg-out{box-shadow:inset 0 0 0 2.5px #ff5d5d;opacity:.9}
-.cell.chg-sw{box-shadow:inset 0 0 0 2.5px #ffc04a}
-/* a selected hand keeps its ring on top of a change ring */
-.cell.sel.chg-in{box-shadow:inset 0 0 0 2.5px #3fe07a,inset 0 0 0 4.5px var(--fg)}
-.cell.sel.chg-out{box-shadow:inset 0 0 0 2.5px #ff5d5d,inset 0 0 0 4.5px var(--fg)}
-.cell.sel.chg-sw{box-shadow:inset 0 0 0 2.5px #ffc04a,inset 0 0 0 4.5px var(--fg)}
 #b-sub:empty{display:none}
 .cell.dimmed{opacity:.28}
 .cell.pop{animation:pop .42s ease-out}
@@ -466,7 +459,7 @@ html.app .ctl .frow .seg button{min-height:30px}
   <!-- ICM -->
   <section class="view" id="v-icm" hidden>
     <h2 class="title">ICM stages</h2>
-    <p class="lede">The same spot and stacks at five points of a 1,000-player event, 8-handed. Learn Chip EV first, then ICM as a tax: ringed hands are the ones that change from Chip EV.</p>
+    <p class="lede">The same spot and stacks at five points of a 1,000-player event, 8-handed. Learn Chip EV first, then ICM as a tax: switch stages to see which hands drop out.</p>
     <div class="charts">
       <aside class="ctl tight">
         <div class="chips tight" id="i-fam" role="group" aria-label="Spot"></div>
@@ -1347,17 +1340,11 @@ function renderIcm() {
   iPh = avail[UI.iPhase] ? UI.iPhase : avail.lastIndexOf(true);  // shown stage; your pick stays for the next stack
   $('#i-phase').innerHTML = PHASES.map((p, i) => `<button data-p="${i}" aria-pressed="${i === iPh}" ${avail[i] ? '' : 'disabled'}>${p.short}</button>`).join('');
   $('#i-dpb').textContent = UI.iDp;
-  const sp = icmSpot(base, iPh, UI.iDp), ref = icmSpot(base, 0, UI.iDp);
+  const sp = icmSpot(base, iPh, UI.iDp);
   $('#i-scn').innerHTML = narrate(sp) + ` <span class="muted">· ${PHASES[iPh].label}</span>`;
   const kinds = [...new Set(sp.order.map(a => sp.A[a].kind))];
-  $('#i-legend').innerHTML = legendHTML(kinds) + '<span><i class="sw" style="box-shadow:inset 0 0 0 2px #ff5d5d"></i>Dropped vs Chip EV</span><span><i class="sw" style="box-shadow:inset 0 0 0 2px #3fe07a"></i>Added</span><span><i class="sw" style="box-shadow:inset 0 0 0 2px #ffc04a"></i>Switched</span>';
-  iGrid.show(sp, {
-    marks: g => {
-      let m = g === iSel ? 'sel' : '';
-      if (ref && sp !== ref) { const a = playsAt(ref, g), b = playsAt(sp, g); if (a && !b) m += ' chg-out'; else if (!a && b) m += ' chg-in'; else if (a && b && kindAt(ref, g) !== kindAt(sp, g)) m += ' chg-sw'; }
-      return m;
-    }
-  });
+  $('#i-legend').innerHTML = legendHTML(kinds);
+  iGrid.show(sp, { marks: g => (g === iSel ? 'sel' : '') });
   const film = $('#i-film');
   film.innerHTML = PHASES.map((p, i) => { const s = icmSpot(base, i, UI.iDp); return s ? `<figure data-p="${i}" class="${i === iPh ? 'on' : ''}"><canvas></canvas><figcaption>${p.short} · ${pct(1 - mixOf(s)[s.defIdx])}</figcaption></figure>` : ''; }).join('');
   $$('figure', film).forEach(f => { const s = icmSpot(base, +f.dataset.p, UI.iDp); drawMini($('canvas', f), s, 5); });
