@@ -352,8 +352,8 @@ html.app .charts>.ctl.tight{gap:8px}
 .seg.grow{display:flex;flex:1;flex-wrap:nowrap;gap:2px;padding:2px;border-radius:10px}
 .seg.grow button{flex:1 1 auto;min-width:0;min-height:30px;padding:0 5px;border-radius:8px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html.app .seg.grow button{min-height:30px}
-/* unfolded app: ICM stages fits its left pane without scrolling */
-@media (min-width:600px){html.app #v-icm .stage{gap:6px;padding-bottom:2px}html.app #v-icm .film{scrollbar-width:none;padding-bottom:0}html.app #v-icm .film figure{padding:1px 3px;gap:2px}}
+/* unfolded app: both chart pages fit their left pane without scrolling, with the same spacing */
+@media (min-width:600px){html.app #v-icm .stage,html.app #v-charts .stage{gap:6px;padding-bottom:2px}html.app #v-icm .film,html.app #v-charts .film{scrollbar-width:none;padding-bottom:0}html.app #v-icm .film figure,html.app #v-charts .film figure{padding:1px 3px;gap:2px}}
 .frow{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;align-items:center}
 .frow[hidden]{display:none}
 .flab{font:700 10.5px/1.15 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -376,10 +376,10 @@ html.app .ctl .frow .seg button{min-height:30px}
   <div class="top-in">
     <div class="brand"><div class="chip-mark" aria-hidden="true">600</div><div><b>Ville 600 Range Lab</b><span>Preflop tournament ranges, 5–100bb</span></div></div>
     <nav class="tabs" role="tablist" id="tabs">
-      <button role="tab" data-tab="charts">Charts</button>
+      <button role="tab" data-tab="charts">Chip EV Charts</button>
+      <button role="tab" data-tab="icm">ICM Stage Charts</button>
       <button role="tab" data-tab="build">Spot builder</button>
       <button role="tab" data-tab="lens">Hand lens</button>
-      <button role="tab" data-tab="icm">ICM stages</button>
       <button role="tab" data-tab="drill">Drill</button>
       <button role="tab" data-tab="method">Method</button>
     </nav>
@@ -390,21 +390,20 @@ html.app .ctl .frow .seg button{min-height:30px}
 <main class="wrap">
   <!-- CHARTS -->
   <section class="view" id="v-charts" hidden>
+    <h2 class="title">Chip EV Charts</h2>
+    <p class="lede">Every spot at every stack, 9-handed with a 12.5% big-blind ante, Chip EV, everyone with the same stack. Playing 8-handed? Use UTG+1 as your UTG.</p>
     <div class="charts">
       <aside class="ctl tight">
         <div class="chips tight" id="c-fam" role="group" aria-label="Spot"></div>
         <div class="srows" id="c-sit"></div>
-        <p class="note">9-handed, 12.5% big-blind ante, Chip EV, everyone with the same stack. Playing 8-handed? Use UTG+1 as your UTG.</p>
       </aside>
       <div class="stage">
         <p class="scn" id="c-scn"></p>
-        <div class="seats" id="c-seats"></div>
         <div class="grid" id="c-grid"></div>
         <div class="legend" id="c-legend"></div>
         <div><p class="eyebrow">Every stack depth for this spot</p><div class="film" id="c-film"></div></div>
-        <div class="clock">
-          <div class="clock-num"><b id="c-dp">20</b><small>bb</small></div>
-          <div class="clock-mid"><input type="range" id="c-slider" min="0" max="10" step="1" aria-label="Effective stack"><div class="ticks" id="c-ticks"></div></div>
+        <div class="clock dual">
+          <div class="drow on"><div class="dval"><b id="c-dp">20</b><small>bb</small></div><div class="dmid"><input type="range" id="c-slider" min="0" max="10" step="1" aria-label="Effective stack"><div class="ticks" id="c-ticks"></div></div></div>
         </div>
       </div>
       <aside class="rail" id="c-rail"></aside>
@@ -458,7 +457,7 @@ html.app .ctl .frow .seg button{min-height:30px}
 
   <!-- ICM -->
   <section class="view" id="v-icm" hidden>
-    <h2 class="title">ICM stages</h2>
+    <h2 class="title">ICM Stage Charts</h2>
     <p class="lede">The same spot and stacks at five points of a 1,000-player event, 8-handed. Learn Chip EV first, then ICM as a tax: switch stages to see which hands drop out.</p>
     <div class="charts">
       <aside class="ctl tight">
@@ -521,7 +520,7 @@ html.app .ctl .frow .seg button{min-height:30px}
     <div class="method">
       <div class="panel">
         <ol class="principles" style="padding:0;margin:0">
-          <li><div><h4>Learn the shape, not 169 cells</h4><p>Every range is a handful of ladders: pairs, Ax suited, Kx offsuit and so on. In each ladder you only need the edge, the weakest hand still in. The Edges panel on the Charts tab gives you those edges for every spot.</p></div></li>
+          <li><div><h4>Learn the shape, not 169 cells</h4><p>Every range is a handful of ladders: pairs, Ax suited, Kx offsuit and so on. In each ladder you only need the edge, the weakest hand still in. The Edges panel on Chip EV Charts gives you those edges for every spot.</p></div></li>
           <li><div><h4>Learn in steps, not whole charts</h4><p>Pick a stack you know well, say 25bb, and step the stack slider down one notch at a time, watching the thumbnails. Only a few hands change at each step, and in a predictable order: small pairs and weak suited aces turn into shoves first, offsuit broadways last.</p></div></li>
           <li><div><h4>File it under the hand</h4><p>At the table you look at K9o before you think about charts. Hand lens shows one hand in every seat at every stack, and the Numbers drill turns it into rules like “CO: ≤13 Jam · 14–40 Raise”. Learn those rules for the 25–30 hands that keep changing; the rest are always played or always folded.</p></div></li>
           <li><div><h4>Recall it, don't re-read it</h4><p>Re-reading charts mostly trains recognition. Painting a range from memory and deciding fast on edge hands trains recall, which is what you use at the table. Drill picks edge hands and brings your misses back on a spaced schedule.</p></div></li>
@@ -531,13 +530,13 @@ html.app .ctl .frow .seg button{min-height:30px}
       <div class="panel">
         <p class="eyebrow">Two-week plan</p>
         <table class="plan">
-          <tr><th>Day 1–2</th><td>First in, 25–40bb. Charts, stepping the stack slider down from 40bb, then Paint three seats a day and Quick-fire “First in”, 21–50bb.</td></tr>
+          <tr><th>Day 1–2</th><td>First in, 25–40bb. Chip EV Charts, stepping the stack slider down from 40bb, then Paint three seats a day and Quick-fire “First in”, 21–50bb.</td></tr>
           <tr><th>Deep stacks</th><td>For the opening levels: the “Deep stacks · 50–100” preset in Quick-fire, then Paint CO and BTN opens and BB vs BTN at 60 and 100bb.</td></tr>
           <tr><th>Day 3–4</th><td>First in, 10–20bb, where raising and shoving split. Hand lens on the hands that switch, then the Numbers drill.</td></tr>
           <tr><th>Day 5</th><td>Under 10bb: shove or fold. Quick-fire 5–9bb plus Numbers.</td></tr>
           <tr><th>Day 6–7</th><td>Big blind: defending against opens and calling shoves. Paint BB vs BTN, CO and SB at 12, 18 and 25bb.</td></tr>
           <tr><th>Day 8–9</th><td>Facing opens: reshoves and 3-bets, then calling off when you open and get shoved on. Edges drill.</td></tr>
-          <tr><th>Day 10–11</th><td>ICM stages tab, then Quick-fire with the ICM solutions.</td></tr>
+          <tr><th>Day 10–11</th><td>ICM Stage Charts, then Quick-fire with the ICM solutions.</td></tr>
           <tr><th>Day 12–13</th><td>Only the reddest squares in your “Where you leak” map.</td></tr>
           <tr><th>Day 14</th><td>Light review. Hand lens on the hands you miss most. No new material.</td></tr>
         </table>
@@ -547,7 +546,7 @@ html.app .ctl .frow .seg button{min-height:30px}
         <p class="eyebrow" style="margin-top:18px">After a session</p>
         <p style="margin:0 0 8px">Rebuild the hands you weren't sure about in Spot builder: tap the seats in the order they acted, then slide the stack. Do it on a break or after play; live events don't allow checking charts during a hand.</p>
         <p class="eyebrow" style="margin-top:18px">About the numbers</p>
-        <p class="small muted" style="margin:0" id="m-about">Charts, Hand lens and the default drills use 9-handed MTT solutions with a 12.5% big-blind ante, Chip EV, and equal stacks. The ICM tab uses 8-handed ICM solutions for a 1,000-player field. Real stacks are rarely equal, so treat these as anchors and adjust when the stacks behind you are much shorter or deeper.</p>
+        <p class="small muted" style="margin:0" id="m-about">Chip EV Charts, Hand lens and the default drills use 9-handed MTT solutions with a 12.5% big-blind ante, Chip EV, and equal stacks. ICM Stage Charts use 8-handed ICM solutions for a 1,000-player field. Real stacks are rarely equal, so treat these as anchors and adjust when the stacks behind you are much shorter or deeper.</p>
       </div>
     </div>
   </section>
@@ -1024,7 +1023,6 @@ function renderChartsGrid(animate) {
   const sp = cCurSpot();
   $('#c-dp').textContent = sp.dp;
   $('#c-scn').innerHTML = narrate(sp);
-  $('#c-seats').innerHTML = seatsHTML(sp);
   const kinds = [...new Set(sp.order.map(a => sp.A[a].kind))];
   $('#c-legend').innerHTML = legendHTML(kinds);
   cGrid.show(sp, { animate, marks: g => (g === cSel ? 'sel' : '') });
@@ -1202,7 +1200,7 @@ function renderBuildSpot() {
     const sit = bSit(sp);
     bGrid.show(sp, { marks: g => (g === bSel ? 'sel' : '') });
     $('#b-legend').innerHTML = legendHTML([...new Set(sp.order.map(a => sp.A[a].kind))]);
-    $('#b-info').innerHTML = `<div class="panel"><h3>${sp.dp}bb · ${esc(sitLabel(sit))}</h3>${stableMixHTML(sp, sit ? sit.spots : [sp])}<div style="margin-top:12px"><button class="btn ghost small" id="b-open">Open in ${sp.tag === 'icm8' ? 'ICM stages' : 'Charts'} →</button></div></div><div class="panel"><h3>Hand</h3>${handDetailHTML(sp, bSel)}</div>`;
+    $('#b-info').innerHTML = `<div class="panel"><h3>${sp.dp}bb · ${esc(sitLabel(sit))}</h3>${stableMixHTML(sp, sit ? sit.spots : [sp])}<div style="margin-top:12px"><button class="btn ghost small" id="b-open">Open in ${sp.tag === 'icm8' ? 'ICM Stage Charts' : 'Chip EV Charts'} →</button></div></div><div class="panel"><h3>Hand</h3>${handDetailHTML(sp, bSel)}</div>`;
   } else {
     $('#b-empty').textContent = S.actor == null ? 'The betting is closed. Tap a seat to change what happened.' : `No stored ranges for ${S.names[S.actor]} here. Tap a later seat, or pick an action.`;
     $('#b-info').innerHTML = '';

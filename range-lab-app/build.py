@@ -66,7 +66,7 @@ def build_assets():
     (www / "tournament.html").write_text(app_page(SOURCES / "ville600-range-lab.html", [
         ("<title>Ville 600 Range Lab</title>", "<title>Tournament · Range Lab</title>"),
         ('<div class="chip-mark" aria-hidden="true">600</div><div><b>Ville 600 Range Lab</b><span>Preflop tournament ranges, 5–100bb</span></div>',
-         '<div class="chip-mark" aria-hidden="true">MTT</div><div><b>Tournament</b><span>Preflop ranges, 5–100bb</span></div>'),
+         '<div class="chip-mark" aria-hidden="true">MTT</div><div><b>Tournament</b><span>Preflop, 5–100bb</span></div>'),  # short enough for one header row with the chart tab names
         ("How to use this before the Ville 600", "How to study tournament ranges"),
     ]), encoding="utf-8")
     (www / "cash.html").write_text(app_page(SOURCES / "cash-range-lab.html", [
