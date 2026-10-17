@@ -353,7 +353,7 @@ html.app .ctl .chips.tight button{min-height:32px}
 html.app .ctl .frow .seg button{min-height:30px}
 .srows{display:flex;flex-direction:column;gap:6px}
 .srows:empty{display:none}
-.seatpick{display:flex;gap:2px;padding:2px;border:1px solid var(--line);border-radius:10px;background:var(--surface);min-width:0}
+.seatpick{display:flex;gap:2px;padding:2px;border:1px solid var(--line);border-radius:10px;background:var(--surface);min-width:0;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:pointer}
 .seatpick button{flex:1 1 0;min-width:0;min-height:30px;border:0;border-radius:8px;background:none;padding:0;font:600 11.5px/1 var(--f-mono);color:var(--fg);cursor:pointer;white-space:nowrap;overflow:hidden}
 .seatpick button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
 .seatpick button.off{color:var(--muted)}
@@ -928,6 +928,27 @@ function pickSeat(sits, cur, k, v) {
   }
   return best;
 }
+/* a seat strip slides like a slider: press anywhere on it and drag; the seat nearest your finger is picked as you go */
+function scrubSeats(box, choose) {
+  let drag = null;
+  const pick = e => {
+    const strip = box.querySelector(`.seatpick[data-k="${drag.k}"]`); if (!strip) return;
+    const bs = [...strip.querySelectorAll('button')].filter(b => !b.disabled); if (!bs.length) return;
+    const b = bs.reduce((best, x) => { const r = x.getBoundingClientRect(), d = Math.abs(e.clientX - (r.left + r.width / 2)); return d < best.d ? { b: x, d } : best; }, { b: null, d: Infinity }).b;
+    if (b && b.dataset.v !== drag.last) { drag.last = b.dataset.v; choose(drag.k, +b.dataset.v); }
+  };
+  box.addEventListener('pointerdown', e => {
+    const strip = e.target.closest('.seatpick'); if (!strip || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    drag = { k: strip.dataset.k, id: e.pointerId, last: null };
+    try { box.setPointerCapture(e.pointerId); } catch (err) { }
+    pick(e); e.preventDefault();
+  });
+  box.addEventListener('pointermove', e => { if (drag && e.pointerId === drag.id) pick(e); });
+  const end = e => { if (drag && e.pointerId === drag.id) drag = null; };
+  box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
+  // keyboard: Enter or Space on a seat
+  box.addEventListener('click', e => { const b = e.target.closest('.seatpick button'); if (!b || b.disabled || e.detail !== 0) return; choose(b.closest('.seatpick').dataset.k, +b.dataset.v); });
+}
 /* the continuing range by card: how many of the 1,326 combos you continue with hold each rank, by action
    (a pair counts once; any one rank is in 198 combos). Weighted by how often you take each action and reach this spot. */
 const RANK_COMBOS = new WeakMap();
@@ -1044,7 +1065,7 @@ function renderChartsRail() {
 $('#c-rail').addEventListener('click', e => { const r = e.target.closest('rect[data-v]'); if (r) { stopPlay(); setStep(cSeries().findIndex(s => String(axisVal(s, UI.cAxis)) === r.dataset.v)); return; } const b = e.target.closest('[data-lens]'); if (b) { UI.lens = +b.dataset.lens; const sp = cCurSpot(); UI.lTag = sp.tag; UI.lDp = sp.dp; UI.lOpen = sp.open; setTab('lens'); } });
 $('#c-tag').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cTag = b.dataset.t; UI.cSit = null; UI.cOpen = GAMES[UI.cTag].defOpen; UI.cDp = 100; UI.cPref = null; stopPlay(); renderCharts(); });
 $('#c-fam').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cFam = b.dataset.f; UI.cSit = null; stopPlay(); renderCharts(); });
-$('#c-sit').addEventListener('click', e => { const b = e.target.closest('.seatpick button'); if (!b || b.disabled) return; const s = pickSeat(cSits(), cCurSit(), b.closest('.seatpick').dataset.k, +b.dataset.v); if (!s) return; UI.cSit = s.key; stopPlay(); renderCharts(); });
+scrubSeats($('#c-sit'), (k, v) => { const s = pickSeat(cSits(), cCurSit(), k, v); if (!s || s.key === UI.cSit) return; UI.cSit = s.key; stopPlay(); renderCharts(); });
 function setStep(i, animate = true) {
   const ser = cSeries(); i = Math.max(0, Math.min(ser.length - 1, i));
   const v = axisVal(ser[i], UI.cAxis); if (String(v) === String(curVal())) return false;
