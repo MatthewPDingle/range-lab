@@ -918,12 +918,13 @@ const VS_ROLE = { BBvsOpen: 'Opener', BBvsLimp: 'Limper', BBvsJam: 'Shover', vsO
 /* ---------- Charts filters: one strip of table seats per role ---------- */
 const seatAbbr = nm => nm.replace('UTG+', 'U+');
 const ROLE_KEYS = ['hero', 'vs', 'caller'];
-/* a row for each role that varies in this spot; seats that need another role moved are dimmed, seats that never occur are off */
-function seatRowsHTML(sits, cur, names) {
+/* a row for each role that varies in this spot; seats that need another role moved, or that aren't solved at this
+   stack (here(sit) is false), are dimmed; seats that never occur are off */
+function seatRowsHTML(sits, cur, names, here) {
   const keys = ROLE_KEYS.filter(k => new Set(sits.map(s => s[k])).size > 1);
   return keys.map(k => {
     const have = new Set(sits.map(s => s[k]));
-    const fits = new Set(sits.filter(s => keys.every(o => o === k || s[o] === cur[o])).map(s => s[k]));
+    const fits = new Set(sits.filter(s => keys.every(o => o === k || s[o] === cur[o]) && (!here || here(s))).map(s => s[k]));
     const lab = k === 'hero' ? 'You' : k === 'caller' ? 'Caller' : VS_ROLE[cur.fam] || 'Villain';
     return `<div class="frow"><span class="flab">${lab}</span><div class="seatpick" data-k="${k}">${names.map((nm, i) => `<button data-v="${i}" title="${nm}" aria-pressed="${cur[k] === i}"${!have.has(i) ? ' disabled' : fits.has(i) ? '' : ' class="off"'}>${seatAbbr(nm)}</button>`).join('')}</div></div>`;
   }).join('');
@@ -1009,7 +1010,8 @@ function renderCharts() {
   if (!fams.includes(UI.cFam)) UI.cFam = fams[0];
   $('#c-fam').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${f === UI.cFam}" title="${FAM[f].label}">${HEAT_LABEL[f] || FAM[f].label}</button>`).join('');
   const sits = cSits(), sit = cCurSit();
-  $('#c-sit').innerHTML = seatRowsHTML(sits, sit, POS[sit.n]);
+  const shownD = cCurSpot().dp;  // seats not solved at the stack on screen are dimmed
+  $('#c-sit').innerHTML = seatRowsHTML(sits, sit, POS[sit.n], s => s.depths.includes(shownD));
   const sp = cCurSpot(); UI.cDp = sp.dp;
   const sl = $('#c-slider'); sl.max = sit.depths.length - 1; sl.value = sp.idx;
   $('#c-ticks').innerHTML = ticksHTML(sit.depths, sp.dp, $('#c-ticks').clientWidth || 300);
@@ -1350,7 +1352,6 @@ function renderIcm() {
   $('#i-fam').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${f === UI.iFam}" title="${FAM[f].label}">${HEAT_LABEL[f] || FAM[f].label}</button>`).join('');
   const sits = icmSits(UI.iFam);
   let base = sits.find(s => s.key === UI.iSit) || sits.find(s => s.fam !== 'RFI' || s.hero === 4) || sits[0]; UI.iSit = base.key;
-  $('#i-sit').innerHTML = seatRowsHTML(sits, base, POS[base.n]);
   const dps = iDps = [...new Set(PHASES.flatMap((p, i) => { const sk = ['icm8', p.gt, base.fam, base.hero, base.vs, base.caller].join('|'); const s = SITS.get(sk); return s ? s.depths : []; }))].sort((a, b) => a - b);
   if (UI.iDpPref == null) UI.iDpPref = UI.iDp || 20;
   const wantD = UI.iDpPref;  // the stack you picked; a spot without it shows the nearest one
@@ -1359,6 +1360,7 @@ function renderIcm() {
   $('#i-dp-ticks').innerHTML = ticksHTML(dps, UI.iDp, $('#i-dp-ticks').clientWidth || 260);
   const avail = PHASES.map((p, i) => !!icmSpot(base, i, UI.iDp));
   iPh = avail[UI.iPhase] ? UI.iPhase : avail.lastIndexOf(true);  // shown stage; your pick stays for the next stack
+  $('#i-sit').innerHTML = seatRowsHTML(sits, base, POS[base.n], s => !!icmSpot(s, iPh, UI.iDp));  // dimmed: not solved at this stage and stack
   $('#i-phase').innerHTML = PHASES.map((p, i) => `<button data-p="${i}" aria-pressed="${i === iPh}" ${avail[i] ? '' : 'disabled'}>${p.short}</button>`).join('');
   $('#i-dpb').textContent = UI.iDp;
   const sp = icmSpot(base, iPh, UI.iDp);

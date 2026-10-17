@@ -908,12 +908,13 @@ const VS_ROLE = { BBvsOpen: 'Opener', BBvsLimp: 'Limper', vsOpen: 'Opener', vs3b
 /* ---------- Charts filters: one strip of table seats per role ---------- */
 const seatAbbr = nm => nm.replace('UTG+', 'U+');
 const ROLE_KEYS = ['hero', 'vs', 'caller'];
-/* a row for each role that varies in this spot; seats that need another role moved are dimmed, seats that never occur are off */
-function seatRowsHTML(sits, cur, names) {
+/* a row for each role that varies in this spot; seats that need another role moved, or that aren't solved at this
+   stack (here(sit) is false), are dimmed; seats that never occur are off */
+function seatRowsHTML(sits, cur, names, here) {
   const keys = ROLE_KEYS.filter(k => new Set(sits.map(s => s[k])).size > 1);
   return keys.map(k => {
     const have = new Set(sits.map(s => s[k]));
-    const fits = new Set(sits.filter(s => keys.every(o => o === k || s[o] === cur[o])).map(s => s[k]));
+    const fits = new Set(sits.filter(s => keys.every(o => o === k || s[o] === cur[o]) && (!here || here(s))).map(s => s[k]));
     const lab = k === 'hero' ? 'You' : k === 'caller' ? 'Caller' : VS_ROLE[cur.fam] || 'Villain';
     return `<div class="frow"><span class="flab">${lab}</span><div class="seatpick" data-k="${k}">${names.map((nm, i) => `<button data-v="${i}" title="${nm}" aria-pressed="${cur[k] === i}"${!have.has(i) ? ' disabled' : fits.has(i) ? '' : ' class="off"'}>${seatAbbr(nm)}</button>`).join('')}</div></div>`;
   }).join('');
@@ -1001,7 +1002,8 @@ function renderCharts() {
   if (!fams.includes(UI.cFam)) UI.cFam = fams[0];
   $('#c-fam').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${f === UI.cFam}" title="${famLabel(f, UI.cTag)}">${heatLabel(f, UI.cTag)}</button>`).join('');
   const sits = cSits(), sit = cCurSit();
-  $('#c-sit').innerHTML = seatRowsHTML(sits, sit, P(sit.tag));
+  const shown = cCurSpot();  // seats not solved at the open size and stack on screen are dimmed
+  $('#c-sit').innerHTML = seatRowsHTML(sits, sit, P(sit.tag), s => SPOT_AT.has(s.key + '|' + shown.open + '|' + shown.dp));
   $('#c-note').textContent = GAMES[UI.cTag].desc + '.' + (UI.cTag === 'str' ? ' The straddler (STR) acts last preflop.' : '');
   const sp = cCurSpot(); UI.cOpen = sp.open; UI.cDp = sp.dp;
   $('#c-film-lab').textContent = UI.cAxis === 'open' ? `Every open size at ${UI.cDp}bb` : `Every stack depth with ${UI.cOpen} opens`;
