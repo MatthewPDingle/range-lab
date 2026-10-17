@@ -330,12 +330,9 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .heat-key i{flex:0 1 120px;min-width:40px;height:8px;border-radius:999px;background:linear-gradient(90deg,var(--good),var(--ok),var(--bad));background:linear-gradient(90deg in oklch,var(--good),var(--bad))}
 .heat button.hc:not(.none):not(.nodata){text-shadow:0 1px 2px rgba(0,0,0,.45)}
 .heat .hc.nodata{background:var(--surface-2);color:var(--muted)}
-/* unfolded app: the left pane fits without scrolling at full chart and thumbnail size. The colour legend
-   (the action bars on the right show the same colours) and the thumbnail caption (the slider box says it) are left out. */
+/* unfolded app: the left pane fits without scrolling at full chart and thumbnail size */
 @media (min-width:600px){
   html.app #v-charts .stage{gap:5px;padding-bottom:0}
-  html.app #v-charts .seats .seat{padding-block:4px}
-  html.app #v-charts #c-legend,html.app #v-charts #c-film-lab{display:none}
   html.app #v-charts .film{scrollbar-width:none;padding-bottom:0}
   html.app #v-charts .film figure{padding:1px 3px;gap:2px}
 }
@@ -396,7 +393,6 @@ html.app .ctl .frow .seg button{min-height:30px}
       </aside>
       <div class="stage">
         <p class="scn" id="c-scn"></p>
-        <div class="seats" id="c-seats"></div>
         <div class="grid" id="c-grid"></div>
         <div class="legend" id="c-legend"></div>
         <div><p class="eyebrow" id="c-film-lab">Every step for this spot</p><div class="film" id="c-film"></div></div>
@@ -1025,7 +1021,6 @@ function renderChartsGrid(animate) {
   const sp = cCurSpot(); if (!sp) return;
   renderClock(sp);
   $('#c-scn').innerHTML = `<span>${narrate(sp)}</span>`;
-  $('#c-seats').innerHTML = seatsHTML(sp);
   const kinds = [...new Set(sp.order.map(a => sp.A[a].kind))];
   $('#c-legend').innerHTML = legendHTML(kinds);
   cGrid.show(sp, { animate, marks: g => (g === cSel ? 'sel' : '') });
