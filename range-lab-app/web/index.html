@@ -24,7 +24,7 @@ header{padding-inline:20px;padding-block:22px 6px}
 header h1{margin:0;font:800 44px/0.95 var(--f-display);text-transform:uppercase;letter-spacing:.01em}
 header p{margin:6px 0 0;color:var(--muted)}
 .doors{flex:1;display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding-inline:20px;padding-block:16px 20px;align-content:start}
-@media (min-width:600px){ .doors{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-content:stretch} }
+@media (min-width:600px){ .doors{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-content:stretch;padding-block:10px 14px} }
 a.door{display:flex;flex-direction:column;gap:12px;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;min-height:220px;position:relative;overflow:hidden}
 a.door:active{transform:scale(.99)}
 a.door .eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
@@ -39,7 +39,8 @@ svg.motif{position:absolute;right:16px;top:16px;width:88px;height:88px;opacity:.
 .chart{display:none;grid-template-columns:repeat(13,minmax(0,1fr));gap:2px;width:100%;max-width:420px;align-self:center;margin-block:6px}
 .chart i{aspect-ratio:1;border-radius:2px;background:var(--empty)}
 @media (min-width:600px){ .chart{display:grid} svg.motif{display:none} }
-footer{padding-inline:20px;padding-block:0 20px;color:var(--muted);font-size:12.5px}
+footer{padding-inline:20px;padding-block:0 20px;color:var(--muted);font-size:12.5px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px}
+footer .ver{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -67,7 +68,7 @@ footer{padding-inline:20px;padding-block:0 20px;color:var(--muted);font-size:12.
     <span class="go">Open</span>
   </a>
 </main>
-<footer>Everything runs offline; your drill progress stays on this phone.</footer>
+<footer><span>Everything runs offline; your drill progress stays on this phone.</span><span class="ver">Version __VERSION__</span></footer>
 <script>
 'use strict';
 function motif(id, pat) {

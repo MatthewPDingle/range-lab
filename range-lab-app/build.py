@@ -61,8 +61,12 @@ def build_assets():
     www = BUILD / "assets" / "www"
     shutil.rmtree(BUILD / "assets", ignore_errors=True)
     www.mkdir(parents=True)
-    for name in ("index.html", "app.css", "app.js"):
+    for name in ("app.css", "app.js"):
         shutil.copy(ROOT / "web" / name, www / name)
+    # the home screen shows the version from the manifest, so it always matches the installed build
+    version = re.search(r'android:versionName="([^"]+)"', (ROOT / "android" / "AndroidManifest.xml").read_text(encoding="utf-8")).group(1)
+    home = replace_once((ROOT / "web" / "index.html").read_text(encoding="utf-8"), "__VERSION__", version)
+    (www / "index.html").write_text(home, encoding="utf-8")
     (www / "tournament.html").write_text(app_page(SOURCES / "ville600-range-lab.html", [
         ("<title>Ville 600 Range Lab</title>", "<title>Tournament · Range Lab</title>"),
         ('<div class="chip-mark" aria-hidden="true">600</div><div><b>Ville 600 Range Lab</b><span>Preflop tournament ranges, 5–100bb</span></div>',
