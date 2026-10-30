@@ -570,6 +570,7 @@ const PHASES = [
   { gt: 'MTTGeneral_ICM8m1000PTPCT50', label: 'Half the field left', short: '50% left' },
   { gt: 'MTTGeneral_ICM8m1000PTBUBBLE152PT', label: 'Bubble', short: 'Bubble' },
   { gt: 'MTTGeneral_ICM8m1000PTPCT10', label: 'In the money, 10% left', short: 'ITM 10%' },
+  { gt: 'MTTGeneral_ICM8m1000PTT2', label: 'Two tables left', short: '2 tables' },
   { gt: 'MTTGeneral_ICM8m1000PTFT', label: 'Final table', short: 'Final table' },
 ];
 const PHASE_OF = Object.fromEntries(PHASES.map((p, i) => [p.gt, i]));
@@ -855,6 +856,8 @@ function handDetailHTML(spot, g) {
 const UI = Object.assign({ tab: 'charts', cFam: 'RFI', cSit: null, cDp: 20, lens: GIDX['KJo'], iFam: 'RFI', iSit: null, iDp: 20, iPhase: 2, dMode: 'quick', dTag: 'cev9', dFams: FAM_ORDER, dBands: BANDS.map(b => b.id), dLen: 40, dHeatBy: 'score' }, load('v600-ui') || {});
 const saveUI = () => store('v600-ui', UI);
 if (['RFI', 'BBvsOpen', 'BBvsLimp', 'BBvsJam', 'vsOpen', 'vsJam', 'OpenVsJam', 'OpenVs3bet', 'Squeeze'].every(f => UI.dFams.includes(f)) && !UI.dFams.includes('ThreebetVs4bet')) UI.dFams = [...UI.dFams, 'ThreebetVs4bet', 'ThreebetVsJam'];
+// 2 tables now sits before the final table: a saved stage pick from the final table on moves up one, and a saved ICM deck with the final table gets 2 tables too
+if (!UI.t2) { if (UI.iPhase >= 4) UI.iPhase++; if (UI.dPhases && UI.dPhases.includes('MTTGeneral_ICM8m1000PTFT') && !UI.dPhases.includes('MTTGeneral_ICM8m1000PTT2')) UI.dPhases = [...UI.dPhases, 'MTTGeneral_ICM8m1000PTT2']; UI.t2 = 1; }
 
 /* ---------- tabs ---------- */
 /* jumping to a tab from a link (Open in Hand lens, Open chart…) starts it at the top; in the app the panes scroll, not the window */
