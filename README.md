@@ -15,7 +15,7 @@ The range data is solver output from a personal subscription, so it isn't publis
 
 | Path | What it is |
 |---|---|
-| `ville600-range-lab.html` | Tournament trainer page (loads `data.js`, `window.RANGE_DATA`) |
+| `tournament-range-lab.html` | Tournament trainer page (loads `data.js`, `window.RANGE_DATA`) |
 | `cash-range-lab.html` | Cash trainer page (loads `cash-data.js`, `window.CASH_DATA`) |
 | `range-lab-app/web/` | App home screen, app stylesheet (two-pane layout at 600px+), app script |
 | `range-lab-app/android/` | Manifest, WebView activity, icons |

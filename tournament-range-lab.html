@@ -1,4 +1,4 @@
-<title>Ville 600 Range Lab</title>
+<title>Tournament Range Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -374,7 +374,7 @@ html.app .ctl .frow .seg button{min-height:30px}
 
 <header class="top">
   <div class="top-in">
-    <div class="brand"><div class="chip-mark" aria-hidden="true">600</div><div><b>Ville 600 Range Lab</b><span>Preflop tournament ranges, 5–100bb</span></div></div>
+    <div class="brand"><div class="chip-mark" aria-hidden="true">MTT</div><div><b>Tournament Range Lab</b><span>Preflop tournament ranges, 5–100bb</span></div></div>
     <nav class="tabs" role="tablist" id="tabs">
       <button role="tab" data-tab="charts">Chip EV Charts</button>
       <button role="tab" data-tab="icm">ICM Stage Charts</button>
@@ -515,7 +515,7 @@ html.app .ctl .frow .seg button{min-height:30px}
 
   <!-- METHOD -->
   <section class="view" id="v-method" hidden>
-    <h2 class="title">How to use this before the Ville 600</h2>
+    <h2 class="title">How to study tournament ranges</h2>
     <p class="lede">You can't memorise hundreds of charts as pictures. You can memorise a few dozen edges and how they move with stack depth. Everything in this tool is built around that.</p>
     <div class="method">
       <div class="panel">
@@ -853,8 +853,10 @@ function handDetailHTML(spot, g) {
 }
 
 /* ---------- state ---------- */
-const UI = Object.assign({ tab: 'charts', cFam: 'RFI', cSit: null, cDp: 20, lens: GIDX['KJo'], iFam: 'RFI', iSit: null, iDp: 20, iPhase: 2, dMode: 'quick', dTag: 'cev9', dFams: FAM_ORDER, dBands: BANDS.map(b => b.id), dLen: 40, dHeatBy: 'score' }, load('v600-ui') || {});
-const saveUI = () => store('v600-ui', UI);
+// versions before 2.0.10 saved these under the old page name: move them over once so settings and drill history carry on
+for (const [from, to] of [['v600-ui', 'tournament-ui'], ['v600-progress', 'tournament-progress']]) { try { const v = localStorage.getItem(from); if (v != null && localStorage.getItem(to) == null) localStorage.setItem(to, v); localStorage.removeItem(from); } catch (e) { } }
+const UI = Object.assign({ tab: 'charts', cFam: 'RFI', cSit: null, cDp: 20, lens: GIDX['KJo'], iFam: 'RFI', iSit: null, iDp: 20, iPhase: 2, dMode: 'quick', dTag: 'cev9', dFams: FAM_ORDER, dBands: BANDS.map(b => b.id), dLen: 40, dHeatBy: 'score' }, load('tournament-ui') || {});
+const saveUI = () => store('tournament-ui', UI);
 if (['RFI', 'BBvsOpen', 'BBvsLimp', 'BBvsJam', 'vsOpen', 'vsJam', 'OpenVsJam', 'OpenVs3bet', 'Squeeze'].every(f => UI.dFams.includes(f)) && !UI.dFams.includes('ThreebetVs4bet')) UI.dFams = [...UI.dFams, 'ThreebetVs4bet', 'ThreebetVsJam'];
 // 2 tables now sits before the final table: a saved stage pick from the final table on moves up one, and a saved ICM deck with the final table gets 2 tables too
 if (!UI.t2) { if (UI.iPhase >= 4) UI.iPhase++; if (UI.dPhases && UI.dPhases.includes('MTTGeneral_ICM8m1000PTFT') && !UI.dPhases.includes('MTTGeneral_ICM8m1000PTT2')) UI.dPhases = [...UI.dPhases, 'MTTGeneral_ICM8m1000PTT2']; UI.t2 = 1; }
@@ -1417,7 +1419,7 @@ $('#i-rail').addEventListener('click', e => {
 
 /* ---------- progress store (device + account) ---------- */
 const Progress = {
-  key: 'v600-progress',
+  key: 'tournament-progress',
   data: { v: 1, updated: 0, items: {}, stats: {}, log: [] },
   ref: null, busy: false, again: false, timer: null,
   init() { const d = load(this.key); if (d && d.v === 1) this.data = Object.assign(this.data, d); },

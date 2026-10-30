@@ -94,6 +94,8 @@ function chart(id, hi, mid, top, edge) {
 }
 chart('c1', 'R', 'J', 18.5, 13.5);
 chart('c2', 'R', 'C', 19.5, 15.5);
+// versions before 2.0.10 saved these under the old page name: move them over once so settings and drill history carry on
+for (const [from, to] of [['v600-ui', 'tournament-ui'], ['v600-progress', 'tournament-progress']]) { try { const v = localStorage.getItem(from); if (v != null && localStorage.getItem(to) == null) localStorage.setItem(to, v); localStorage.removeItem(from); } catch (e) { } }
 function stats(key, el) {
   let d = null; try { d = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { }
   if (!d || !d.log || !d.log.length) { el.innerHTML = '<span>No drills yet.</span>'; return; }
@@ -103,9 +105,9 @@ function stats(key, el) {
   const due = Object.values(d.items || {}).filter(v => v[1] <= now).length;
   el.innerHTML = `<span>Last drill: ${new Date(last[0]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · ${names[last[1]] || last[1]} · <b>${last[3]}%</b></span><span><b>${due}</b> review${due === 1 ? '' : 's'} due</span>`;
 }
-stats('v600-progress', document.getElementById('s-mtt'));
+stats('tournament-progress', document.getElementById('s-mtt'));
 stats('cash-progress', document.getElementById('s-cash'));
-window.addEventListener('pageshow', () => { stats('v600-progress', document.getElementById('s-mtt')); stats('cash-progress', document.getElementById('s-cash')); });
+window.addEventListener('pageshow', () => { stats('tournament-progress', document.getElementById('s-mtt')); stats('cash-progress', document.getElementById('s-cash')); });
 </script>
 </body>
 </html>

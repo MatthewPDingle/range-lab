@@ -50,8 +50,6 @@ def app_page(src, renames):
     body = replace_once(body, '<div class="brand">', '<a class="home-link" href="index.html" aria-label="Back to Range Lab">&lsaquo;</a><div class="brand">')
     body = body.replace("'Roboto Condensed',sans-serif", "'Roboto Condensed','sans-serif-condensed',sans-serif")
     body = replace_once(body, "</style>", '</style>\n<link rel="stylesheet" href="app.css">')
-    if re.search(r"ville", body, re.I):
-        raise SystemExit(f"{src.name}: Ville branding left in the page")
     head = ('<!doctype html>\n<html lang="en" class="app">\n<head>\n<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n</head>\n<body>\n')
     return head + body + '\n<script src="app.js"></script>\n</body>\n</html>\n'
@@ -67,11 +65,10 @@ def build_assets():
     version = re.search(r'android:versionName="([^"]+)"', (ROOT / "android" / "AndroidManifest.xml").read_text(encoding="utf-8")).group(1)
     home = replace_once((ROOT / "web" / "index.html").read_text(encoding="utf-8"), "__VERSION__", version)
     (www / "index.html").write_text(home, encoding="utf-8")
-    (www / "tournament.html").write_text(app_page(SOURCES / "ville600-range-lab.html", [
-        ("<title>Ville 600 Range Lab</title>", "<title>Tournament · Range Lab</title>"),
-        ('<div class="chip-mark" aria-hidden="true">600</div><div><b>Ville 600 Range Lab</b><span>Preflop tournament ranges, 5–100bb</span></div>',
-         '<div class="chip-mark" aria-hidden="true">MTT</div><div><b>Tournament</b><span>Preflop, 5–100bb</span></div>'),  # short enough for one header row with the chart tab names
-        ("How to use this before the Ville 600", "How to study tournament ranges"),
+    (www / "tournament.html").write_text(app_page(SOURCES / "tournament-range-lab.html", [
+        ("<title>Tournament Range Lab</title>", "<title>Tournament · Range Lab</title>"),
+        ('<b>Tournament Range Lab</b><span>Preflop tournament ranges, 5–100bb</span>',
+         '<b>Tournament</b><span>Preflop, 5–100bb</span>'),  # short enough for one header row with the chart tab names
     ]), encoding="utf-8")
     (www / "cash.html").write_text(app_page(SOURCES / "cash-range-lab.html", [
         ("<title>Live Cash Range Lab</title>", "<title>Live cash · Range Lab</title>"),
