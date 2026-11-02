@@ -7,5 +7,6 @@ __pycache__/
 # private: solver data (also bundled inside the APK), the signing key, and the crawler
 data.js
 cash-data.js
+sng-data.js
 *.keystore
 tools/crawler.js

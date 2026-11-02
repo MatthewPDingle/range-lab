@@ -1,6 +1,6 @@
 """Build the Range Lab Android app (RangeLab.apk) without Gradle.
 
-Steps: assemble the web assets from the two trainer pages, compile resources with aapt2,
+Steps: assemble the web assets from the three trainer pages, compile resources with aapt2,
 compile the activity with javac, dex it with d8, then zipalign and sign with apksigner.
 
 Usage:  python build.py
@@ -14,7 +14,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-SOURCES = ROOT.parent                      # folder holding the two trainer pages and their data files
+SOURCES = ROOT.parent                      # folder holding the three trainer pages and their data files
 TOOLS = Path(r"C:\Users\there\android-build")
 JDK = next((TOOLS / "jdk").glob("jdk-*"))
 SDK = TOOLS / "sdk"
@@ -74,8 +74,13 @@ def build_assets():
         ("<title>Live Cash Range Lab</title>", "<title>Live cash · Range Lab</title>"),
         ("<b>Live Cash Range Lab</b><span>8-handed preflop, regular and straddle games</span>", "<b>Live cash</b><span>8-handed, regular and straddle</span>"),
     ]), encoding="utf-8")
+    (www / "sng.html").write_text(app_page(SOURCES / "sng-range-lab.html", [
+        ("<title>Sit & Go Range Lab</title>", "<title>Sit & Go · Range Lab</title>"),
+        ("<b>Sit & Go Range Lab</b><span>Heads-up preflop ranges, 1–72bb</span>", "<b>Sit & Go</b><span>Heads-up, 1–72bb</span>"),
+    ]), encoding="utf-8")
     shutil.copy(SOURCES / "data.js", www / "data.js")
     shutil.copy(SOURCES / "cash-data.js", www / "cash-data.js")
+    shutil.copy(SOURCES / "sng-data.js", www / "sng-data.js")
 
 
 def build_apk():

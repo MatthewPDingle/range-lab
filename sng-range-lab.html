@@ -1,0 +1,1873 @@
+<title>Sit & Go Range Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a tournament-clock bar (stack depth is the hero numeral), the 13x13 chart centre stage,
+   spot controls on the left, a reading rail on the right; tabs for hand lens, ICM, drills and method. */
+:root{
+  --bg:#eceff1; --surface:#ffffff; --surface-2:#f4f6f7; --line:#d3dade; --fg:#13212b; --muted:#56666f; --faint:#87949c;
+  --accent:#9c6a17; --accent-soft:#f1e4cb; --accent-fg:#ffffff;
+  --k-F:#5a85ad; --k-C:#3a965a; --k-X:#4f8d70; --k-R:#de5546; --k-B:#e08a2c; --k-J:#991e3b;
+  --empty:#dfe5e8; --cell-fg:#ffffff; --cell-dim:#93a1aa;
+  --good:#2c8a4d; --ok:#ad7618; --bad:#c43f3c;
+  --card:#ffffff; --card-edge:#c9d0d4; --felt:#e2e9ec; --felt-2:#d3dde2; --rail:#c4cfd5; --suit-s:#1a1a1a; --suit-h:#cf2f2d; --suit-d:#2860c6; --suit-c:#2a873b;
+  --shadow:0 1px 2px rgba(20,33,43,.06), 0 4px 14px rgba(20,33,43,.06);
+  --f-display:'Big Shoulders Display','Arial Narrow','Roboto Condensed',sans-serif;
+  --f-body:'Figtree',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1418; --surface:#151d22; --surface-2:#1b252b; --line:#29343b; --fg:#e4eaed; --muted:#92a1aa; --faint:#64737c;
+    --accent:#e0aa55; --accent-soft:#33291a; --accent-fg:#1a1206;
+    --k-F:#3c6990; --k-C:#359157; --k-X:#46866a; --k-R:#d4513e; --k-B:#cf7e2a; --k-J:#8c1b37;
+    --empty:#212b31; --cell-fg:#ffffff; --cell-dim:#5b6a73;
+    --good:#47ad69; --ok:#d49a3d; --bad:#e25f5a;
+    --card:#f3f3f1; --card-edge:#3a464e; --felt:#1c2930; --felt-2:#162127; --rail:#2b3a43;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1418; --surface:#151d22; --surface-2:#1b252b; --line:#29343b; --fg:#e4eaed; --muted:#92a1aa; --faint:#64737c;
+  --accent:#e0aa55; --accent-soft:#33291a; --accent-fg:#1a1206;
+  --k-F:#3c6990; --k-C:#359157; --k-X:#46866a; --k-R:#d4513e; --k-B:#cf7e2a; --k-J:#8c1b37;
+  --empty:#212b31; --cell-fg:#ffffff; --cell-dim:#5b6a73;
+  --good:#47ad69; --ok:#d49a3d; --bad:#e25f5a;
+  --card:#f3f3f1; --card-edge:#3a464e; --felt:#1c2930; --felt-2:#162127; --rail:#2b3a43;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body);margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1380px;margin:0 auto;padding-inline:16px;padding-block:0 48px}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{max-width:1380px;margin:0 auto;padding-inline:16px;padding-block:10px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.chip-mark{width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font:800 13px/1 var(--f-display);letter-spacing:.02em;box-shadow:inset 0 0 0 3px var(--bg),inset 0 0 0 5px var(--accent)}
+.brand b{font:800 22px/1 var(--f-display);letter-spacing:.01em;text-transform:uppercase}
+.brand span{display:block;font-size:12px;color:var(--muted);line-height:1.2}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.tabs button{border:0;background:none;padding:8px 12px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg)}
+.sync{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block}
+.sync.on i{background:var(--good)}
+@media (max-width:720px){.sync{display:none}.brand span{display:none}}
+
+.view{padding-block:18px 0}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 7px}
+h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spacing:.01em;margin:0 0 4px;text-wrap:balance}
+.lede{color:var(--muted);margin:0 0 16px;max-width:68ch}
+
+/* controls */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button,.seg button{border:1px solid var(--line);background:var(--surface);padding:6px 11px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;color:var(--fg)}
+.chips button[aria-pressed="true"]{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+.chips button:disabled,.seg button:disabled{opacity:.4;cursor:default}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--surface);gap:2px;flex-wrap:wrap}
+.seg button{border:0;padding:5px 12px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:9px 14px;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.ghost{background:none}
+.btn:disabled{opacity:.5;cursor:default}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* charts layout */
+.charts{display:grid;grid-template-columns:250px minmax(0,1fr) 330px;gap:20px;align-items:start}
+.ctl{display:flex;flex-direction:column;gap:18px;position:sticky;top:76px}
+.stage{min-width:0;display:flex;flex-direction:column;gap:12px}
+.rail{min-width:0;display:flex;flex-direction:column;gap:14px}
+@media (max-width:1180px){.charts{grid-template-columns:230px minmax(0,1fr)}.rail{grid-column:1 / -1;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}}
+@media (max-width:780px){
+  .charts{grid-template-columns:minmax(0,1fr);gap:14px}
+  .ctl{position:static;gap:10px}
+  .ctl .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .ctl .chips button{white-space:nowrap}
+  .ctl .note{display:none}
+  .ctl .eyebrow{margin-bottom:5px}
+  .rail{display:flex}
+  .clock{padding:8px 12px;gap:10px}
+  .clock-num b{font-size:52px}
+  .seats{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .stack-big{font-size:58px}
+  .pcard{width:64px;height:90px}.pcard .rk{font-size:38px}.pcard .st{font-size:26px}
+  .acts button{min-width:0;padding:12px 6px}
+}
+
+/* the stack clock */
+.clock{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;flex-wrap:wrap}
+.clock-num{display:flex;align-items:baseline;gap:4px;min-width:96px}
+.clock-num b{font:800 64px/0.9 var(--f-display);font-variant-numeric:tabular-nums;color:var(--accent)}
+.clock-num small{font:600 18px/1 var(--f-display);color:var(--muted);text-transform:uppercase}
+.clock-mid{flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px}
+.clock-mid input[type=range]{width:100%;accent-color:var(--accent);margin:0;direction:rtl}
+.ticks{position:relative;height:16px;font:500 10px/1 var(--f-mono);color:var(--faint)}
+.ticks span{position:absolute;transform:translateX(-50%);top:3px;white-space:nowrap}
+.ticks span.on{color:var(--fg);font-weight:600}
+
+/* scenario + seats */
+.scn{font-size:15px;margin:0}
+.scn b{font-weight:700}
+.seats{display:flex;gap:4px;flex-wrap:wrap}
+.seat{font:600 11px/1 var(--f-mono);padding:5px 7px;border-radius:6px;background:var(--surface-2);color:var(--muted);border:1px solid var(--line);display:inline-flex;gap:5px;align-items:center}
+.seat.s-fold{opacity:.45;text-decoration:line-through}
+.seat.s-R{background:var(--k-R);color:#fff;border-color:transparent}
+.seat.s-J{background:var(--k-J);color:#fff;border-color:transparent}
+.seat.s-C{background:var(--k-C);color:#fff;border-color:transparent}
+.seat.me{box-shadow:0 0 0 2px var(--accent);color:var(--fg);opacity:1;text-decoration:none}
+.seat em{font-style:normal;font-weight:500;opacity:.85}
+
+/* range grid */
+.grid{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:2px;width:100%;max-width:640px;user-select:none;-webkit-user-select:none}
+.grid.mini{max-width:340px;gap:1px}
+.cell{position:relative;aspect-ratio:1;border-radius:3px;background:var(--empty);color:var(--cell-fg);font:600 clamp(7.5px,1.15vw,12.5px)/1 var(--f-mono);padding:3px 3px;overflow:hidden;cursor:pointer;transition:box-shadow .15s}
+.grid.mini .cell{font-size:clamp(6.5px,1.6vw,9px);padding:2px;border-radius:2px}
+.cell .nm{position:relative;z-index:1;text-shadow:0 1px 1px rgba(0,0,0,.25)}
+.cell.out .nm{color:var(--cell-dim);text-shadow:none}
+.cell .val{position:absolute;inset:0;display:grid;place-items:center;padding-top:28%;font:700 clamp(9px,1.5vw,16px)/1 var(--f-mono);z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+.cell.sel{box-shadow:inset 0 0 0 2px var(--fg)}
+.cell.target{box-shadow:0 0 0 3px var(--accent),inset 0 0 0 1px var(--bg);z-index:2}
+#b-sub:empty{display:none}
+.cell.dimmed{opacity:.28}
+.cell.pop{animation:pop .42s ease-out}
+@keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.18);z-index:3}100%{transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){.cell.pop{animation:none}}
+.grid.paint .cell{cursor:crosshair;touch-action:none}
+.grid.paint{touch-action:none}
+.cell.mark-ok::after,.cell.mark-bad::after,.cell.mark-mix::after{content:"";position:absolute;right:2px;bottom:2px;width:30%;height:30%;border-radius:50%;z-index:2}
+.cell.mark-bad::after{background:#ff4d4d;box-shadow:0 0 0 1.5px #fff}
+.cell.mark-mix::after{background:#ffc04a;box-shadow:0 0 0 1.5px #fff}
+
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
+.film{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.film figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px;border-radius:6px;border:1px solid transparent}
+.film figure.on{border-color:var(--accent);background:var(--accent-soft)}
+.film figcaption{font:600 11px/1 var(--f-mono);color:var(--muted)}
+.film figure.on figcaption{color:var(--fg)}
+
+/* rail */
+.rail .panel h3{font:800 17px/1.1 var(--f-display);text-transform:uppercase;letter-spacing:.02em;margin:0 0 10px}
+.mix{display:flex;flex-direction:column;gap:6px}
+.mix-row{display:grid;grid-template-columns:86px 1fr 46px;align-items:center;gap:8px;font-size:13px}
+.bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%}
+.edges{display:grid;grid-template-columns:max-content 1fr;gap:5px 10px;font-size:12.5px;align-items:center}
+.edges .lad{display:flex;gap:2px;align-items:center;flex-wrap:wrap}
+.edges .lad i{width:10px;height:14px;border-radius:2px;display:inline-block}
+.edges .lad span{font-family:var(--f-mono);margin-left:6px}
+.edges .nm{font-weight:600;color:var(--muted)}
+.handbox{display:flex;flex-direction:column;gap:8px;font-size:13px}
+.handbox .hn{font:800 26px/1 var(--f-display)}
+.taglist{font-family:var(--f-mono);font-size:12.5px;line-height:1.7}
+.taglist span{display:inline-block;padding:0 5px;border-radius:4px;background:var(--surface-2);margin:0 3px 3px 0}
+
+/* lens */
+.lens-head{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}
+.lens-pick{display:flex;flex-direction:column;gap:8px}
+.lens-pick input{font:600 16px var(--f-mono);padding:8px 10px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--fg);width:120px;text-transform:none}
+.lens-blocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,560px),1fr));gap:16px}
+.mx{overflow-x:auto}
+.mx-in{position:relative;min-width:520px}
+.mx-row{display:grid;grid-template-columns:var(--lab,132px) minmax(0,1fr);gap:10px;align-items:center;padding:5px 0;border-top:1px solid var(--line)}
+.mx-lines{position:absolute;top:0;bottom:0;left:calc(var(--lab,132px) + 10px);right:0;display:grid;grid-template-columns:repeat(var(--cols),minmax(14px,1fr));gap:2px;pointer-events:none;z-index:0}
+.mx-in>.mx-row{position:relative;z-index:1}
+.mx-lines i{position:relative}
+.mx-lines i.on::after{content:"";position:absolute;left:50%;top:15px;bottom:2px;width:1px;margin-left:-.5px;background:color-mix(in srgb,var(--fg) 45%,transparent)}
+.mx-row.hd{border-top:0;padding-bottom:2px}
+/* the stack labels repeat under the last row; the marker lines stop above them */
+.mx-row.hd.ft{border-top:1px solid var(--line);padding:4px 0 0}
+.mx-in.has-ft .mx-lines i.on::after{bottom:18px}
+.mx-row.mx-grp{border-top:0;padding:10px 0 0}
+.mx-grp .mx-lab{font:700 10.5px/1.2 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
+.mx-lab b{font:600 13px var(--f-mono)}
+.mx-lab .rule{display:block;font-size:11.5px;color:var(--muted);line-height:1.3}
+.mx-strip{display:grid;grid-template-columns:repeat(var(--cols),minmax(14px,1fr));gap:2px}
+.mx-strip .c{height:22px;border-radius:3px;background:var(--empty)}
+.mx-strip .c.na{background:repeating-linear-gradient(45deg,var(--empty) 0 3px,transparent 3px 6px)}
+.mx-strip .c.none{background:transparent}
+.mx-strip .d{font:500 10px/1 var(--f-mono);color:var(--faint);text-align:center}
+.mx-strip .d.k{color:var(--fg);font-weight:600}
+
+/* drill */
+.drill-home{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.drill-home{grid-template-columns:minmax(0,1fr)}}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.mode{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.mode b{font:800 19px/1 var(--f-display);text-transform:uppercase;letter-spacing:.02em}
+.mode span{font-size:12.5px;color:var(--muted);line-height:1.35}
+.mode[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:var(--accent-soft)}
+.form{display:flex;flex-direction:column;gap:16px;margin-top:16px}
+.heat{display:grid;gap:3px;font-size:11.5px;overflow-x:auto}
+.heat .hc{border-radius:4px;padding:0 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font:600 11px/1 var(--f-mono);color:#fff;cursor:pointer;border:0;min-width:0}
+.heat .hc small{font-size:9.5px;font-weight:500;opacity:.8}
+.heat .hc.none{background:var(--surface-2);color:var(--faint);cursor:default}
+.heat button.hc.none{cursor:pointer}
+.heat .hl{font-weight:600;color:var(--muted);align-self:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.heat .hb{font-size:10.5px;text-align:center}
+
+.q{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.q{grid-template-columns:minmax(0,1fr)}}
+.qbar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:12px}
+.qbar b{color:var(--fg);font-variant-numeric:tabular-nums}
+.prog{flex:1;min-width:120px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent)}
+.board{display:flex;flex-direction:column;gap:14px}
+.board-top{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.stack-big{font:800 72px/.85 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums}
+.stack-big small{font-size:22px;color:var(--muted);margin-left:3px}
+.board-meta{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:2px;padding-bottom:6px}
+.board-meta b{color:var(--fg);font-size:15px}
+.cards{display:flex;gap:10px}
+.pcard{width:74px;height:104px;border-radius:9px;background:var(--card);border:1px solid var(--card-edge);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:var(--f-display)}
+.pcard .rk{font-weight:800;font-size:44px;line-height:1}
+.pcard .st{font-size:30px;line-height:1}
+.pcard.s-s{color:var(--suit-s)}.pcard.s-h{color:var(--suit-h)}.pcard.s-d{color:var(--suit-d)}.pcard.s-c{color:var(--suit-c)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts button{flex:1;min-width:110px;border:0;border-radius:10px;padding:14px 10px;font-weight:700;font-size:15px;line-height:1.25;color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px}
+.acts button small{font:500 11px/1 var(--f-mono);opacity:.8}
+.acts button:disabled{cursor:default}
+.acts button.chosen{outline:3px solid var(--fg);outline-offset:2px}
+/* quick-fire table */
+.tblw{container-type:inline-size;width:100%}
+.tbl{position:relative;width:33.3em;height:29em;margin:0 auto;font-size:min(3cqw,15px)}
+.tbl .felt{position:absolute;left:2.3em;right:2.3em;top:2.4em;bottom:3.4em;border-radius:999px;background:radial-gradient(ellipse at 50% 42%,var(--felt),var(--felt-2));border:.6em solid var(--rail)}
+.ts{position:absolute;transform:translate(-50%,-50%);min-width:4.7em;padding:.32em .45em;border-radius:.6em;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;gap:.12em;z-index:2;white-space:nowrap}
+.ts b{font:700 1em/1.1 var(--f-body);color:var(--fg)}
+.ts span{font:500 .9em/1.1 var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.ts.act{border-color:var(--k);box-shadow:0 0 0 1px var(--k),var(--shadow)}
+.ts.act span{color:color-mix(in srgb,var(--k) 70%,var(--fg));font:700 .9em/1.1 var(--f-body)}
+.ts.f{opacity:.35;box-shadow:none}
+.ts.me{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),var(--shadow)}
+.ts.me b,.ts.me span,.ts.me.act span{color:var(--accent-fg)}
+.tb{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:.28em;padding:.2em .45em .2em .22em;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--fg);white-space:nowrap;z-index:1}
+.tb span{font:600 .92em/1 var(--f-mono)}
+.tb i{width:1em;height:1em;border-radius:50%;background:var(--k,var(--faint));box-shadow:inset 0 0 0 .2em rgba(255,255,255,.4)}
+.tdlr{position:absolute;transform:translate(-50%,-50%);width:1.25em;height:1.25em;border-radius:50%;background:#fff;color:#111;display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.35);z-index:1}
+.tdlr span{font:800 .72em/1 var(--f-body)}
+.tpot{position:absolute;transform:translate(-50%,-50%);text-align:center;display:flex;flex-direction:column;align-items:center;gap:.25em}
+.tpot b{font:800 3.3em/.85 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums}
+.tpot b small{font-size:.4em;margin-left:.08em;color:var(--muted)}
+.tpot span{font:600 .9em/1 var(--f-mono);color:var(--muted)}
+.tcards{position:absolute;transform:translate(-50%,-100%);display:flex;gap:.35em;z-index:3}
+.tbl .pcard{width:5.2em;height:7.3em;border-radius:.6em}
+.tbl .pcard .rk{font-size:3.15em}
+.tbl .pcard .st{font-size:2.2em}
+.tcap{position:absolute;left:0;top:0;font-size:.85em;line-height:1.3;color:var(--muted);max-width:8.5em}
+.tcap b{color:var(--fg);font-weight:700}
+.verdict{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;font-weight:700;font-size:17px}
+.board.qtable{gap:10px}
+.verdict.good{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.verdict.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.verdict.bad{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+.verdict small{font-weight:500;font-size:13px;color:var(--fg)}
+.fb{display:flex;flex-direction:column;gap:12px}
+.ladder-q{display:flex;flex-wrap:wrap;gap:6px}
+.ladder-q button{font:600 13px var(--f-mono);border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:8px 9px;cursor:pointer;min-width:52px;color:var(--fg)}
+.ladder-q button.k-in{color:#fff;border-color:transparent}
+.ladder-q button.pick{outline:3px solid var(--fg);outline-offset:1px}
+.ladder-q button.ans{box-shadow:0 0 0 3px var(--accent)}
+.brushes{display:flex;gap:6px;flex-wrap:wrap}
+.brushes button{border:2px solid transparent;border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px;color:#fff;cursor:pointer}
+.brushes button[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 2px var(--bg) inset}
+.score{font:800 52px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.summary-list{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.summary-list button{all:unset;cursor:pointer;color:var(--accent);font-weight:600}
+
+/* method */
+.method{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:900px){.method{grid-template-columns:minmax(0,1fr)}}
+.principles{display:flex;flex-direction:column;gap:14px;counter-reset:p}
+.principles li{list-style:none;display:grid;grid-template-columns:34px 1fr;gap:10px}
+.principles li::before{counter-increment:p;content:counter(p);font:800 28px/1 var(--f-display);color:var(--accent)}
+.principles h4{margin:0 0 3px;font-size:16px}
+.principles p{margin:0;color:var(--muted);max-width:62ch}
+.principles ul{padding:0;margin:0}
+table.plan{border-collapse:collapse;width:100%;font-size:13.5px}
+table.plan th,table.plan td{text-align:left;padding:8px 8px;border-top:1px solid var(--line);vertical-align:top}
+table.plan th{font:800 15px/1.1 var(--f-display);text-transform:uppercase;white-space:nowrap;color:var(--accent)}
+.note{font-size:13px;color:var(--muted);border-left:3px solid var(--accent);padding:2px 0 2px 12px;margin:0}
+.empty-state{padding:40px 16px;text-align:center;color:var(--muted)}
+@media (hover:none){.kbd-tip{display:none}}
+/* spot builder */
+button.ts{font:inherit;color:inherit;cursor:pointer}
+button.ts:hover{border-color:var(--accent)}
+button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bact{display:flex;flex-direction:column;gap:8px}
+.bwho{font-size:14px;color:var(--muted)}
+.bwho b{color:var(--fg)}
+.bact .acts button.prev{outline:3px solid var(--fg);outline-offset:2px}
+.brow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.binfo{display:flex;flex-direction:column;gap:14px}
+.verdict .evloss{margin-left:auto;font:800 22px/1 var(--f-mono)}
+.evt{display:flex;flex-direction:column;gap:1px}
+.evr{display:grid;grid-template-columns:12px minmax(0,1fr) auto 3.4em 5em;align-items:center;gap:8px;padding:2px 8px;border-radius:6px;font-size:13px;line-height:1.3}
+.evr.evh{padding:0 8px 2px;font:600 10.5px/1 var(--f-body);color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
+.evr b{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evr em{font:700 10px/1 var(--f-body);font-style:normal;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:999px;background:var(--fg);color:var(--bg)}
+#q-verdict{display:flex;flex-direction:column;gap:10px}
+#q-verdict:empty{display:none}
+.qnext{display:flex;gap:10px}
+.qnext .btn{flex:1}
+.evr .fq,.evr .ev{text-align:right;font:500 12px var(--f-mono);color:var(--muted)}
+.evr .ev{font-weight:700;font-size:13px;color:var(--fg)}
+.evr.top .ev{color:var(--good)}
+.evr.you{background:var(--surface-2)}
+.evr.you:not(.top) .ev{color:var(--bad)}
+.ltop{margin:10px 0 0;font-size:15px}
+.ltop b{color:var(--accent);font-size:17px}
+.heat-head{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;margin:0 0 7px}
+.heat-head .eyebrow{margin:0}
+.heat-head .seg button{padding:4px 10px;font-size:12px}
+.heat-key{display:flex;align-items:center;gap:8px;margin:0 0 8px;font:500 11px/1 var(--f-mono);color:var(--muted);white-space:nowrap}
+.heat-key:empty{display:none}
+.heat-key i{flex:0 1 120px;min-width:40px;height:8px;border-radius:999px;background:linear-gradient(90deg,var(--good),var(--ok),var(--bad));background:linear-gradient(90deg in oklch,var(--good),var(--bad))}
+.heat button.hc:not(.none):not(.nodata){text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.heat .hc.nodata{background:var(--surface-2);color:var(--muted)}
+/* Charts filters: compact rows with the label on the left; seats as one strip per role */
+.ctl.tight{gap:10px}
+html.app .charts>.ctl.tight{gap:8px}
+#c-scn,#i-scn{line-height:1.25;min-height:2.5em}
+.clock.dual{flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:8px;padding:4px 12px}
+.drow{display:flex;align-items:center;gap:12px}
+.dval{flex:none;width:100px;display:flex;align-items:baseline;gap:4px}
+.dval b{font:800 28px/1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--fg)}
+.dval small{font:600 12px/1 var(--f-display);color:var(--muted);text-transform:uppercase;white-space:nowrap}
+.drow.on .dval b{color:var(--accent)}
+.dmid{flex:1;min-width:0;display:flex;flex-direction:column}
+.dmid .ticks{height:14px}
+.dmid input[type=range]{width:100%;accent-color:var(--accent);margin:0;direction:rtl}
+.seg.grow{display:flex;flex:1;flex-wrap:nowrap;gap:2px;padding:2px;border-radius:10px}
+.seg.grow button{flex:1 1 auto;min-width:0;min-height:30px;padding:0 5px;border-radius:8px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.app .seg.grow button{min-height:30px}
+/* unfolded app: both chart pages fit their left pane without scrolling, with the same spacing */
+@media (min-width:600px){html.app #v-icm .stage,html.app #v-charts .stage{gap:6px;padding-bottom:2px}html.app #v-icm .film,html.app #v-charts .film{scrollbar-width:none;padding-bottom:0}html.app #v-icm .film figure,html.app #v-charts .film figure{padding:1px 3px;gap:2px}}
+.frow{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;align-items:center}
+.frow[hidden]{display:none}
+.flab{font:700 10.5px/1.15 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.frow .seg{display:flex;flex-wrap:nowrap;gap:2px;padding:2px;border-radius:10px}
+.frow .seg button{flex:1 1 0;min-width:0;min-height:30px;padding:0 8px;border-radius:8px;font-size:13px}
+.chips.tight{gap:4px}
+.chips.tight button{padding:5px 10px;font-size:12.5px}
+html.app .ctl .chips.tight button{min-height:32px}
+html.app .ctl .frow .seg button{min-height:30px}
+.srows{display:flex;flex-direction:column;gap:6px}
+.srows:empty{display:none}
+.seatpick{display:flex;gap:2px;padding:2px;border:1px solid var(--line);border-radius:10px;background:var(--surface);min-width:0;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:pointer}
+.seatpick button{flex:1 1 0;min-width:0;min-height:30px;border:0;border-radius:8px;background:none;padding:0;font:600 11.5px/1 var(--f-mono);color:var(--fg);cursor:pointer;white-space:nowrap;overflow:hidden}
+.seatpick button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.seatpick button.off{color:var(--muted)}
+.seatpick button:disabled{opacity:.22;cursor:default}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><div class="chip-mark" aria-hidden="true">SNG</div><div><b>Sit & Go Range Lab</b><span>Heads-up preflop ranges, 1–72bb</span></div></div>
+    <nav class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-tab="charts">Charts</button>
+      <button role="tab" data-tab="build">Spot builder</button>
+      <button role="tab" data-tab="lens">Hand lens</button>
+      <button role="tab" data-tab="drill">Drill</button>
+      <button role="tab" data-tab="method">Method</button>
+    </nav>
+    <div class="sync" id="sync"><i></i><span>Progress saved on this device</span></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- CHARTS -->
+  <section class="view" id="v-charts" hidden>
+    <h2 class="title">Charts</h2>
+    <p class="lede" id="c-lede"></p>
+    <div class="charts">
+      <aside class="ctl tight">
+        <div><p class="eyebrow">Format</p><div class="seg" id="c-tag" role="group" aria-label="Format"></div></div>
+        <div class="chips tight" id="c-fam" role="group" aria-label="Spot"></div>
+        <div class="srows" id="c-sit"></div>
+      </aside>
+      <div class="stage">
+        <p class="scn" id="c-scn"></p>
+        <div class="grid" id="c-grid"></div>
+        <div class="legend" id="c-legend"></div>
+        <div><p class="eyebrow">Every stack depth for this spot</p><div class="film" id="c-film"></div></div>
+        <div class="clock dual">
+          <div class="drow on"><div class="dval"><b id="c-dp">20</b><small>bb</small></div><div class="dmid"><input type="range" id="c-slider" min="0" max="10" step="1" aria-label="Effective stack"><div class="ticks" id="c-ticks"></div></div></div>
+        </div>
+      </div>
+      <aside class="rail" id="c-rail"></aside>
+    </div>
+  </section>
+
+  <!-- SPOT BUILDER -->
+  <section class="view" id="v-build" hidden>
+    <div class="charts">
+      <aside class="ctl">
+        <div><p class="eyebrow">Game</p><div class="chips" id="b-game"></div></div>
+        <div id="b-sub"></div>
+        <p class="small muted" style="margin:0">Pick each player's action under the table, starting with the small blind. Tap a seat that already acted to change what it did.</p>
+      </aside>
+      <div class="stage">
+        <div id="b-table"></div>
+        <div class="bact">
+          <div class="bwho" id="b-who"></div>
+          <div class="acts" id="b-acts"></div>
+          <div class="brow"><button class="btn ghost small" id="b-back">Undo</button><button class="btn ghost small" id="b-reset">Start over</button><span class="small muted" id="b-note"></span></div>
+        </div>
+        <div class="clock">
+          <div class="clock-num"><b id="b-dp">20</b><small>bb</small></div>
+          <div class="clock-mid"><input type="range" id="b-slider" min="0" max="10" step="1" aria-label="Stack depth"><div class="ticks" id="b-ticks"></div></div>
+        </div>
+      </div>
+      <aside class="rail" id="b-rail">
+        <div class="panel"><h3 id="b-title"></h3><div class="grid" id="b-grid"></div><p class="small muted" id="b-empty" style="margin:0" hidden></p><div class="legend" id="b-legend" style="margin-top:8px"></div></div>
+        <div id="b-info" class="binfo"></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- HAND LENS -->
+  <section class="view" id="v-lens" hidden>
+    <div class="lens-head">
+      <div style="flex:1;min-width:260px">
+        <h2 class="title">Hand lens</h2>
+        <p class="lede">At the table you see your cards first, so learn each hand as a set of stack thresholds. Each row is one spot and each square one stack depth. The vertical lines mark 2, 5, 10, 15, 20, 25 and 40bb.</p>
+        <div class="seg" id="l-tag" role="group" aria-label="Format" style="margin-bottom:12px"></div>
+        <div class="lens-pick">
+          <label class="eyebrow" for="l-input">Hand</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="l-input" value="KJo" autocomplete="off" spellcheck="false"><div class="cards" id="l-cards"></div></div>
+          <p class="ltop" id="l-top"></p>
+        </div>
+      </div>
+      <div><p class="eyebrow">Pick a hand</p><div class="grid mini" id="l-grid" style="width:min(340px,86vw)"></div></div>
+    </div>
+    <div class="legend" id="l-legend" style="margin-bottom:12px"></div>
+    <div class="lens-blocks" id="l-blocks"></div>
+  </section>
+
+  <!-- DRILL -->
+  <section class="view" id="v-drill" hidden>
+    <div id="d-home">
+      <h2 class="title">Drill</h2>
+      <p class="lede">Most questions use hands near the edge of a range, where mistakes happen. Misses come back a few hands later and again on a spaced schedule over the next days.</p>
+      <div class="drill-home">
+        <div class="panel">
+          <p class="eyebrow">Mode</p>
+          <div class="modes" id="d-modes">
+            <button class="mode" data-mode="quick"><b>Quick-fire</b><span>Read the table, act on instinct.</span></button>
+            <button class="mode" data-mode="paint"><b>Paint</b><span>Draw a whole range from memory, then see the gaps.</span></button>
+            <button class="mode" data-mode="edges"><b>Edges</b><span>Name the weakest hand in a family that still plays.</span></button>
+            <button class="mode" data-mode="numbers"><b>Numbers</b><span>How deep does this hand still shove or call?</span></button>
+          </div>
+          <div class="form">
+            <div><p class="eyebrow">Plan presets</p><div class="chips" id="d-presets"></div></div>
+            <div><p class="eyebrow">Format</p><div class="seg" id="d-tag"></div></div>
+            <div id="d-phase-wrap" hidden><p class="eyebrow">Stages</p><div class="chips" id="d-phases"></div></div>
+            <div><p class="eyebrow">Spots</p><div class="chips" id="d-fams"></div></div>
+            <div><p class="eyebrow">Stacks (bb)</p><div class="chips" id="d-bands"></div></div>
+            <div id="d-len-wrap"><p class="eyebrow">Length</p><div class="seg" id="d-len"><button data-len="20">20</button><button data-len="40">40</button><button data-len="80">80</button></div></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn primary" id="d-start">Start</button><span class="small muted" id="d-due"></span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="heat-head"><p class="eyebrow">Where you leak</p><div class="seg" id="d-heat-by" role="group" aria-label="Colour the squares by"><button data-by="score">Score</button><button data-by="ev">EV lost</button></div></div>
+          <p class="small muted" style="margin:0 0 8px" id="d-heat-note"></p>
+          <div class="heat-key" id="d-heat-key"></div>
+          <div class="heat" id="d-heat"></div>
+        </div>
+      </div>
+    </div>
+    <div id="d-run" hidden></div>
+  </section>
+
+  <!-- METHOD -->
+  <section class="view" id="v-method" hidden>
+    <h2 class="title">How to study heads-up ranges</h2>
+    <p class="lede">Heads-up ranges are wide and change fast with the stack, so learn them as a few edges per spot and how those edges move from 1bb to 25bb.</p>
+    <div class="method">
+      <div class="panel">
+        <ol class="principles" style="padding:0;margin:0">
+          <li><div><h4>The small blind decides the shape</h4><p>On the button you limp, raise or shove almost every hand, so the question is which, not whether. Learn where shoving takes over from raising, and which hands limp, at 25, 15, 10 and 5bb.</p></div></li>
+          <li><div><h4>Step the stack, one notch at a time</h4><p>Pick a stack you know and step the slider down. Below 15bb the charts move in ½bb steps; only a few hands change at each step, and the Numbers drill turns them into rules like “SB: ≤11 Jam”.</p></div></li>
+          <li><div><h4>Defend wide in the big blind</h4><p>Getting 3-to-1 or better, the big blind continues with most hands against a min-raise and calls shoves far wider than feels natural. Paint BB vs raise and BB vs shove until the folds look small.</p></div></li>
+          <li><div><h4>Recall it, don't re-read it</h4><p>Painting a range from memory and deciding fast on edge hands trains recall, which is what you use at the table. Drill picks edge hands and brings your misses back on a spaced schedule.</p></div></li>
+          <li><div><h4>Compare the formats</h4><p>Switch between MTT heads-up and HU SnG on Charts at the same stack. The ante makes every pot bigger, so the small blind plays more hands and the big blind defends wider.</p></div></li>
+        </ol>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">One-week plan</p>
+        <table class="plan">
+          <tr><th>Day 1</th><td>Small blind first in at 15–25bb: Charts, stepping the slider down, then Paint and Quick-fire “First in”.</td></tr>
+          <tr><th>Day 2</th><td>Push/fold under 10bb: the “Push/fold · 1–10” preset, then the Numbers drill.</td></tr>
+          <tr><th>Day 3</th><td>Big blind against a limp, a raise and a shove. Paint each at 20, 12 and 8bb.</td></tr>
+          <tr><th>Day 4</th><td>Limp lines: limped and raised, limped and shoved on, and the big blind's raise getting 3-bet or shoved on.</td></tr>
+          <tr><th>Day 5</th><td>3-bet pots and deeper stacks, 30–72bb.</td></tr>
+          <tr><th>Day 6</th><td>The other format: compare MTT heads-up and HU SnG on Charts, then Quick-fire in the one you play less.</td></tr>
+          <tr><th>Day 7</th><td>Only the reddest squares in your “Where you leak” map.</td></tr>
+        </table>
+        <p class="note" style="margin-top:14px">Every day: 10 minutes of Paint or Edges, then 15 minutes of Quick-fire. Reviews that are due come first automatically.</p>
+        <p class="eyebrow" style="margin-top:18px">At the table</p>
+        <p style="margin:0 0 8px">Run the same order every hand: <b>effective stack in bb → hand → that hand's number.</b> Heads-up, the effective stack is the shorter of the two stacks.</p>
+        <p class="eyebrow" style="margin-top:18px">About the numbers</p>
+        <p class="small muted" style="margin:0" id="m-about">MTT heads-up: Chip EV with an ante, as at the end of a tournament, 1–60bb. HU SnG: no ante, 1–72bb. With two players left, chip value and prize value move together, so these Chip EV ranges hold for heads-up for a title too. Each chart is for one effective stack; the deeper player's extra chips don't matter.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="sng-data.js"></script>
+<script>
+'use strict';
+/* ---------- constants ---------- */
+const RANKS = 'AKQJT98765432';
+const GRID = [];
+for (let i = 0; i < 13; i++) for (let j = 0; j < 13; j++) GRID.push(i === j ? RANKS[i] + RANKS[i] : i < j ? RANKS[i] + RANKS[j] + 's' : RANKS[j] + RANKS[i] + 'o');
+const GIDX = Object.fromEntries(GRID.map((n, i) => [n, i]));
+const A2G = [...GRID].sort().map(n => GIDX[n]);
+const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+const DEC = {}; [...B64].forEach((c, i) => DEC[c] = i);
+const COMBOS = GRID.map(n => n.length === 2 ? 6 : n[2] === 's' ? 4 : 12);
+const POS = { 2: ['SB', 'BB'], 3: ['BTN', 'SB', 'BB'] };
+/* one entry per solution set; tag is stored with every spot */
+const TAGS = [
+  { tag: 'mtthu', gt: 'MTTHUGeneral', label: 'MTT heads-up', table: 'Heads-up · MTT, with ante', cap: '<b>MTT heads-up</b><br>Chip EV, ante', ante: 0.125,
+    lede: 'Heads-up at the end of a tournament: Chip EV with an ante, every stack from 1 to 60bb (½bb steps below 15). Each chart is for the effective stack, the shorter of the two.' },
+  { tag: 'husng', gt: 'HuSngGeneral_V3', label: 'HU SnG', table: 'Heads-up sit & go · no ante', cap: '<b>HU SnG</b><br>no ante', ante: 0,
+    lede: 'Heads-up sit & go without an ante, every stack from 1 to 72bb (½bb steps below 15). Each chart is for the effective stack, the shorter of the two.' },
+];
+const TAG_OF = Object.fromEntries(TAGS.map(t => [t.tag, t]));
+const PHASES = [];
+const PHASE_OF = Object.fromEntries(PHASES.map((p, i) => [p.gt, i]));
+const FAM = {
+  RFI: { label: 'First in', seat: 'Your seat' },
+  BBvsLimp: { label: 'BB vs limp', seat: 'Limper' },
+  BBvsOpen: { label: 'BB vs raise', seat: 'Raiser' },
+  BBvsJam: { label: 'BB vs shove', seat: 'Shover' },
+  LimpVsRaise: { label: 'Limped, got raised', seat: 'Raiser' },
+  LimpVsJam: { label: 'Limped, got shoved on', seat: 'Shover' },
+  OpenVs3bet: { label: 'Raised, got 3-bet', seat: '3-bettor' },
+  OpenVsJam: { label: 'Raised, got shoved on', seat: 'Shover' },
+  IsoVs3bet: { label: 'Raised a limp, got 3-bet', seat: '3-bettor' },
+  IsoVsJam: { label: 'Raised a limp, got shoved on', seat: 'Shover' },
+  ThreebetVs4bet: { label: '3-bet, got 4-bet', seat: '4-bettor' },
+  ThreebetVsJam: { label: '3-bet, got shoved on', seat: 'Shover' },
+  vsOpen: { label: 'Facing a raise', seat: 'You vs raiser' },
+  vsJam: { label: 'Facing a shove', seat: 'You vs shover' },
+  Squeeze: { label: 'Raise + call', seat: 'Raiser + caller' },
+};
+const FAM_ORDER = Object.keys(FAM);
+const CALL_FAMS = new Set(['BBvsJam', 'vsJam', 'OpenVsJam', 'ThreebetVsJam', 'LimpVsJam', 'IsoVsJam']);
+const KORD = { J: 0, B: 1, R: 2, C: 3, X: 4, F: 5 };
+const KNAME = { J: 'All-in', B: 'Bigger raise', R: 'Raise', C: 'Call', X: 'Check', F: 'Fold' };
+const BANDS = [
+  { id: 'b1', label: '1–5', lo: 0, hi: 5 }, { id: 'b5', label: '5.5–10', lo: 5.5, hi: 10 }, { id: 'b10', label: '10.5–15', lo: 10.5, hi: 15 },
+  { id: 'b16', label: '16–25', lo: 15.5, hi: 25 }, { id: 'b30', label: '30–72', short: '30+', lo: 25.5, hi: 999 },
+];
+const bandOf = dp => BANDS.find(b => dp >= b.lo && dp <= b.hi).id;
+const SUITSYM = { s: '♠', h: '♥', d: '♦', c: '♣' };
+
+/* ---------- decode data ---------- */
+const SPOTS = [], SITS = new Map(), SPOT_AT = new Map();
+function kindOf(code, ai) { if (code === 'F') return 'F'; if (code === 'X') return 'X'; if (code === 'C') return 'C'; if (ai) return 'J'; return 'R'; }
+(function decode() {
+  const recs = (window.SNG_DATA && window.SNG_DATA.spots) || [];
+  for (const rec of recs) {
+    const [fam, tag, gt, n, dp, hero, vs, caller, pos, acts, f, l, r, hist] = rec;
+    const A = acts.map(([code, t, size, ai, tf], i) => ({ i, code, kind: kindOf(code, ai), size: +size, tf }));
+    const raises = A.filter(a => a.kind === 'R').sort((x, y) => x.size - y.size);
+    raises.slice(1).forEach(a => a.kind = 'B');
+    const fr = f.map(s => { const a = new Float32Array(169); for (let k = 0; k < 169; k++) a[A2G[k]] = DEC[s[k]] / 63; return a; });
+    const ls = l.map(s => { const a = new Float32Array(169); for (let k = 0; k < 169; k++) a[A2G[k]] = 0.02 * (Math.exp(DEC[s[k]] / 9) - 1); return a; });
+    let reach = null;
+    if (r) { reach = new Float32Array(169); for (let k = 0; k < 169; k++) reach[A2G[k]] = DEC[r[k]] / 63; }
+    const prim = new Uint8Array(169);
+    for (let g = 0; g < 169; g++) {
+      let s = 0, b = 0;
+      for (let a = 0; a < A.length; a++) { s += fr[a][g]; if (fr[a][g] > fr[b][g]) b = a; }
+      if (s > 0) for (let a = 0; a < A.length; a++) fr[a][g] /= s;
+      prim[g] = b;
+    }
+    const sitKey = [tag, gt, fam, hero, vs, caller].join('|');
+    const spot = { id: SPOTS.length, fam, tag, gt, n, dp, hero, vs, caller, A, f: fr, loss: ls, reach, prim, hist: hist || '', sitKey, multiR: raises.length > 1 };
+    spot.defIdx = (A.find(a => a.kind === 'F') || A.find(a => a.kind === 'X') || A[0]).i;
+    const live = A.filter(a => a.i === spot.defIdx || fr[a.i].some((v, g) => v >= 0.02 && (!reach || reach[g] > 0.04)));
+    spot.order = [...live].sort((x, y) => KORD[x.kind] - KORD[y.kind]).map(a => a.i);
+    spot.btnOrder = [...live].sort((x, y) => KORD[y.kind] - KORD[x.kind]).map(a => a.i);
+    SPOTS.push(spot);
+    SPOT_AT.set(sitKey + '|' + dp, spot);
+    if (!SITS.has(sitKey)) SITS.set(sitKey, { key: sitKey, fam, tag, gt, n, hero, vs, caller, spots: [] });
+    SITS.get(sitKey).spots.push(spot);
+  }
+  for (const s of SITS.values()) { s.spots.sort((a, b) => a.dp - b.dp); s.depths = s.spots.map(x => x.dp); s.spots.forEach((sp, i) => { sp.idx = i; sp.sit = s; }); }
+})();
+const sitSort = (a, b) => a.hero - b.hero || a.vs - b.vs || a.caller - b.caller;
+const sitsWhere = (pred) => [...SITS.values()].filter(pred).sort(sitSort);
+
+/* ---------- helpers ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pct = x => Math.round(x * 100) + '%';
+const fmtBB = x => (Math.round(x * 10) / 10) + 'bb';
+const rnd = n => Math.floor(Math.random() * n);
+const pick = arr => arr[rnd(arr.length)];
+const inRange = (spot, g) => !spot.reach || spot.reach[g] > 0.04;
+const kindAt = (spot, g) => spot.A[spot.prim[g]].kind;
+const playsAt = (spot, g) => inRange(spot, g) && spot.f[spot.defIdx][g] < 0.5;
+function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
+function load(k) { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+function weightedPick(weights) { let t = 0; for (const w of weights) t += w; if (t <= 0) return -1; let x = Math.random() * t; for (let i = 0; i < weights.length; i++) { x -= weights[i]; if (x <= 0) return i; } return weights.length - 1; }
+
+function raiseWord(spot) { return ({ RFI: 'Raise', BBvsOpen: '3-bet', vsOpen: '3-bet', BBvsLimp: 'Raise', LimpVsRaise: '3-bet', IsoVs3bet: '4-bet', OpenVs3bet: '4-bet', ThreebetVs4bet: '5-bet', Squeeze: 'Squeeze' })[spot.fam] || 'Raise'; }
+function actLabel(spot, a, short) {
+  const A = spot.A[a];
+  switch (A.kind) {
+    case 'F': return 'Fold';
+    case 'X': return 'Check';
+    case 'C': return spot.fam === 'RFI' ? 'Limp' : 'Call';
+    case 'J': return short ? 'Jam' : 'All-in';
+    default: return short && !spot.multiR ? raiseWord(spot) : raiseWord(spot) + ' ' + fmtBB(A.size);
+  }
+}
+const kColor = k => `var(--k-${k})`;
+function sitLabel(s) {
+  const P = POS[s.n];
+  if (s.n === 2) return FAM[s.fam].label;  // heads-up: the spot says it all
+  switch (s.fam) {
+    case 'RFI': return P[s.hero];
+    case 'BBvsOpen': case 'BBvsJam': return 'vs ' + P[s.vs];
+    case 'BBvsLimp': return 'vs SB limp';
+    case 'Squeeze': return P[s.hero] + ' vs ' + P[s.vs] + ' + ' + P[s.caller];
+    default: return P[s.hero] + ' vs ' + P[s.vs];
+  }
+}
+function tableDesc(spot) { return TAG_OF[spot.tag].table; }
+
+/* replay the preflop action to narrate the spot */
+function simulate(spot) {
+  const acts = spot.hist ? spot.hist.split('-') : [];
+  let queue = [...Array(spot.n).keys()];
+  const folded = new Set(), ev = [], last = {};
+  let raises = 0;
+  for (const code of acts) {
+    const p = queue.shift();
+    if (p === undefined) break;
+    if (code === 'F') { folded.add(p); ev.push({ p, t: 'F' }); last[p] = 'fold'; continue; }
+    if (code === 'C' || code === 'X') { ev.push({ p, t: code, r: raises }); last[p] = code === 'X' ? 'X' : 'C'; continue; }
+    raises++;
+    const size = code === 'RAI' ? null : parseFloat(code.slice(1));
+    const isJam = code === 'RAI' || size >= spot.dp - 0.2;
+    ev.push({ p, t: isJam ? 'J' : 'R', size: isJam ? null : size, r: raises });
+    last[p] = isJam ? 'J' : 'R';
+    const next = [];
+    for (let k = 1; k < spot.n; k++) { const q = (p + k) % spot.n; if (!folded.has(q)) next.push(q); }
+    queue = next;
+  }
+  return { ev, last, folded };
+}
+function narrate(spot) {
+  const P = POS[spot.n], { ev } = simulate(spot), H = spot.hero;
+  const out = [];
+  let k = 0; while (k < ev.length && ev[k].t === 'F') k++;
+  if (k === ev.length) return spot.n === 2 ? `You're in the <b>SB</b>, on the button, first to act.` : H === 0 ? `You're first to act in <b>${P[0]}</b>.` : `Folds to you in the <b>${P[H]}</b>.`;
+  let heroActed = false, limped = false;
+  for (let e = k; e < ev.length; e++) {
+    const x = ev[e]; if (x.t === 'F') continue;
+    const me = x.p === H; if (me) heroActed = true;
+    const who = me ? 'You' : `<b>${P[x.p]}</b>`, v = w => me ? w : w + 's';
+    let s;
+    if (x.t === 'R') s = `${who} ${x.r === 1 ? ((x.p === spot.n - 2 && !me) || limped ? v('raise') : v('open')) : x.r === 2 ? v('3-bet') : v('4-bet')} to ${fmtBB(x.size)}`;
+    else if (x.t === 'J') s = `${who} ${v('shove')} ${spot.dp}bb`;
+    else if (x.t === 'C') { s = `${who} ${x.r ? v('call') : v('limp')}`; if (!x.r) limped = true; }
+    else s = `${who} ${v('check')}`;
+    if (e === k && k > 0) s = (me ? `Folds to you in the <b>${P[x.p]}</b>. ` : `Folds to ${P[x.p]}. `) + s;
+    out.push(s + '.');
+  }
+  out.push(heroActed ? 'Back to you.' : `You're in the <b>${P[H]}</b>.`);
+  return out.join(' ');
+}
+function seatsHTML(spot) {
+  const P = POS[spot.n], { last } = simulate(spot);
+  return P.map((p, i) => {
+    const st = last[i], me = i === spot.hero;
+    let cls = 'seat', tag = '';
+    if (st === 'fold') cls += ' s-fold';
+    else if (st === 'R') { cls += ' s-R'; }
+    else if (st === 'J') { cls += ' s-J'; tag = '<em>all-in</em>'; }
+    else if (st === 'C') { cls += ' s-C'; }
+    if (me) cls += ' me';
+    return `<span class="${cls}">${p}${tag}</span>`;
+  }).join('');
+}
+
+/* ---------- range notation & ladders ---------- */
+const LADDERS = (() => {
+  const L = [{ name: 'Pairs', short: 'Pairs', pair: true, cells: [...Array(13).keys()].map(i => i * 13 + i) }];
+  for (let i = 0; i < 12; i++) L.push({ name: RANKS[i] + 'x suited', short: RANKS[i] + 'xs', cells: [...Array(12 - i).keys()].map(d => i * 13 + i + 1 + d) });
+  for (let i = 0; i < 12; i++) L.push({ name: RANKS[i] + 'x offsuit', short: RANKS[i] + 'xo', cells: [...Array(12 - i).keys()].map(d => (i + 1 + d) * 13 + i) });
+  return L;
+})();
+const EDGE_LADDERS = LADDERS.filter(l => l.pair || ['Axs', 'Kxs', 'Qxs', 'Jxs', 'Txs', '9xs', 'Axo', 'Kxo', 'Qxo', 'Jxo', 'Txo'].includes(l.short));
+function ladderRuns(l, test) {
+  const c = l.cells, runs = []; let s = -1;
+  for (let k = 0; k <= c.length; k++) { const on = k < c.length && test(c[k]); if (on && s < 0) s = k; if (!on && s >= 0) { runs.push([s, k - 1]); s = -1; } }
+  return runs;
+}
+function ladderNotation(l, test) {
+  const n = l.cells.map(g => GRID[g]);
+  return ladderRuns(l, test).map(([a, b]) => a === 0 ? n[b] + '+' : a === b ? n[a] : n[a] + '–' + n[b]);
+}
+function topRunEdge(l, test) { // index of the weakest hand in the run that starts at the top of the ladder; -1 = none
+  let k = 0; while (k < l.cells.length && test(l.cells[k])) k++;
+  return k - 1;
+}
+
+/* ---------- cell painting ---------- */
+function cellBg(spot, g) {
+  if (!spot) return 'var(--empty)';
+  const reach = spot.reach ? spot.reach[g] : 1;
+  if (reach < 0.04) return 'var(--empty)';
+  const segs = []; let x = 0;
+  for (const a of spot.order) {
+    const p = spot.f[a][g]; if (p < 0.004) continue;
+    const k = spot.A[a].kind;
+    segs.push(`${kColor(k)} ${(x * 100).toFixed(1)}% ${((x + p) * 100).toFixed(1)}%`); x += p;
+  }
+  if (!segs.length) return 'var(--empty)';
+  const grad = `linear-gradient(90deg,${segs.join(',')})`;
+  if (reach < 0.97) return `${grad} bottom/100% ${(reach * 100).toFixed(0)}% no-repeat,var(--empty)`;
+  return grad;
+}
+class Grid {
+  constructor(el, opts = {}) {
+    this.el = el; this.opts = opts; this.cells = [];
+    el.innerHTML = '';
+    for (let g = 0; g < 169; g++) {
+      const c = document.createElement('div'); c.className = 'cell'; c.dataset.g = g;
+      c.innerHTML = `<span class="nm">${GRID[g]}</span><span class="val"></span>`;
+      el.appendChild(c); this.cells.push(c);
+    }
+    if (opts.onCell) el.addEventListener('click', e => { const c = e.target.closest('.cell'); if (c) opts.onCell(+c.dataset.g); });
+    this.prevK = new Array(169).fill(null);
+  }
+  show(spot, { marks, values, animate, bg } = {}) {
+    for (let g = 0; g < 169; g++) {
+      const c = this.cells[g];
+      c.style.background = bg ? bg(g) : cellBg(spot, g);
+      const out = spot ? !inRange(spot, g) : false;
+      let cls = 'cell' + (out ? ' out' : '');
+      if (marks) { const m = marks(g); if (m) cls += ' ' + m; }
+      const k = spot && !out ? kindAt(spot, g) : 'out';
+      if (animate && this.prevK[g] !== null && this.prevK[g] !== k) cls += ' pop';
+      this.prevK[g] = k;
+      c.className = cls;
+      c.querySelector('.val').textContent = values ? (values(g) ?? '') : '';
+    }
+  }
+}
+/* with a spot, name the actions as that spot does (a first-in call is a limp) */
+function legendHTML(kinds, spot) {
+  return kinds.map(k => `<span><i class="sw" style="background:${kColor(k)}"></i>${k === 'C' && spot && spot.fam === 'RFI' ? 'Limp' : KNAME[k]}</span>`).join('') +
+    `<span><i class="sw" style="background:var(--empty)"></i>Not in your range</span>`;
+}
+let COLORS = {};
+function readColors() { const cs = getComputedStyle(document.documentElement); for (const k of ['F', 'C', 'X', 'R', 'B', 'J']) COLORS[k] = cs.getPropertyValue('--k-' + k).trim(); COLORS.empty = cs.getPropertyValue('--empty').trim(); }
+function drawMini(cv, spot, size = 5, marks) {
+  const gap = 1, W = 13 * size + 12 * gap, dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = W * dpr; cv.style.width = cv.style.height = W + 'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, W);
+  for (let g = 0; g < 169; g++) {
+    const x = (g % 13) * (size + gap), y = Math.floor(g / 13) * (size + gap);
+    ctx.fillStyle = COLORS.empty; ctx.fillRect(x, y, size, size);
+    if (!spot || !inRange(spot, g)) continue;
+    let off = 0;
+    for (const a of spot.order) { const p = spot.f[a][g]; if (p < 0.01) continue; ctx.fillStyle = COLORS[spot.A[a].kind]; ctx.fillRect(x + off * size, y, Math.max(p * size, 0.6), size); off += p; }
+    if (marks && marks(g)) { ctx.strokeStyle = '#ffc04a'; ctx.lineWidth = 1; ctx.strokeRect(x + .5, y + .5, size - 1, size - 1); }
+  }
+}
+function mixOf(spot) {
+  const tot = new Float64Array(spot.A.length); let W = 0;
+  for (let g = 0; g < 169; g++) { const w = COMBOS[g] * (spot.reach ? spot.reach[g] : 1); W += w; for (let a = 0; a < spot.A.length; a++) tot[a] += w * spot.f[a][g]; }
+  return [...tot].map(x => W ? x / W : 0);
+}
+function kindLabel(spot, k) { return k === 'F' ? 'Fold' : k === 'X' ? 'Check' : k === 'C' ? (spot.fam === 'RFI' ? 'Limp' : 'Call') : k === 'J' ? 'All-in' : k === 'B' ? raiseWord(spot) + ' (big)' : raiseWord(spot); }
+/* one row per action type that exists anywhere in the series, so rows never appear or vanish while sliding */
+function stableMixHTML(spot, spots) {
+  const kinds = [];
+  for (const s of spots) for (const a of s.order) { const k = s.A[a].kind; if (!kinds.includes(k)) kinds.push(k); }
+  kinds.sort((x, y) => KORD[x] - KORD[y]);
+  const m = mixOf(spot);
+  return `<div class="mix">${kinds.map(k => {
+    const idx = spot.order.filter(a => spot.A[a].kind === k);
+    const v = idx.reduce((s, a) => s + m[a], 0);
+    const size = (k === 'R' || k === 'B') && idx.length ? ` <small class="muted">${fmtBB(spot.A[idx[0]].size)}</small>` : '';
+    return `<div class="mix-row"><span style="${idx.length ? '' : 'color:var(--faint)'}">${kindLabel(spot, k)}${size}</span><div class="bar"><i style="width:${(v * 100).toFixed(1)}%;background:${kColor(k)}"></i></div><span class="mono">${pct(v)}</span></div>`;
+  }).join('')}</div>`;
+}
+function edgesHTML(spot) {
+  const rows = EDGE_LADDERS.map(l => {
+    const lad = l.cells.map(g => `<i title="${GRID[g]}" style="background:${inRange(spot, g) ? cellBg(spot, g) : 'var(--empty)'}"></i>`).join('');
+    const txt = ladderNotation(l, g => playsAt(spot, g)).join(', ') || 'none';
+    return `<span class="nm">${l.short}</span><div class="lad">${lad}<span>${txt}</span></div>`;
+  });
+  return `<div class="edges">${rows.join('')}</div>`;
+}
+function handDetailHTML(spot, g) {
+  if (g == null) return '<p class="small muted" style="margin:0">Tap a hand in the chart to see its exact frequencies and what each wrong choice costs.</p>';
+  if (!inRange(spot, g)) return `<div class="handbox"><span class="hn">${GRID[g]}</span><span class="muted">Not in your range here. You'd have folded it earlier.</span></div>`;
+  const rows = spot.order.map(a => `<div class="mix-row"><span>${actLabel(spot, a, true)}</span><div class="bar"><i style="width:${(spot.f[a][g] * 100).toFixed(1)}%;background:${kColor(spot.A[a].kind)}"></i></div><span class="mono">${pct(spot.f[a][g])}</span></div><div class="small muted" style="margin:-4px 0 2px 94px">${spot.loss[a][g] < 0.01 ? 'best or tied' : '−' + spot.loss[a][g].toFixed(2) + 'bb vs best'}</div>`).join('');
+  return `<div class="handbox"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="hn">${GRID[g]}</span><button class="btn ghost small" data-lens="${g}">Open in Hand lens →</button></div><div class="mix">${rows}</div></div>`;
+}
+
+/* ---------- state ---------- */
+const UI = Object.assign({ tab: 'charts', cTag: 'mtthu', cFam: 'RFI', cSit: null, cDp: 20, lTag: 'mtthu', lens: GIDX['K9o'], dMode: 'quick', dTag: 'mtthu', dFams: FAM_ORDER, dBands: BANDS.map(b => b.id), dLen: 40, dHeatBy: 'score' }, load('sng-ui') || {});
+const saveUI = () => store('sng-ui', UI);
+const tagsHere = () => TAGS.filter(t => SPOTS.some(s => s.tag === t.tag));
+const tagSegHTML = cur => tagsHere().map(t => `<button data-tag="${t.tag}" aria-pressed="${t.tag === cur}">${t.label}</button>`).join('');
+function fixTag(k) { const h = tagsHere(); if (h.length && !h.some(t => t.tag === UI[k])) UI[k] = h[0].tag; }
+
+/* ---------- tabs ---------- */
+/* jumping to a tab from a link (Open in Hand lens, Open chart…) starts it at the top; in the app the panes scroll, not the window */
+function resetScroll() {
+  const m = document.querySelector('main'); if (m) m.scrollTop = 0;
+  $$('.view:not([hidden]) .stage, .view:not([hidden]) .rail, .view:not([hidden]) .ctl, .lens-head, .lens-blocks, .drill-home > .panel, .method > .panel').forEach(el => { el.scrollTop = 0; });
+}
+function setTab(t) {
+  UI.tab = t; saveUI();
+  for (const b of $$('#tabs button')) b.setAttribute('aria-selected', b.dataset.tab === t);
+  for (const v of $$('.view')) v.hidden = v.id !== 'v-' + t;
+  if (t === 'charts') renderCharts();
+  if (t === 'build') renderBuild();
+  if (t === 'lens') renderLens();
+  if (t === 'drill' && !RUN) renderDrillHome();
+  window.scrollTo({ top: 0 }); resetScroll();
+}
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.tab); });
+
+/* ---------- CHARTS ---------- */
+const cGrid = new Grid($('#c-grid'), { onCell: g => { cSel = g; renderChartsRail(); renderChartsGrid(false); } });
+let cSel = null, cPlay = null;
+function cSits() { return sitsWhere(s => s.tag === UI.cTag && s.fam === UI.cFam); }
+function cCurSit() {
+  const sits = cSits(); let s = sits.find(x => x.key === UI.cSit);
+  if (!s) { s = sits.find(x => x.fam !== 'RFI' || x.hero === 5) || sits[0]; UI.cSit = s && s.key; }
+  return s;
+}
+function cCurSpot() {
+  const s = cCurSit(); if (!s) return null;
+  if (UI.cDpPref == null) UI.cDpPref = UI.cDp;
+  const want = UI.cDpPref;  // the stack you picked; a spot without it shows the nearest one
+  let best = s.spots[0]; for (const sp of s.spots) if (Math.abs(sp.dp - want) < Math.abs(best.dp - want)) best = sp;
+  return best;
+}
+function ticksHTML(depths, cur, width) {
+  const n = depths.length; if (!n) return '';
+  const posOf = i => n > 1 ? 1 - i / (n - 1) : 0.5;  // biggest on the left, like the slider
+  const minGap = 26 / Math.max(width, 120);
+  const chosen = [];
+  const tryAdd = i => { if (i < 0 || chosen.includes(i)) return; if (chosen.every(j => Math.abs(posOf(j) - posOf(i)) >= minGap)) chosen.push(i); };
+  [depths[0], depths[n - 1], 10, 20, 15, 25, 40, 5, 30, 50, 2].forEach(d => tryAdd(depths.indexOf(d)));
+  depths.forEach((d, i) => tryAdd(i));
+  return chosen.sort((a, b) => a - b).map(i => `<span style="left:${(posOf(i) * 100).toFixed(2)}%" class="${depths[i] === cur ? 'on' : ''}">${depths[i]}</span>`).join('');
+}
+function threshold(sit, g, metric, cap = 25) {
+  let t = null;
+  for (const sp of sit.spots) {
+    if (sp.dp > cap) continue;
+    if (!inRange(sp, g)) continue;
+    let v;
+    if (metric === 'P') v = 1 - sp.f[sp.defIdx][g];
+    else { v = 0; sp.A.forEach((a, i) => { if (a.kind === metric) v += sp.f[i][g]; }); }
+    if (v >= 0.5) t = sp.dp;
+  }
+  return t;
+}
+const VS_ROLE = { BBvsOpen: 'Raiser', BBvsLimp: 'Limper', BBvsJam: 'Shover', LimpVsRaise: 'Raiser', LimpVsJam: 'Shover', IsoVs3bet: '3-bettor', IsoVsJam: 'Shover', vsOpen: 'Raiser', vsJam: 'Shover', OpenVsJam: 'Shover', OpenVs3bet: '3-bettor', ThreebetVs4bet: '4-bettor', ThreebetVsJam: 'Shover', Squeeze: 'Raiser' };
+/* ---------- Charts filters: one strip of table seats per role ---------- */
+const seatAbbr = nm => nm.replace('UTG+', 'U+');
+const ROLE_KEYS = ['hero', 'vs', 'caller'];
+/* a row for each role that varies in this spot; seats that need another role moved, or that aren't solved at this
+   stack (here(sit) is false), are dimmed; seats that never occur are off */
+function seatRowsHTML(sits, cur, names, here) {
+  const keys = ROLE_KEYS.filter(k => new Set(sits.map(s => s[k])).size > 1);
+  return keys.map(k => {
+    const have = new Set(sits.map(s => s[k]));
+    const fits = new Set(sits.filter(s => keys.every(o => o === k || s[o] === cur[o]) && (!here || here(s))).map(s => s[k]));
+    const lab = k === 'hero' ? 'You' : k === 'caller' ? 'Caller' : VS_ROLE[cur.fam] || 'Villain';
+    return `<div class="frow"><span class="flab">${lab}</span><div class="seatpick" data-k="${k}">${names.map((nm, i) => `<button data-v="${i}" title="${nm}" aria-pressed="${cur[k] === i}"${!have.has(i) ? ' disabled' : fits.has(i) ? '' : ' class="off"'}>${seatAbbr(nm)}</button>`).join('')}</div></div>`;
+  }).join('');
+}
+/* tapping a seat keeps the other roles where they are if that spot exists, else moves them as little as possible */
+function pickSeat(sits, cur, k, v) {
+  let best = null, bs = Infinity;
+  for (const s of sits) {
+    if (s[k] !== v) continue;
+    const d = ROLE_KEYS.reduce((t, o, i) => o === k ? t : t + Math.abs(s[o] - cur[o]) * [4, 2, 1][i], 0);
+    if (d < bs) { bs = d; best = s; }
+  }
+  return best;
+}
+/* a seat strip slides like a slider: press anywhere on it and drag; the seat nearest your finger is picked as you go */
+function scrubSeats(box, choose) {
+  let drag = null;
+  const pick = e => {
+    const strip = box.querySelector(`.seatpick[data-k="${drag.k}"]`); if (!strip) return;
+    const bs = [...strip.querySelectorAll('button')].filter(b => !b.disabled); if (!bs.length) return;
+    const b = bs.reduce((best, x) => { const r = x.getBoundingClientRect(), d = Math.abs(e.clientX - (r.left + r.width / 2)); return d < best.d ? { b: x, d } : best; }, { b: null, d: Infinity }).b;
+    if (b && b.dataset.v !== drag.last) { drag.last = b.dataset.v; choose(drag.k, +b.dataset.v); }
+  };
+  box.addEventListener('pointerdown', e => {
+    const strip = e.target.closest('.seatpick'); if (!strip || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    drag = { k: strip.dataset.k, id: e.pointerId, last: null };
+    try { box.setPointerCapture(e.pointerId); } catch (err) { }
+    pick(e); e.preventDefault();
+  });
+  box.addEventListener('pointermove', e => { if (drag && e.pointerId === drag.id) pick(e); });
+  const end = e => { if (drag && e.pointerId === drag.id) drag = null; };
+  box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
+  // keyboard: Enter or Space on a seat
+  box.addEventListener('click', e => { const b = e.target.closest('.seatpick button'); if (!b || b.disabled || e.detail !== 0) return; choose(b.closest('.seatpick').dataset.k, +b.dataset.v); });
+}
+/* the continuing range by card: how many of the 1,326 combos you continue with hold each rank, by action
+   (a pair counts once; any one rank is in 198 combos). Weighted by how often you take each action and reach this spot. */
+const RANK_COMBOS = new WeakMap();
+function rankCombos(sp) {
+  let by = RANK_COMBOS.get(sp); if (by) return by;
+  const R = sp.reach; by = Array.from({ length: 13 }, () => ({ J: 0, B: 0, R: 0, C: 0, X: 0 }));
+  for (let g = 0; g < 169; g++) {
+    const nm = GRID[g], w = (nm.length === 2 ? 6 : nm[2] === 's' ? 4 : 12) * (R ? R[g] : 1);
+    if (!(w > 0)) continue;
+    const r1 = RANKS.indexOf(nm[0]), r2 = RANKS.indexOf(nm[1]);
+    for (let a = 0; a < sp.A.length; a++) {
+      const k = sp.A[a].kind; if (k === 'F') continue;
+      const v = w * sp.f[a][g]; if (!(v > 0)) continue;
+      by[r1][k] += v; if (r2 !== r1) by[r2][k] += v;
+    }
+  }
+  RANK_COMBOS.set(sp, by); return by;
+}
+function rankChartSVG(sp, spots, ghost) {
+  const kinds = ['J', 'B', 'R', 'C', 'X'], sum = o => kinds.reduce((t, k) => t + o[k], 0);
+  const by = rankCombos(sp), tot = by.map(sum), gtot = ghost ? rankCombos(ghost).map(sum) : null;
+  if (!tot.some(v => v >= 0.5)) return '';
+  const kName = k => { const i = sp.A.findIndex(x => x.kind === k); return i >= 0 ? actLabel(sp, i, true) : KNAME[k]; };
+  // one scale for every stack (and open size) of this spot, so the bars grow and shrink as you slide
+  const peak = Math.max(...(spots || [sp]).map(s => Math.max(...rankCombos(s).map(sum))));
+  const step = [5, 10, 20, 25, 50].find(s => peak / s <= 4) || 50, top = Math.max(step, Math.ceil(peak / step - 1e-9) * step);
+  const W = 300, H = 82, pad = { l: 26, r: 4, t: 10, b: 13 }, cw = (W - pad.l - pad.r) / 13, bw = cw * 0.7;
+  const ys = v => pad.t + (H - pad.t - pad.b) * (1 - v / top);
+  let lines = '';
+  for (let v = step; v <= top + 1e-9; v += step) lines += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--line)" stroke-dasharray="2 3"/><text x="${pad.l - 4}" y="${ys(v) + 3}" text-anchor="end" font-size="9" fill="var(--faint)" font-family="var(--f-mono)">${v}</text>`;
+  const cols = by.map((o, r) => {
+    const x = pad.l + cw * r + (cw - bw) / 2, cx = (x + bw / 2).toFixed(1); let base = 0, rects = '';
+    for (const k of kinds) { const v = o[k]; if (!(v > 0)) continue; rects += `<rect x="${x.toFixed(1)}" y="${ys(base + v).toFixed(1)}" width="${bw.toFixed(1)}" height="${(ys(base) - ys(base + v)).toFixed(1)}" fill="${kColor(k)}"/>`; base += v; }
+    const parts = kinds.filter(k => o[k] >= 0.5).map(k => `${kName(k)} ${Math.round(o[k])}`).join(' · ');
+    return `<g><title>${RANKS[r]}: ${Math.round(tot[r])} of the 198 combos with ${/[A8]/.test(RANKS[r]) ? 'an' : 'a'} ${RANKS[r]} continue${parts ? ' (' + parts + ')' : ''}${gtot ? ' · Chip EV ' + Math.round(gtot[r]) : ''}</title>${rects}${gtot && gtot[r] >= 0.5 ? `<rect x="${x.toFixed(1)}" y="${ys(gtot[r]).toFixed(1)}" width="${bw.toFixed(1)}" height="${(ys(0) - ys(gtot[r])).toFixed(1)}" fill="none" stroke="var(--fg)" stroke-opacity=".55" stroke-dasharray="2 2"/>` : ''}<text x="${cx}" y="${(ys(gtot ? Math.max(tot[r], gtot[r]) : tot[r]) - 2).toFixed(1)}" text-anchor="middle" font-size="8" fill="var(--muted)" font-family="var(--f-mono)">${Math.round(tot[r])}</text><text x="${cx}" y="${H - 2}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--fg)" font-family="var(--f-mono)">${RANKS[r]}</text></g>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Combos you continue with that hold each rank, by action" style="display:block;margin-top:14px">${lines}${cols}</svg><p class="small muted" style="margin:4px 0 0">Combos you continue with (of all 1,326) that hold each rank, by action. Any one rank is in 198 combos.${ghost ? ' Dashed outline: Chip EV at this stack.' : ''}</p>`;
+}
+/* keep the highlighted thumbnail in view; scrolls the strip only, never the page */
+function filmFollow(el = $('#c-film')) {
+  const on = $('figure.on', el); if (!on || !el.clientWidth) return;
+  const d = on.getBoundingClientRect().left - el.getBoundingClientRect().left - (el.clientWidth - on.offsetWidth) / 2;
+  if (Math.abs(d) > 1) el.scrollLeft += d;
+}
+function renderCharts() {
+  fixTag('cTag');
+  $('#c-tag').innerHTML = tagSegHTML(UI.cTag);
+  $('#c-lede').textContent = TAG_OF[UI.cTag].lede;
+  const fams = FAM_ORDER.filter(f => sitsWhere(s => s.tag === UI.cTag && s.fam === f).length);
+  if (!fams.length) { $('#v-charts').innerHTML = '<div class="empty-state">No range data loaded.</div>'; return; }
+  if (!fams.includes(UI.cFam)) UI.cFam = fams[0];
+  $('#c-fam').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${f === UI.cFam}" title="${FAM[f].label}">${HEAT_LABEL[f] || FAM[f].label}</button>`).join('');
+  const sits = cSits(), sit = cCurSit();
+  const shownD = cCurSpot().dp;  // seats not solved at the stack on screen are dimmed
+  $('#c-sit').innerHTML = seatRowsHTML(sits, sit, POS[sit.n], s => s.depths.includes(shownD));
+  const sp = cCurSpot(); UI.cDp = sp.dp;
+  const sl = $('#c-slider'); sl.max = sit.depths.length - 1; sl.value = sp.idx;
+  $('#c-ticks').innerHTML = ticksHTML(sit.depths, sp.dp, $('#c-ticks').clientWidth || 300);
+  renderChartsGrid(false);
+  renderFilm();
+  renderChartsRail();
+  saveUI();
+}
+function renderChartsGrid(animate) {
+  const sp = cCurSpot();
+  $('#c-dp').textContent = sp.dp;
+  $('#c-scn').innerHTML = narrate(sp);
+  const kinds = [...new Set(sp.order.map(a => sp.A[a].kind))];
+  $('#c-legend').innerHTML = legendHTML(kinds, sp);
+  cGrid.show(sp, { animate, marks: g => (g === cSel ? 'sel' : '') });
+}
+function renderFilm() {
+  const sit = cCurSit(), sp = cCurSpot();
+  const el = $('#c-film');
+  const spots = [...sit.spots].reverse();  // deepest first, like the slider
+  el.innerHTML = spots.map(s => `<figure data-dp="${s.dp}" class="${s === sp ? 'on' : ''}"><canvas></canvas><figcaption>${s.dp}</figcaption></figure>`).join('');
+  $$('canvas', el).forEach((cv, i) => drawMini(cv, spots[i], 4));
+  filmFollow();
+}
+function mixChartSVG(sit, cur) {
+  const W = 300, H = 96, pad = { l: 26, r: 6, t: 6, b: 16 };
+  const n = sit.spots.length; if (n < 2) return '';
+  const xs = i => pad.l + (W - pad.l - pad.r) * (1 - i / (n - 1));  // deepest on the left, like the slider
+  const ys = v => pad.t + (H - pad.t - pad.b) * (1 - v);
+  const kinds = ['J', 'B', 'R', 'C', 'X'];
+  const mixes = sit.spots.map(sp => { const m = mixOf(sp); const o = {}; kinds.forEach(k => o[k] = 0); sp.A.forEach((a, i) => { if (a.kind !== 'F') o[a.kind] += m[i]; }); return o; });
+  let base = new Array(n).fill(0); const paths = [];
+  for (const k of kinds) {
+    if (!mixes.some(m => m[k] > 0.004)) continue;
+    const top = base.map((b, i) => b + mixes[i][k]);
+    const d = 'M' + top.map((v, i) => `${xs(i).toFixed(1)},${ys(v).toFixed(1)}`).join('L') + 'L' + base.map((v, i) => `${xs(i).toFixed(1)},${ys(v).toFixed(1)}`).reverse().join('L') + 'Z';
+    paths.push(`<path d="${d}" fill="${kColor(k)}" opacity=".92"/>`);
+    base = top;
+  }
+  const ci = sit.spots.indexOf(cur);
+  const grid = [0.25, 0.5].map(v => `<line x1="${pad.l}" x2="${W - pad.r}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--line)" stroke-dasharray="2 3"/><text x="${pad.l - 4}" y="${ys(v) + 3}" text-anchor="end" font-size="9" fill="var(--faint)" font-family="var(--f-mono)">${v * 100}%</text>`).join('');
+  // label the ends and the round stacks, skipping any that would collide (½bb steps sit close together)
+  const shown = [];
+  [0, n - 1, ...sit.spots.map((sp, i) => [5, 10, 15, 20, 25, 40].includes(sp.dp) ? i : -1).filter(i => i > 0 && i < n - 1)].forEach(i => { if (shown.every(j => Math.abs(xs(i) - xs(j)) >= 18)) shown.push(i); });
+  const lab = shown.map(i => `<text x="${xs(i)}" y="${H - 3}" text-anchor="middle" font-size="9" fill="${i === ci ? 'var(--fg)' : 'var(--faint)'}" font-family="var(--f-mono)">${sit.spots[i].dp}</text>`).join('');
+  const hit = sit.spots.map((sp, i) => `<rect x="${xs(i) - (W / n) / 2}" y="0" width="${W / n}" height="${H}" fill="transparent" data-dp="${sp.dp}" style="cursor:pointer"><title>${sp.dp}bb</title></rect>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Share of hands played by action at each stack depth" style="display:block;margin-top:12px">${grid}${paths.join('')}<line x1="${xs(ci)}" x2="${xs(ci)}" y1="${pad.t - 2}" y2="${H - pad.b}" stroke="var(--fg)" stroke-width="1.5"/>${lab}${hit}</svg><p class="small muted" style="margin:4px 0 0">Share of hands played, by action, at every stack. Tap to jump.</p>`;
+}
+function renderChartsRail() {
+  const sp = cCurSpot();
+  const parts = [];
+  parts.push(`<div class="panel"><h3>${sp.dp}bb · ${esc(sitLabel(sp.sit))}</h3>${stableMixHTML(sp, sp.sit.spots)}${mixChartSVG(sp.sit, sp)}${rankChartSVG(sp, sp.sit.spots)}</div>`);
+  parts.push(`<div class="panel" id="c-hand"><h3>Hand</h3>${handDetailHTML(sp, cSel)}</div>`);
+  parts.push(`<div class="panel"><h3>Edges</h3><p class="small muted" style="margin:-4px 0 10px">Each ladder from strongest to weakest, and where it stops.</p>${edgesHTML(sp)}</div>`);
+  $('#c-rail').innerHTML = parts.join('');
+}
+$('#c-rail').addEventListener('click', e => {
+  const b = e.target.closest('[data-lens]'); if (b) { UI.lens = +b.dataset.lens; setTab('lens'); return; }
+  const r = e.target.closest('rect[data-dp]'); if (r) { stopPlay(); const sit = cCurSit(); setDepthIdx(sit.depths.indexOf(+r.dataset.dp)); }
+});
+$('#c-tag').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cTag = b.dataset.tag; UI.cSit = null; stopPlay(); renderCharts(); });
+$('#c-fam').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cFam = b.dataset.f; UI.cSit = null; stopPlay(); renderCharts(); });
+scrubSeats($('#c-sit'), (k, v) => { const s = pickSeat(cSits(), cCurSit(), k, v); if (!s || s.key === UI.cSit) return; UI.cSit = s.key; stopPlay(); renderCharts(); });
+function setDepthIdx(i, animate = true) {
+  const sit = cCurSit(); i = Math.max(0, Math.min(sit.depths.length - 1, i));
+  if (sit.depths[i] === UI.cDp) return false;
+  UI.cDp = UI.cDpPref = sit.depths[i]; saveUI();
+  $('#c-slider').value = i;
+  $$('#c-ticks span').forEach(s => s.classList.toggle('on', +s.textContent === UI.cDp));
+  renderChartsGrid(animate); renderChartsRail();
+  $$('#c-film figure').forEach(f => f.classList.toggle('on', +f.dataset.dp === UI.cDp));
+  filmFollow();
+  return true;
+}
+$('#c-slider').addEventListener('input', e => { stopPlay(); setDepthIdx(+e.target.value); });
+$('#c-film').addEventListener('click', e => { const f = e.target.closest('figure'); if (!f) return; stopPlay(); const sit = cCurSit(); setDepthIdx(sit.depths.indexOf(+f.dataset.dp)); });
+function stopPlay() { if (cPlay) { clearInterval(cPlay); cPlay = null; } }
+document.addEventListener('keydown', e => {
+  if (e.target && e.target.closest && e.target.closest('input,textarea')) return;
+  if (UI.tab === 'charts' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); stopPlay(); setDepthIdx(cCurSpot().idx + (e.key === 'ArrowLeft' ? 1 : -1)); }
+  if (UI.tab === 'drill' && RUN) drillKey(e);
+});
+
+/* ---------- SPOT BUILDER ---------- */
+/* Rebuilds the action tree from each spot's history, so any line that leads to a stored spot can be clicked through */
+const BIDX = new Map(), BDEP = new Map();
+let bSel = null, bPrev = null, bMsg = '';
+function bDepths(gt) { if (!BDEP.has(gt)) BDEP.set(gt, [...new Set(SPOTS.filter(s => s.gt === gt).map(s => s.dp))].sort((a, b) => a - b)); return BDEP.get(gt); }
+function bIndex(gt, dp) {
+  const key = gt + '|' + dp; let ix = BIDX.get(key); if (ix) return ix;
+  ix = { at: new Map(), kids: new Map() };
+  for (const sp of SPOTS) {
+    if (sp.gt !== gt || sp.dp !== dp) continue;
+    ix.at.set(sp.hist, sp);
+    const cs = sp.hist ? sp.hist.split('-') : [];
+    for (let i = 0; i < cs.length; i++) { const pre = cs.slice(0, i).join('-'); let m = ix.kids.get(pre); if (!m) ix.kids.set(pre, m = new Map()); m.set(cs[i], (m.get(cs[i]) || 0) + 1); }
+  }
+  BIDX.set(key, ix); return ix;
+}
+const codeKind = (c, dp) => c === 'F' || c === 'C' || c === 'X' ? c : c === 'RAI' || parseFloat(c.slice(1)) >= dp - 0.2 ? 'J' : 'R';
+/* the chosen line is stored as {code, kind}; at another stack the same kind of action is used when the exact size isn't there */
+function bResolve(seq, gt, dp) {
+  const ix = bIndex(gt, dp), codes = [];
+  for (const { c, k } of seq) {
+    const m = ix.kids.get(codes.join('-')); if (!m) break;
+    let pick = m.has(c) && codeKind(c, dp) === k ? c : null, best = -1;
+    if (!pick) for (const [cc, cnt] of m) if (codeKind(cc, dp) === k && cnt > best) { pick = cc; best = cnt; }
+    if (!pick) break;
+    codes.push(pick);
+  }
+  return codes;
+}
+function bWalk(codes, n) {
+  let queue = [...Array(n).keys()], raises = 0, limps = 0; const folded = new Set(), who = [];
+  for (const c of codes) {
+    const p = queue.shift(); who.push(p);
+    if (c === 'F') { folded.add(p); continue; }
+    if (c === 'C' || c === 'X') { if (!raises) limps++; continue; }
+    raises++; queue = []; for (let k = 1; k < n; k++) { const q = (p + k) % n; if (!folded.has(q)) queue.push(q); }
+  }
+  return { who, queue, raises, limps };
+}
+function bActLabel(c, W, dp) {
+  const k = codeKind(c, dp);
+  if (k === 'F') return 'Fold'; if (k === 'X') return 'Check'; if (k === 'J') return 'All-in';
+  if (k === 'C') return W.raises ? 'Call' : 'Limp';
+  return (W.raises ? (W.raises + 2) + '-bet ' : W.limps ? 'Raise ' : 'Open ') + fmtBB(parseFloat(c.slice(1)));
+}
+function bState() {
+  const gt = bGt(), dp = UI.bDp, ps = bPseudo(gt);
+  const seq = UI.bSeq || [], codes = bResolve(seq, gt, dp), W = bWalk(codes, ps.n), ix = bIndex(gt, dp), hist = codes.join('-');
+  return { gt, dp, ps, names: bNames(ps), seq, codes, W, ix, hist, actor: W.queue[0], spot: ix.at.get(hist) || null, cut: codes.length < seq.length };
+}
+/* folds added by tapping a later seat are marked s:1, so Undo steps back to the last action you picked */
+/* the dealer button sits at the bottom so the table never turns while you build a hand */
+function bTableHTML(S) {
+  const T = tableState({ ...S.ps, dp: S.dp, hist: S.hist, hero: S.actor ?? -1 }), n = T.n, { cx, cy, rx, ry, potY } = TBL, em = v => v.toFixed(2) + 'em';
+  const base = T.btn >= 0 ? T.btn : n - 3;
+  let out = '';
+  for (let i = 0; i < n; i++) {
+    const k = (i - base + n) % n, th = (90 + k * 360 / n) * Math.PI / 180, ux = Math.cos(th), uy = Math.sin(th);
+    const x = cx + rx * ux, y = cy + ry * uy, me = i === S.actor, s = T.st[i], kc = s && 'RJCX'.includes(s) ? s : '';
+    const kv = kc ? `;--k:var(--k-${kc})` : '';
+    out += `<button type="button" class="ts${me ? ' me' : ''}${s === 'F' && !me ? ' f' : ''}${kc && !me ? ' act' : ''}" data-seat="${i}" style="left:${em(x)};top:${em(y)}${kv}"><b>${S.names[i]}</b><span>${me ? 'to act' : s ? T.word[i] : num(S.dp - T.bet[i])}</span></button>`;
+    const lab = T.bet[i] > 0 && s !== 'F' ? num(T.bet[i]) : '', hw = (lab.length * 0.62 + 1.7) / 2;
+    let bx, by;
+    if (Math.abs(uy) >= 0.5) { by = y - Math.sign(uy) * 2.7; bx = x + (cx - x) * 0.15; }
+    else { bx = x - Math.sign(ux) * (2.7 + hw + 0.35); by = y + (potY - y) * 0.2; }
+    if (lab) out += `<div class="tb" style="left:${em(bx)};top:${em(by)}${kv}"><i></i><span>${lab}</span></div>`;
+    if (i === T.btn) {
+      let dx = bx, dy = by;
+      if (Math.abs(uy) >= 0.5) dx = bx + (Math.abs(ux) < 0.2 ? 1 : Math.sign(ux)) * (hw + 1.1); else dy = by + 1.9;
+      out += `<div class="tdlr" style="left:${em(dx)};top:${em(dy)}"><span>D</span></div>`;
+    }
+  }
+  out += `<div class="tpot" style="left:${em(cx)};top:${em(cy)}"><b>${S.dp}<small>bb</small></b><span>Pot ${Math.round(T.pot * 10) / 10}</span></div>`;
+  return `<div class="tblw"><div class="tbl"><div class="felt"></div>${out}</div></div>`;
+}
+function renderBuild() {
+  const games = bGames();
+  if (!games.length) { $('#v-build').innerHTML = '<div class="empty-state">No range data loaded.</div>'; return; }
+  if (!games.some(g => g.key === UI.bGame)) { UI.bGame = games[0].key; UI.bSeq = []; }
+  UI.bSeq = UI.bSeq || [];
+  $('#b-game').innerHTML = games.map(g => `<button data-g="${g.key}" aria-pressed="${g.key === UI.bGame}">${g.label}</button>`).join('');
+  $('#b-sub').innerHTML = bSub();
+  const dps = bDepths(bGt()), want = UI.bDp || 20;
+  if (!dps.includes(UI.bDp)) UI.bDp = dps.reduce((b, d) => Math.abs(d - want) < Math.abs(b - want) ? d : b, dps[0]);
+  const sl = $('#b-slider'); sl.max = dps.length - 1; sl.value = dps.indexOf(UI.bDp);
+  $('#b-ticks').innerHTML = ticksHTML(dps, UI.bDp, $('#b-ticks').clientWidth || 300);
+  renderBuildSpot();
+}
+function renderBuildSpot() {
+  const S = bState();
+  $('#b-dp').textContent = S.dp;
+  $$('#b-ticks span').forEach(s => s.classList.toggle('on', +s.textContent === S.dp));
+  $('#b-table').innerHTML = bTableHTML(S);
+  const kids = S.ix.kids.get(S.hist);
+  const opts = kids ? [...kids.keys()].sort((a, b) => KORD[codeKind(b, S.dp)] - KORD[codeKind(a, S.dp)] || parseFloat(a.slice(1)) - parseFloat(b.slice(1))) : [];
+  $('#b-who').innerHTML = S.actor == null ? 'Everyone has acted.' : `<b>${S.names[S.actor]}</b> to act${opts.length ? '' : '. No later spots are stored from here.'}`;
+  $('#b-acts').innerHTML = opts.map(c => `<button data-c="${c}" class="${bPrev && bPrev.seat === S.actor && bPrev.code === c ? 'prev' : ''}" style="background:${kColor(codeKind(c, S.dp))}">${bActLabel(c, S.W, S.dp)}</button>`).join('');
+  const notes = [];
+  if (S.cut) notes.push(`At ${S.dp}bb the rest of that line isn't in the solutions.`);
+  if (bMsg) notes.push(bMsg);
+  $('#b-note').textContent = notes.join(' ');
+  bMsg = '';
+  $('#b-back').disabled = !S.codes.length;
+  const sp = S.spot;
+  $('#b-grid').hidden = !sp; $('#b-legend').hidden = !sp; $('#b-empty').hidden = !!sp;
+  $('#b-title').textContent = sp ? `${S.names[S.actor]} · ${bFamLabel(sp)}` : S.actor == null ? 'Hand over' : `${S.names[S.actor]} to act`;
+  if (sp) {
+    const sit = bSit(sp);
+    bGrid.show(sp, { marks: g => (g === bSel ? 'sel' : '') });
+    $('#b-legend').innerHTML = legendHTML([...new Set(sp.order.map(a => sp.A[a].kind))], sp);
+    $('#b-info').innerHTML = `<div class="panel"><h3>${sp.dp}bb · ${esc(sitLabel(sit))}</h3>${stableMixHTML(sp, sit ? sit.spots : [sp])}<div style="margin-top:12px"><button class="btn ghost small" id="b-open">Open in Charts →</button></div></div><div class="panel"><h3>Hand</h3>${handDetailHTML(sp, bSel)}</div>`;
+  } else {
+    $('#b-empty').textContent = S.actor == null ? 'The betting is closed. Tap a seat to change what happened.' : `No stored ranges for ${S.names[S.actor]} here. Tap a later seat, or pick an action.`;
+    $('#b-info').innerHTML = '';
+  }
+  saveUI();
+}
+function bTapSeat(s) {
+  const S = bState(), qi = S.W.queue.indexOf(s);
+  if (qi === 0) return;
+  if (qi > 0) {
+    const cur = S.codes.slice(), seq = S.seq.slice(0, S.codes.length);
+    for (let t = 0; t < qi; t++) {
+      const m = S.ix.kids.get(cur.join('-'));
+      if (!m || !m.has('F')) { bMsg = `No stored line has ${S.names[S.W.queue[t]]} folding here.`; break; }
+      cur.push('F'); seq.push({ c: 'F', k: 'F', s: 1 });
+    }
+    UI.bSeq = seq; bPrev = null; renderBuildSpot(); return;
+  }
+  const last = S.W.who.lastIndexOf(s);
+  if (last >= 0) { UI.bSeq = S.seq.slice(0, last); bPrev = { seat: s, code: S.codes[last] }; renderBuildSpot(); }
+}
+const bGrid = new Grid($('#b-grid'), { onCell: g => { bSel = g; renderBuildSpot(); } });
+$('#b-game').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const before = bNames(bPseudo(bGt())).join();
+  UI.bGame = b.dataset.g;
+  if (bNames(bPseudo(bGt())).join() !== before) UI.bSeq = [];
+  bPrev = null; renderBuild();
+});
+$('#b-slider').addEventListener('input', e => { UI.bDp = bDepths(bGt())[+e.target.value]; renderBuildSpot(); });
+$('#b-table').addEventListener('click', e => { const b = e.target.closest('[data-seat]'); if (b) bTapSeat(+b.dataset.seat); });
+$('#b-acts').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; const S = bState(); UI.bSeq = [...S.seq.slice(0, S.codes.length), { c: b.dataset.c, k: codeKind(b.dataset.c, S.dp) }]; bPrev = null; renderBuildSpot(); });
+$('#b-back').addEventListener('click', () => {
+  const S = bState(), q = S.seq.slice(0, S.codes.length), skip = () => { while (q.length && q[q.length - 1].s) q.pop(); };
+  skip(); q.pop(); UI.bSeq = q; bPrev = null; renderBuildSpot();
+});
+$('#b-reset').addEventListener('click', () => { UI.bSeq = []; bPrev = null; renderBuildSpot(); });
+$('#b-info').addEventListener('click', e => {
+  const l = e.target.closest('[data-lens]'); if (l) { UI.lens = +l.dataset.lens; setTab('lens'); return; }
+  if (e.target.closest('#b-open')) { const S = bState(); if (S.spot) openInCharts(S.spot, bSel); }
+});
+const B_GAMES = TAGS.map(t => ({ key: t.gt, label: t.label }));
+function bGames() { return B_GAMES.filter(g => SPOTS.some(s => s.gt === g.key)); }
+function bGt() { return UI.bGame; }
+function bSub() { return ''; }
+function bPseudo(gt) { const s = SPOTS.find(x => x.gt === gt); return { n: s.n, tag: s.tag, gt }; }
+function bNames(ps) { return POS[ps.n]; }
+function bSit(sp) { return sp.sit; }
+function bFamLabel(sp) { return FAM[sp.fam].label; }
+
+/* ---------- HAND LENS ---------- */
+/* how strong each starting hand is: [top % of the 1,326 combos ranked at or above it, % equity against a random hand].
+   Ranked by all-in equity vs a random hand (2,000,000 simulated deals per hand). */
+const HAND_TOP = {'AA':[0.5,85.2],'KK':[0.9,82.4],'QQ':[1.4,79.9],'JJ':[1.8,77.5],'TT':[2.3,75.0],'99':[2.7,72.1],'88':[3.2,69.2],'AKs':[3.5,67.1],'AQs':[3.8,66.2],'77':[4.2,66.2],'AJs':[4.5,65.4],'AKo':[5.4,65.3],'ATs':[5.7,64.6],'AQo':[6.6,64.3],'AJo':[7.5,63.6],'KQs':[7.8,63.4],'66':[8.3,63.2],'A9s':[8.6,62.8],'ATo':[9.5,62.7],'KJs':[9.8,62.5],'A8s':[10.1,62.0],'KTs':[10.4,61.8],'KQo':[11.3,61.4],'A7s':[11.6,61.0],'A9o':[12.5,60.8],'KJo':[13.4,60.5],'55':[13.9,60.3],'QJs':[14.2,60.2],'K9s':[14.5,60.0],'A5s':[14.8,60.0],'A6s':[15.1,59.9],'A8o':[16.0,59.9],'KTo':[16.9,59.7],'QTs':[17.2,59.4],'A4s':[17.5,59.0],'A7o':[18.4,58.9],'K8s':[18.7,58.4],'A3s':[19.0,58.2],'QJo':[19.9,58.1],'K9o':[20.8,57.8],'A6o':[21.7,57.7],'Q9s':[22.0,57.7],'A5o':[22.9,57.7],'K7s':[23.2,57.5],'JTs':[23.5,57.5],'A2s':[23.8,57.4],'QTo':[24.7,57.3],'44':[25.2,57.1],'A4o':[26.1,56.7],'K6s':[26.4,56.6],'K8o':[27.3,56.0],'Q8s':[27.6,55.9],'A3o':[28.5,55.9],'K5s':[28.8,55.8],'J9s':[29.1,55.6],'Q9o':[30.0,55.3],'JTo':[30.9,55.3],'K7o':[31.8,55.2],'A2o':[32.7,55.0],'K4s':[33.0,54.9],'Q7s':[33.3,54.3],'K6o':[34.2,54.2],'K3s':[34.5,54.1],'J8s':[34.8,54.1],'T9s':[35.1,54.0],'33':[35.6,53.7],'Q6s':[35.9,53.6],'Q8o':[36.8,53.5],'K5o':[37.7,53.4],'J9o':[38.6,53.3],'K2s':[38.9,53.2],'Q5s':[39.2,52.8],'T8s':[39.5,52.3],'K4o':[40.4,52.3],'J7s':[40.7,52.3],'Q4s':[41.0,51.8],'Q7o':[41.9,51.8],'J8o':[42.8,51.5],'T9o':[43.7,51.5],'K3o':[44.6,51.4],'Q6o':[45.6,51.0],'Q3s':[45.9,50.9],'98s':[46.2,50.8],'T7s':[46.5,50.6],'J6s':[46.8,50.6],'K2o':[47.7,50.5],'22':[48.1,50.3],'Q2s':[48.4,50.2],'Q5o':[49.3,50.2],'J5s':[49.6,50.0],'T8o':[50.5,49.7],'J7o':[51.4,49.7],'97s':[51.7,49.2],'Q4o':[52.6,49.1],'J4s':[52.9,49.1],'T6s':[53.2,48.9],'J3s':[53.5,48.2],'Q3o':[54.4,48.2],'98o':[55.4,48.1],'T7o':[56.3,47.9],'87s':[56.6,47.9],'J6o':[57.5,47.8],'96s':[57.8,47.5],'J2s':[58.1,47.4],'Q2o':[59.0,47.3],'T5s':[59.3,47.2],'J5o':[60.2,47.2],'T4s':[60.5,46.5],'97o':[61.4,46.3],'86s':[61.7,46.2],'J4o':[62.6,46.2],'T6o':[63.5,46.2],'95s':[63.8,45.7],'T3s':[64.1,45.7],'76s':[64.4,45.4],'J3o':[65.3,45.2],'87o':[66.2,45.1],'T2s':[66.5,44.8],'85s':[66.8,44.6],'96o':[67.7,44.4],'J2o':[68.6,44.3],'T5o':[69.5,44.3],'94s':[69.8,43.9],'75s':[70.1,43.7],'T4o':[71.0,43.5],'93s':[71.3,43.3],'86o':[72.2,43.2],'65s':[72.5,43.2],'84s':[72.9,42.7],'T3o':[73.8,42.6],'95o':[74.7,42.6],'92s':[75.0,42.5],'76o':[75.9,42.3],'74s':[76.2,41.9],'T2o':[77.1,41.7],'54s':[77.4,41.4],'85o':[78.3,41.4],'64s':[78.6,41.3],'83s':[78.9,40.8],'94o':[79.8,40.7],'75o':[80.7,40.5],'82s':[81.0,40.3],'93o':[81.9,40.0],'73s':[82.2,40.0],'65o':[83.1,39.9],'53s':[83.4,39.8],'63s':[83.7,39.6],'84o':[84.6,39.5],'92o':[85.5,39.1],'43s':[85.8,38.7],'74o':[86.7,38.6],'54o':[87.6,38.2],'72s':[87.9,38.1],'64o':[88.8,38.0],'52s':[89.1,37.9],'62s':[89.4,37.7],'83o':[90.3,37.5],'42s':[90.6,36.8],'82o':[91.6,36.8],'73o':[92.5,36.6],'53o':[93.4,36.3],'32s':[93.7,36.1],'63o':[94.6,36.0],'43o':[95.5,35.2],'72o':[96.4,34.5],'52o':[97.3,34.3],'62o':[98.2,34.0],'42o':[99.1,33.2],'32o':[100.0,32.2]};
+const handTopHTML = g => { const t = HAND_TOP[GRID[g]]; return t ? `<b>Top ${t[0].toFixed(1)}%</b> of starting hands <span class="muted">· ${t[1].toFixed(1)}% vs a random hand</span>` : ''; };
+const lGrid = new Grid($('#l-grid'), { onCell: g => { UI.lens = g; saveUI(); renderLens(); } });
+function cardsHTML(g, combo) {
+  const n = GRID[g]; const c = combo || defaultCombo(n);
+  return c.map(([r, s]) => `<div class="pcard s-${s}"><span class="rk">${r === 'T' ? '10' : r}</span><span class="st">${SUITSYM[s]}</span></div>`).join('');
+}
+function defaultCombo(n) { if (n.length === 2) return [[n[0], 's'], [n[1], 'h']]; return n[2] === 's' ? [[n[0], 'h'], [n[1], 'h']] : [[n[0], 's'], [n[1], 'd']]; }
+function dealCombo(n) {
+  const S = ['s', 'h', 'd', 'c'];
+  if (n.length === 2) { const a = rnd(4); let b = rnd(3); if (b >= a) b++; return [[n[0], S[a]], [n[1], S[b]]]; }
+  if (n[2] === 's') { const s = pick(S); return [[n[0], s], [n[1], s]]; }
+  const a = rnd(4); let b = rnd(3); if (b >= a) b++; return [[n[0], S[a]], [n[1], S[b]]];
+}
+function ruleText(sit, g) {
+  const runs = [];
+  for (const sp of sit.spots) {
+    const k = inRange(sp, g) ? kindAt(sp, g) : 'na';
+    const mx = inRange(sp, g) ? Math.max(...sp.order.map(a => sp.f[a][g])) : 1;
+    const lab = k === 'na' ? null : (mx < 0.6 ? 'Mix' : actLabel(sp, sp.prim[g], true));
+    if (runs.length && runs[runs.length - 1].lab === lab) runs[runs.length - 1].hi = sp.dp;
+    else runs.push({ lab, lo: sp.dp, hi: sp.dp });
+  }
+  const d = sit.depths, first = d[0], last = d[d.length - 1];
+  return runs.filter(r => r.lab).map(r => {
+    const span = r.lo === first && r.hi === last ? 'all' : r.lo === first ? '≤' + r.hi : r.hi === last ? r.lo + '+' : r.lo === r.hi ? '' + r.lo : r.lo + '–' + r.hi;
+    return `${span} ${r.lab}`;
+  }).join(' · ');
+}
+/* every depth to 25bb, then a lighter sample so deep stacks don't crowd the strip */
+const LENS_DEEP = new Set([30, 40, 50, 60, 72]);
+function lensMatrix(title, sits, g, note) {
+  const depths = [...new Set(sits.flatMap(s => s.depths))].filter(d => d <= 25 || LENS_DEEP.has(d)).sort((a, b) => b - a);  // deepest first, like the sliders
+  const keyD = new Set([2, 5, 10, 15, 20, 25, 40]);
+  const shown = (d, i) => keyD.has(d) || i === 0 || i === depths.length - 1;
+  const head = `<div class="mx-row hd"><div class="mx-lab"></div><div class="mx-strip" style="--cols:${depths.length}">${depths.map((d, i) => `<span class="d ${keyD.has(d) ? 'k' : ''}">${shown(d, i) ? d : ''}</span>`).join('')}</div></div>`;
+  const lines = `<div class="mx-lines" style="--cols:${depths.length}" aria-hidden="true">${depths.map(d => `<i class="${keyD.has(d) ? 'on' : ''}"></i>`).join('')}</div>`;
+  const group = sits[0] && sits[0].fam === 'Squeeze' && new Set(sits.map(s => s.hero)).size > 1;  // one heading per seat you're in
+  const rows = sits.map((s, i) => {
+    const head = group && (i === 0 || sits[i - 1].hero !== s.hero) ? `<div class="mx-row mx-grp"><div class="mx-lab">Your seat: ${POS[s.n][s.hero]}</div><div></div></div>` : '';
+    const cells = depths.map(d => {
+      const sp = SPOT_AT.get(s.key + '|' + d);
+      if (!sp) return '<i class="c none"></i>';
+      if (!inRange(sp, g)) return `<i class="c na" title="${d}bb: not in your range"></i>`;
+      const tip = `${d}bb: ` + sp.order.map(a => actLabel(sp, a, true) + ' ' + pct(sp.f[a][g])).join(', ');
+      return `<i class="c" title="${esc(tip)}" style="background:${cellBg(sp, g)}"></i>`;
+    }).join('');
+    return head + `<div class="mx-row"><div class="mx-lab"><b>${esc(group ? sitLabel(s).replace(/^\S+ /, '') : s.n === 2 ? HEAT_LABEL[s.fam] || sitLabel(s) : sitLabel(s))}</b></div><div class="mx-strip" style="--cols:${depths.length}">${cells}</div></div>`;
+  }).join('');
+  return `<section class="panel"><h3 style="font:800 18px/1.1 var(--f-display);text-transform:uppercase;margin:0 0 4px">${title}</h3>${note ? `<p class="small muted" style="margin:0 0 8px">${note}</p>` : ''}<div class="mx"><div class="mx-in has-ft">${head}${rows}${head.replace('mx-row hd', 'mx-row hd ft')}${lines}</div></div></section>`;
+}
+function renderLens() {
+  fixTag('lTag');
+  $('#l-tag').innerHTML = tagSegHTML(UI.lTag);
+  const g = UI.lens;
+  $('#l-input').value = GRID[g];
+  $('#l-cards').innerHTML = cardsHTML(g);
+  $('#l-top').innerHTML = handTopHTML(g);
+  lGrid.show(null, { bg: g2 => g2 === g ? 'var(--accent)' : (COMBOS[g2] === 6 ? 'var(--k-F)' : COMBOS[g2] === 4 ? 'color-mix(in srgb, var(--k-F) 70%, var(--empty))' : 'color-mix(in srgb, var(--k-F) 45%, var(--empty))') });
+  $('#l-legend').innerHTML = legendHTML(['J', 'B', 'R', 'C', 'X', 'F']) + '<span><i class="sw" style="background:repeating-linear-gradient(45deg,var(--empty) 0 2px,transparent 2px 4px)"></i>Folded earlier</span>';
+  const blocks = [
+    ['RFI', 'Small blind, first in', 'On the button: limp, raise or shove.'],
+    ['BBvsLimp', 'Big blind vs a limp', 'Check or raise.'],
+    ['BBvsOpen', 'Big blind vs a raise', 'Call, 3-bet or shove.'],
+    ['BBvsJam', 'Big blind vs a shove', 'Calling ranges. These widen fast as stacks get shorter.'],
+    ['LimpVsRaise', 'You limped and got raised', ''],
+    ['LimpVsJam', 'You limped and got shoved on', 'Call-off ranges after a limp. Striped squares mean you would not have limped the hand.'],
+    ['OpenVs3bet', 'You raised and got 3-bet', ''],
+    ['OpenVsJam', 'You raised and got shoved on', 'Call-off ranges. Striped squares mean you would not have raised the hand.'],
+    ['IsoVs3bet', 'You raised a limp and got 3-bet', ''],
+    ['IsoVsJam', 'You raised a limp and got shoved on', ''],
+    ['ThreebetVs4bet', 'You 3-bet and got 4-bet', 'Call, or 5-bet shove.'],
+    ['ThreebetVsJam', 'You 3-bet and got shoved on', 'Call-off ranges after your 3-bet.'],
+  ];
+  $('#l-blocks').innerHTML = blocks.map(([fam, title, note]) => {
+    const sits = sitsWhere(s => s.tag === UI.lTag && s.fam === fam);
+    return sits.length ? lensMatrix(title, sits, g, note) : '';
+  }).join('');
+}
+$('#l-tag').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.lTag = b.dataset.tag; saveUI(); renderLens(); });
+$('#l-input').addEventListener('change', e => {
+  let v = e.target.value.trim(); if (!v) return;
+  v = v[0].toUpperCase() + (v[1] || '').toUpperCase() + (v.slice(2).toLowerCase());
+  if (v.length === 2 && v[0] !== v[1]) v += 'o';
+  if (v.length === 3 && GIDX[v] == null) { const sw = v[1] + v[0] + v[2]; if (GIDX[sw] != null) v = sw; }
+  if (GIDX[v] != null) { UI.lens = GIDX[v]; saveUI(); renderLens(); } else e.target.value = GRID[UI.lens];
+});
+
+/* ---------- progress store (device + account) ---------- */
+const Progress = {
+  key: 'sng-progress',
+  data: { v: 1, updated: 0, items: {}, stats: {}, log: [] },
+  ref: null, busy: false, again: false, timer: null,
+  init() { const d = load(this.key); if (d && d.v === 1) this.data = Object.assign(this.data, d); },
+  async connect() {
+    try {
+      if (!window.claude || !window.claude.use) return;
+      const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      if (!db || !user) return;
+      const uid = await user.id(); if (!uid) return;
+      const ref = db.doc('data/users/' + uid + '/sng-progress');
+      const snap = await ref.get();
+      if (snap.exists) {
+        const d = snap.data();
+        if (d && d.v === 1 && (d.updated || 0) > (this.data.updated || 0)) { this.data = JSON.parse(JSON.stringify(d)); store(this.key, this.data); if (UI.tab === 'drill' && !RUN) renderDrillHome(); }
+      }
+      this.ref = ref;
+      const s = $('#sync'); s.classList.add('on'); $('span', s).textContent = 'Progress synced to your account';
+    } catch (e) { }
+  },
+  touch() {
+    this.data.updated = Date.now();
+    const keys = Object.keys(this.data.items);
+    if (keys.length > 3500) { keys.sort((a, b) => this.data.items[b][0] - this.data.items[a][0] || this.data.items[a][2] - this.data.items[b][2]).slice(0, keys.length - 3000).forEach(k => delete this.data.items[k]); }
+    if (this.data.log.length > 60) this.data.log = this.data.log.slice(-60);
+    store(this.key, this.data);
+    clearTimeout(this.timer); this.timer = setTimeout(() => this.push(), 3500);
+  },
+  async push() {
+    if (!this.ref) return;
+    if (this.busy) { this.again = true; return; }
+    this.busy = true;
+    try { await this.ref.set(JSON.parse(JSON.stringify(this.data))); } catch (e) { }
+    this.busy = false;
+    if (this.again) { this.again = false; this.push(); }
+  },
+};
+const INTERVALS = [4, 20, 1440, 4320, 8640, 17280]; // minutes per box
+function itemKey(spot, g) { return spot.sitKey + '#' + spot.dp + '#' + GRID[g]; }
+function itemFromKey(k) { const [sk, dp, hn] = k.split('#'); const spot = SPOT_AT.get(sk + '|' + dp); return spot ? { spot, g: GIDX[hn] } : null; }
+function recordAnswer(spot, g, grade, loss) {
+  const k = itemKey(spot, g), now = Date.now() / 60000;
+  const it = Progress.data.items[k] || [0, 0, 0, 0];
+  if (grade === 'bad') { it[0] = 0; it[3]++; } else if (grade === 'good') it[0] = Math.min(5, it[0] + 1);
+  it[1] = Math.round(now + INTERVALS[it[0]]); it[2]++;
+  Progress.data.items[k] = it;
+  const sk = spot.fam + '|' + bandOf(spot.dp) + '|' + spot.tag;
+  const st = Progress.data.stats[sk] || [0, 0, 0];
+  st[0]++; if (grade === 'good') st[1]++; else if (grade === 'ok') st[2]++; if (loss != null) { st[3] = Math.round(((st[3] || 0) + loss) * 1000) / 1000; st[4] = (st[4] || 0) + 1; }
+  Progress.data.stats[sk] = st;
+  Progress.touch();
+}
+
+/* ---------- DRILL ---------- */
+const HEAT_LABEL = { RFI: 'First in', BBvsLimp: 'BB vs limp', BBvsOpen: 'BB vs raise', BBvsJam: 'BB vs shove', LimpVsRaise: 'Limp → raise', LimpVsJam: 'Limp → shove', OpenVs3bet: 'Raise → 3-bet', OpenVsJam: 'Raise → shove', IsoVs3bet: 'Iso → 3-bet', IsoVsJam: 'Iso → shove', ThreebetVs4bet: '3-bet → 4-bet', ThreebetVsJam: '3-bet → shove', vsOpen: 'vs raise', vsJam: 'vs shove', Squeeze: 'Raise + call' };
+/* leak map cell: big number = Quick-fire score or EV lost per hand (whichever the toggle shows), small = hands answered
+   (st = [answered, right, mixed-ok, EV lost in bb, answers with EV recorded]; results from before EV was recorded have none) */
+const heatAcc = st => (st[1] + 0.5 * st[2]) / st[0], heatEv = st => st[4] ? st[3] / st[4] : null;
+/* the colour runs from green (a perfect score, or no EV lost) to red (the worst square on the map), by score or by EV */
+function heatScale(stats, by) {
+  if (by === 'ev') { const evs = stats.map(heatEv).filter(v => v != null); return { by, worst: evs.length ? Math.max(...evs) : null }; }
+  return { by, worst: stats.length ? Math.min(...stats.map(heatAcc)) : null };
+}
+function heatCell(f, b, st, sc) {
+  const acc = heatAcc(st), ev = heatEv(st);
+  const t = sc.by === 'ev' ? (ev == null ? null : sc.worst > 0 ? ev / sc.worst : 0) : (sc.worst < 1 ? (1 - acc) / (1 - sc.worst) : 0);
+  const bg = t == null ? '' : ` style="background:color-mix(in oklch,var(--bad) ${Math.round(t * 100)}%,var(--good))"`;
+  const tip = `Score ${Math.round(acc * 100)}% · ${st[0]} hands · ` + (ev != null ? `loses ${ev.toFixed(2)}bb per hand` : 'EV loss not recorded yet');
+  const big = sc.by === 'ev' ? (ev == null ? '–' : ev.toFixed(2).replace(/^0\./, '.')) : Math.round(acc * 100);
+  return `<button class="hc${t == null ? ' nodata' : ''}" data-hf="${f}" data-hb="${b.id}"${bg} title="${tip}">${big}<small>${st[0]}</small></button>`;
+}
+function heatKeyHTML(sc) {
+  if (sc.worst == null) return '';
+  return sc.by === 'ev' ? `<span>Perfect 0bb</span><i></i><span>Worst ${sc.worst.toFixed(2)}bb a hand</span>` : `<span>Perfect 100%</span><i></i><span>Worst ${Math.round(sc.worst * 100)}%</span>`;
+}
+const bandTitle = b => b.label.replace(/bb$/, '') + 'bb';
+let RUN = null;
+/* ICM decks leave out the 8-handed Chip EV baseline unless it's picked under Stages */
+const ICM_ONLY = () => PHASES.filter(p => p.gt !== 'MTTGeneral_8m').map(p => p.gt);
+function drillCfg() { return { mode: UI.dMode, tag: UI.dTag, fams: new Set(UI.dFams), bands: new Set(UI.dBands), phases: new Set(UI.dPhases || ICM_ONLY()), len: UI.dLen }; }
+const inDeck = (s, cfg) => s.tag === cfg.tag && cfg.fams.has(s.fam) && cfg.bands.has(bandOf(s.dp));
+function poolFor(cfg) { return SPOTS.filter(s => inDeck(s, cfg)); }
+function dueCount(cfg) {
+  const now = Date.now() / 60000; let n = 0;
+  for (const [k, v] of Object.entries(Progress.data.items)) { if (v[1] > now) continue; const it = itemFromKey(k); if (it && inDeck(it.spot, cfg)) n++; }
+  return n;
+}
+function renderDrillHome() {
+  fixTag('dTag');
+  $('#d-tag').innerHTML = tagSegHTML(UI.dTag);
+  $('#d-home').hidden = false; $('#d-run').hidden = true;
+  for (const b of $$('#d-modes .mode')) b.setAttribute('aria-pressed', b.dataset.mode === UI.dMode);
+  for (const b of $$('#d-tag button')) b.setAttribute('aria-pressed', b.dataset.tag === UI.dTag);
+  const fams = FAM_ORDER.filter(f => SPOTS.some(s => s.tag === UI.dTag && s.fam === f));
+  $('#d-fams').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${UI.dFams.includes(f)}" title="${FAM[f].label}">${HEAT_LABEL[f] || FAM[f].label}</button>`).join('');
+  const bands = BANDS.filter(b => SPOTS.some(s => s.tag === UI.dTag && bandOf(s.dp) === b.id));
+  $('#d-bands').innerHTML = bands.map(b => `<button data-b="${b.id}" aria-pressed="${UI.dBands.includes(b.id)}">${b.label}</button>`).join('');
+  const phases = UI.dPhases || ICM_ONLY();
+  $('#d-phase-wrap').hidden = UI.dTag !== 'icm8';
+  $('#d-phases').innerHTML = PHASES.filter(p => SPOTS.some(s => s.gt === p.gt)).map(p => `<button data-g="${p.gt}" aria-pressed="${phases.includes(p.gt)}">${p.gt === 'MTTGeneral_8m' ? 'Chip EV' : p.short}</button>`).join('');
+  for (const b of $$('#d-len button')) b.setAttribute('aria-pressed', +b.dataset.len === UI.dLen);
+  const same = (a, c) => a.length === c.length && a.every(x => c.includes(x));
+  for (const b of $$('#d-presets button')) { const p = PRESETS[+b.dataset.p]; b.setAttribute('aria-pressed', same(p.fams.filter(f => SPOTS.some(s => s.tag === UI.dTag && s.fam === f)), UI.dFams.filter(f => SPOTS.some(s => s.tag === UI.dTag && s.fam === f))) && same(p.bands, UI.dBands)); }
+  $('#d-len-wrap').hidden = UI.dMode === 'paint';
+  const cfg = drillCfg(); const pool = poolFor(cfg);
+  const due = dueCount(cfg);
+  $('#d-start').disabled = !pool.length;
+  $('#d-due').textContent = !pool.length ? 'No spots match. Turn on more spots or stacks.' : (UI.dMode === 'quick' ? (due ? `${due} review${due > 1 ? 's' : ''} due in this deck` : 'No reviews due. New edge hands only.') : `${pool.length} spots in this deck`);
+  // heat map
+  const famsAll = FAM_ORDER.filter(f => SPOTS.some(s => s.tag === UI.dTag && s.fam === f));
+  const bandsAll = BANDS.filter(b => SPOTS.some(s => s.tag === UI.dTag && bandOf(s.dp) === b.id));
+  const heatBy = UI.dHeatBy === 'ev' ? 'ev' : 'score';
+  for (const b of $$('#d-heat-by button')) b.setAttribute('aria-pressed', b.dataset.by === heatBy);
+  const sc = heatScale(famsAll.flatMap(f => bandsAll.map(b => Progress.data.stats[f + '|' + b.id + '|' + UI.dTag])).filter(st => st && st[0]), heatBy);
+  $('#d-heat-key').innerHTML = heatKeyHTML(sc);
+  $('#d-heat-note').textContent = heatBy === 'ev'
+    ? 'Big number: EV lost per hand, in bb (.12 = 0.12bb). Small: hands answered. Colour: green loses nothing, red is your worst square. Tap a square to drill it.'
+    : 'Big number: your Quick-fire score (%). Small: hands answered. Colour: green is a perfect score, red is your worst square. Tap a square to drill it.';
+  let html = `<div class="heat" style="grid-template-columns:minmax(64px,30%) repeat(${bandsAll.length},minmax(0,1fr));grid-template-rows:18px;grid-auto-rows:36px"><span></span>${bandsAll.map(b => `<span class="hl hb" title="${bandTitle(b)}">${b.short || b.label}</span>`).join('')}`;
+  for (const f of famsAll) {
+    html += `<span class="hl" title="${FAM[f].label}">${HEAT_LABEL[f] || FAM[f].label}</span>`;
+    for (const b of bandsAll) {
+      const has = SPOTS.some(s => s.tag === UI.dTag && s.fam === f && bandOf(s.dp) === b.id);
+      const st = Progress.data.stats[f + '|' + b.id + '|' + UI.dTag];
+      if (!has) { html += `<span class="hc none">·</span>`; continue; }
+      if (!st || !st[0]) { html += `<button class="hc none" data-hf="${f}" data-hb="${b.id}">–</button>`; continue; }
+      html += heatCell(f, b, st, sc);
+    }
+  }
+  $('#d-heat').innerHTML = html + '</div>';
+  saveUI();
+}
+$('#d-modes').addEventListener('click', e => { const b = e.target.closest('.mode'); if (!b) return; UI.dMode = b.dataset.mode; renderDrillHome(); });
+$('#d-tag').addEventListener('click', e => { const b = e.target.closest('button[data-tag]'); if (!b) return; UI.dTag = b.dataset.tag; renderDrillHome(); });
+$('#d-fams').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const f = b.dataset.f; UI.dFams = UI.dFams.includes(f) ? UI.dFams.filter(x => x !== f) : [...UI.dFams, f]; renderDrillHome(); });
+$('#d-bands').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const f = b.dataset.b; UI.dBands = UI.dBands.includes(f) ? UI.dBands.filter(x => x !== f) : [...UI.dBands, f]; renderDrillHome(); });
+$('#d-phases').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const g = b.dataset.g, cur = UI.dPhases || ICM_ONLY(); UI.dPhases = cur.includes(g) ? cur.filter(x => x !== g) : [...cur, g]; renderDrillHome(); });
+$('#d-len').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.dLen = +b.dataset.len; renderDrillHome(); });
+$('#d-heat-by').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.dHeatBy = b.dataset.by; renderDrillHome(); });
+$('#d-heat').addEventListener('click', e => { const b = e.target.closest('[data-hf]'); if (!b) return; UI.dFams = [b.dataset.hf]; UI.dBands = [b.dataset.hb]; UI.dMode = 'quick'; renderDrillHome(); startDrill(); });
+$('#d-start').addEventListener('click', () => startDrill());
+/* presets keep the format you picked; they only set spots and stacks */
+const PRESETS = [
+  { label: 'Push/fold · 1–10', fams: ['RFI', 'BBvsJam', 'LimpVsJam', 'OpenVsJam', 'IsoVsJam'], bands: ['b1', 'b5'] },
+  { label: 'Small blind first in', fams: ['RFI'], bands: BANDS.map(b => b.id) },
+  { label: 'Big blind defence', fams: ['BBvsLimp', 'BBvsOpen', 'BBvsJam'], bands: BANDS.map(b => b.id) },
+  { label: 'Limp lines', fams: ['LimpVsRaise', 'LimpVsJam', 'IsoVs3bet', 'IsoVsJam'], bands: BANDS.map(b => b.id) },
+  { label: '3-bet pots', fams: ['OpenVs3bet', 'OpenVsJam', 'ThreebetVs4bet', 'ThreebetVsJam'], bands: BANDS.map(b => b.id) },
+  { label: 'Deep · 30–72', fams: FAM_ORDER, bands: ['b30'] },
+  { label: 'Everything', fams: FAM_ORDER, bands: BANDS.map(b => b.id) },
+];
+$('#d-presets').innerHTML = PRESETS.map((p, i) => `<button data-p="${i}">${p.label}</button>`).join('');
+$('#d-presets').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const p = PRESETS[+b.dataset.p]; UI.dFams = [...p.fams]; UI.dBands = [...p.bands]; renderDrillHome(); });
+
+/* hand weights: favour hands at the edges (mixed, or different from a neighbour in stack, seat-ladder or grid) */
+function handWeights(spot) {
+  if (spot._w) return spot._w;
+  const sit = spot.sit, prev = sit.spots[spot.idx - 1], next = sit.spots[spot.idx + 1];
+  const w = new Float32Array(169);
+  for (let g = 0; g < 169; g++) {
+    if (!inRange(spot, g)) continue;
+    const k = kindAt(spot, g), mx = spot.f[spot.prim[g]][g];
+    const i = Math.floor(g / 13), j = g % 13;
+    let edge = mx < 0.8 || (prev && inRange(prev, g) && kindAt(prev, g) !== k) || (next && inRange(next, g) && kindAt(next, g) !== k);
+    if (!edge) for (const [di, dj] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+      const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii > 12 || jj > 12) continue;
+      const g2 = ii * 13 + jj; if (inRange(spot, g2) && kindAt(spot, g2) !== k) { edge = true; break; }
+    }
+    w[g] = (spot.reach ? spot.reach[g] : 1) * Math.sqrt(COMBOS[g]) * (edge ? 1 : 0.07);
+  }
+  return (spot._w = w);
+}
+/* right: the solver's main play (35%+). Mixes: the solver uses it at least 1% of the time. A 0% action that is
+   worth the same as the best one gets half credit too, labelled as such. Anything else is a mistake. */
+function grade(spot, g, a) {
+  const f = spot.f[a][g];
+  if (f >= 0.35) return 'good';
+  if (f >= 0.01 || spot.loss[a][g] < 0.005) return 'ok';
+  return 'bad';
+}
+function pickQuick(R) {
+  const now = Date.now() / 60000;
+  if (Math.random() < 0.6) {
+    const due = [];
+    for (const [k, v] of Object.entries(Progress.data.items)) {
+      if (v[1] > now || R.recent.includes(k)) continue;
+      const it = itemFromKey(k);
+      if (it && inDeck(it.spot, R.cfg) && inRange(it.spot, it.g)) due.push([v[1], it, k]);
+    }
+    if (due.length) { due.sort((a, b) => a[0] - b[0]); return pick(due.slice(0, 6))[1]; }
+  }
+  for (let t = 0; t < 30; t++) {
+    const spot = pick(R.pool);
+    const g = weightedPick(handWeights(spot));
+    if (g < 0) continue;
+    if (R.recent.includes(itemKey(spot, g))) continue;
+    return { spot, g };
+  }
+  return null;
+}
+function startDrill() {
+  const cfg = drillCfg(); const pool = poolFor(cfg);
+  if (!pool.length) return;
+  RUN = { cfg, pool, n: 0, total: cfg.mode === 'paint' ? 5 : cfg.len, good: 0, ok: 0, bad: 0, streak: 0, best: 0, times: [], misses: [], requeue: [], recent: [], cur: null, started: Date.now() };
+  $('#d-home').hidden = true; $('#d-run').hidden = false;
+  nextItem();
+}
+function endDrill() {
+  const R = RUN; if (!R) return;
+  const done = R.good + R.ok + R.bad;
+  if (done) { Progress.data.log.push([Date.now(), R.cfg.mode, done, Math.round(100 * (R.good + 0.5 * R.ok) / done)]); Progress.touch(); }
+  const acc = done ? Math.round(100 * (R.good + 0.5 * R.ok) / done) : 0;
+  const avg = R.times.length ? (R.times.reduce((a, b) => a + b, 0) / R.times.length / 1000).toFixed(1) : '–';
+  const misses = R.misses.slice(-14).reverse().map((m, i) => `<div>${GRID[m.g]} · ${esc(sitLabel(m.spot.sit))} · ${m.spot.dp}bb · <span class="muted">${esc(m.note)}</span> <button data-mi="${R.misses.length - 1 - i}">Show chart</button></div>`).join('');
+  $('#d-run').innerHTML = `<div class="panel" style="max-width:760px"><p class="eyebrow">Session done</p><div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-end"><div><div class="score">${acc}%</div><span class="small muted">score</span></div><div><div class="score">${done}</div><span class="small muted">answered</span></div>${R.cfg.mode === 'quick' ? `<div><div class="score">${avg}s</div><span class="small muted">avg decision</span></div><div><div class="score">${R.best}</div><span class="small muted">best streak</span></div>` : ''}</div>
+    ${misses ? `<p class="eyebrow" style="margin-top:18px">Misses</p><div class="summary-list">${misses}</div>` : ''}
+    <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap"><button class="btn primary" id="d-again">Go again</button><button class="btn" id="d-back">Back to setup</button></div></div>`;
+  $('#d-again').onclick = () => startDrill();
+  $('#d-back').onclick = () => { RUN = null; renderDrillHome(); };
+  $$('[data-mi]').forEach(b => b.onclick = () => { const m = R.misses[+b.dataset.mi]; openInCharts(m.spot, m.g); });
+  R.ended = true;
+}
+function openInCharts(spot, g) {
+  UI.cTag = spot.tag; UI.cFam = spot.fam; UI.cSit = spot.sitKey; UI.cDp = UI.cDpPref = spot.dp; cSel = g; RUN = null; setTab('charts');
+}
+function nextItem() {
+  const R = RUN; if (!R) return;
+  if (R.n >= R.total) return endDrill();
+  if (R.cfg.mode === 'quick') return nextQuick();
+  if (R.cfg.mode === 'paint') return nextPaint();
+  if (R.cfg.mode === 'edges') return nextEdge();
+  if (R.cfg.mode === 'numbers') return nextNumber();
+}
+function runHeader() {
+  const R = RUN, done = R.good + R.ok + R.bad;
+  const acc = done ? Math.round(100 * (R.good + 0.5 * R.ok) / done) + '%' : '–';
+  return `<div class="qbar"><span><b>${Math.min(R.n + (R.cur && !R.cur.answered ? 1 : 0), R.total)}</b> / ${R.total}</span><div class="prog"><i style="width:${(100 * R.n / R.total).toFixed(1)}%"></i></div><span>Score <b>${acc}</b></span>${R.cfg.mode === 'quick' ? `<span>Streak <b>${R.streak}</b></span>` : ''}<button class="btn ghost small" id="d-quit">End</button></div>`;
+}
+function bindRunHeader() { const q = $('#d-quit'); if (q) q.onclick = () => endDrill(); }
+/* ---------- quick-fire table ---------- */
+const TBL = { cx: 16.65, cy: 13.2, rx: 13.6, ry: 11.4, potY: 11.0, card: 7.3 };
+const num = x => String(Math.round(x * 100) / 100);
+function tableState(spot) {
+  const n = spot.n, { names, blinds, ante } = tableSetup(spot);
+  const bet = Array(n).fill(0), st = Array(n).fill(''), word = Array(n).fill('');
+  let level = 0, raises = 0, limped = false, queue = [...Array(n).keys()];
+  for (const [p, b] of blinds) { bet[p] = b; level = Math.max(level, b); }
+  const folded = new Set();
+  for (const code of (spot.hist ? spot.hist.split('-') : [])) {
+    const p = queue.shift(); if (p === undefined) break;
+    if (code === 'F') { folded.add(p); st[p] = 'F'; word[p] = 'Fold'; continue; }
+    if (code === 'X') { st[p] = 'X'; word[p] = 'Check'; continue; }
+    if (code === 'C') { bet[p] = Math.min(spot.dp, level); st[p] = 'C'; word[p] = raises ? 'Call' : 'Limp'; if (!raises) limped = true; continue; }
+    raises++;
+    const size = code === 'RAI' ? spot.dp : parseFloat(code.slice(1)), jam = code === 'RAI' || size >= spot.dp - 0.2;
+    bet[p] = jam ? spot.dp : size; level = bet[p]; st[p] = jam ? 'J' : 'R';
+    word[p] = jam ? 'All-in' : raises === 1 ? (limped ? 'Raise' : 'Open') : (raises + 1) + '-bet';
+    queue = []; for (let k = 1; k < n; k++) { const q = (p + k) % n; if (!folded.has(q)) queue.push(q); }
+  }
+  return { n, names, bet, st, word, pot: ante + bet.reduce((a, b) => a + b, 0), btn: n === 2 ? 0 : names.indexOf('BTN') };  // heads-up the small blind has the button
+}
+/* seats on an oval, hero at the bottom, action running clockwise */
+function tableHTML(spot, cards) {
+  const T = tableState(spot), n = T.n, { cx, cy, rx, ry, potY } = TBL, em = v => v.toFixed(2) + 'em';
+  let out = '';
+  for (let i = 0; i < n; i++) {
+    const k = (i - spot.hero + n) % n, th = (90 + k * 360 / n) * Math.PI / 180, ux = Math.cos(th), uy = Math.sin(th);
+    const x = cx + rx * ux, y = cy + ry * uy, me = k === 0, s = T.st[i], kc = s && 'RJCX'.includes(s) ? s : '';
+    const kv = kc ? `;--k:var(--k-${kc})` : '';
+    out += `<div class="ts${me ? ' me' : ''}${s === 'F' ? ' f' : ''}${kc ? ' act' : ''}" style="left:${em(x)};top:${em(y)}${kv}"><b>${T.names[i]}</b><span>${s ? T.word[i] : num(spot.dp - T.bet[i])}</span></div>`;
+    const lab = T.bet[i] > 0 && s !== 'F' ? num(T.bet[i]) : '', hw = (lab.length * 0.62 + 1.7) / 2;
+    let bx, by;
+    if (me) { bx = cx; by = y - 1.3 - TBL.card - 1.0; }
+    else if (Math.abs(uy) >= 0.5) { by = y - Math.sign(uy) * 2.7; bx = x + (cx - x) * 0.15; }
+    else { bx = x - Math.sign(ux) * (2.7 + hw + 0.35); by = y + (potY - y) * 0.2; }
+    if (lab) out += `<div class="tb" style="left:${em(bx)};top:${em(by)}${kv}"><i></i><span>${lab}</span></div>`;
+    if (i === T.btn) {
+      let dx = bx, dy = by;
+      if (me) { dx = x + 3.9; dy = y; }
+      else if (Math.abs(uy) >= 0.5) dx = bx + (Math.abs(ux) < 0.2 ? 1 : Math.sign(ux)) * (hw + 1.1);
+      else dy = by + 1.9;
+      out += `<div class="tdlr" style="left:${em(dx)};top:${em(dy)}"><span>D</span></div>`;
+    }
+  }
+  out += `<div class="tpot" style="left:${em(cx)};top:${em(potY)}"><b>${spot.dp}<small>bb</small></b><span>Pot ${Math.round(T.pot * 10) / 10}</span></div>`;
+  out += `<div class="tcards" style="left:${em(cx)};top:${em(cy + ry - 1.3)}">${cards}</div>`;
+  const label = narrate(spot).replace(/<[^>]+>/g, '');
+  return `<div class="tblw"><div class="tbl" role="img" aria-label="${esc(label)}"><div class="felt"></div>${out}<div class="tcap">${tableCaption(spot)}</div></div></div>`;
+}
+function tableSetup(spot) {
+  const n = spot.n;
+  return { names: POS[n], blinds: [[n - 2, 0.5], [n - 1, 1]], ante: TAG_OF[spot.tag].ante * n };
+}
+function tableCaption(spot) { return TAG_OF[spot.tag].cap; }
+function boardTop(spot) {
+  return `<div class="board-top"><div class="stack-big">${spot.dp}<small>bb</small></div><div class="board-meta"><b>${esc(POS[spot.n][spot.hero])}</b><span>${tableDesc(spot)}</span></div></div><div class="seats">${seatsHTML(spot)}</div><p class="scn">${narrate(spot)}</p>`;
+}
+
+/* quick-fire */
+function nextQuick() {
+  const R = RUN;
+  let item = null;
+  const ri = R.requeue.findIndex(x => x.at <= R.n);
+  if (ri >= 0) item = R.requeue.splice(ri, 1)[0];
+  if (!item) item = pickQuick(R);
+  if (!item) { $('#d-run').innerHTML = '<div class="empty-state">No hands to ask in this deck.</div>'; return; }
+  const k = itemKey(item.spot, item.g);
+  R.recent.push(k); if (R.recent.length > 10) R.recent.shift();
+  R.cur = { spot: item.spot, g: item.g, combo: dealCombo(GRID[item.g]), t0: performance.now(), answered: false };
+  renderQuick();
+}
+function renderQuick() {
+  const R = RUN, c = R.cur, sp = c.spot;
+  const btns = sp.btnOrder.map((a, i) => `<button data-a="${a}" style="background:${kColor(sp.A[a].kind)}">${actLabel(sp, a)}</button>`).join('');
+  $('#d-run').innerHTML = runHeader() + `<div class="q"><div class="panel board qtable">${tableHTML(sp, cardsHTML(c.g, c.combo))}<div class="acts" id="q-acts">${btns}</div><div id="q-verdict"></div></div><div id="q-fb" class="fb"><div class="panel kbd-tip"><p class="small muted" style="margin:0">Keys: 1–${sp.btnOrder.length} to act, Space or Enter for the next hand.</p></div></div></div>`;
+  bindRunHeader();
+  $('#q-acts').onclick = e => { const b = e.target.closest('button'); if (b) answerQuick(+b.dataset.a); };
+}
+/* a short double buzz on a miss: the Android app's native hook, else the web Vibration API */
+function buzz() { try { if (window.RangeLabNative) window.RangeLabNative.vibrate(); else if (navigator.vibrate) navigator.vibrate([45, 70, 45]); } catch (e) { } }
+function verdictHTML(sp, g, a, gr) {
+  const L = sp.loss[a][g];
+  const okText = sp.f[a][g] >= 0.01 ? '≈ Fine, it mixes' : '≈ Same EV, but the solver never plays it';
+  return `<div class="verdict ${gr}">${gr === 'good' ? '✓ Correct' : gr === 'ok' ? okText : '✗ Mistake'}${L >= 0.01 ? `<span class="evloss">−${L.toFixed(2)}bb</span>` : ''}</div>`;
+}
+/* every action for this hand, best first: how often the solver takes it and the EV it gives up against the best move */
+function evTableHTML(sp, g, a) {
+  const rows = [...sp.order].sort((x, y) => sp.loss[x][g] - sp.loss[y][g]).map(x => {
+    const L = sp.loss[x][g], top = L < 0.005;
+    return `<div class="evr${x === a ? ' you' : ''}${top ? ' top' : ''}"><i class="sw" style="background:${kColor(sp.A[x].kind)}"></i><b>${actLabel(sp, x)}</b><span>${x === a ? '<em>you</em>' : ''}</span><span class="fq">${pct(sp.f[x][g])}</span><span class="ev">${top ? 'best' : '−' + L.toFixed(2) + 'bb'}</span></div>`;
+  }).join('');
+  return `<div class="evt"><div class="evr evh"><span></span><span>Action</span><span></span><span style="text-align:right">Solver</span><span style="text-align:right">EV</span></div>${rows}</div>`;
+}
+function answerQuick(a) {
+  const R = RUN, c = R.cur; if (!c || c.answered) return;
+  c.answered = true;
+  const ms = performance.now() - c.t0; R.times.push(Math.min(ms, 20000));
+  const sp = c.spot, g = c.g, gr = grade(sp, g, a);
+  R[gr]++; R.n++;
+  if (gr === 'bad') { buzz(); R.streak = 0; R.requeue.push({ spot: sp, g, at: R.n + 3 + rnd(4) }); R.misses.push({ spot: sp, g, note: `you ${actLabel(sp, a, true).toLowerCase()}, solver ${actLabel(sp, sp.prim[g], true).toLowerCase()} ${pct(sp.f[sp.prim[g]][g])}, −${sp.loss[a][g].toFixed(2)}bb` }); }
+  else { R.streak++; R.best = Math.max(R.best, R.streak); }
+  recordAnswer(sp, g, gr, sp.loss[a][g]);
+  $$('#q-acts button').forEach(b => { b.disabled = true; if (+b.dataset.a === a) b.classList.add('chosen'); });
+  const freq = sp.order.filter(x => sp.f[x][g] >= 0.01).map(x => `${actLabel(sp, x, true)} ${pct(sp.f[x][g])}`).join(' · ');
+  const L = sp.loss[a][g];
+  const head = gr === 'good' ? '✓ Correct' : gr === 'ok' ? '≈ Fine, it mixes' : '✗ Mistake';
+  const cost = L < 0.01 ? '' : ` · costs ${L.toFixed(2)}bb`;
+  const best = sp.prim[g];
+  const fam = LADDERS.find(l => l.cells.includes(g));
+  const ladTxt = fam ? ladderNotation(fam, x => playsAt(sp, x)).join(', ') || 'none' : '';
+  const fb = $('#q-fb');
+  $('#q-verdict').innerHTML = `${verdictHTML(sp, g, a, gr)}<div class="qnext"><button class="btn primary" id="q-next">Next hand ↵</button><button class="btn ghost" id="q-chart">Open chart</button></div>`;
+  $('#q-fb').innerHTML = `<div class="panel"><p class="eyebrow">${GRID[g]}: EV of each action</p>${evTableHTML(sp, g, a)}</div>
+    <div class="panel"><p class="eyebrow">${GRID[g]} in this spot</p><div class="grid mini" id="q-grid" style="max-width:440px"></div></div>`;
+  const qg = new Grid($('#q-grid'));
+  qg.show(sp, { marks: x => x === g ? 'target' : '' });
+  $('#q-next').onclick = () => nextItem();
+  $('#q-chart').onclick = () => openInCharts(sp, g);
+}
+function drillKey(e) {
+  const R = RUN; if (!R || R.ended) return;
+  if (R.cfg.mode === 'quick' && R.cur) {
+    if (!R.cur.answered && /^[1-9]$/.test(e.key)) { const a = R.cur.spot.btnOrder[+e.key - 1]; if (a != null) { e.preventDefault(); answerQuick(a); } }
+    else if (R.cur.answered && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); nextItem(); }
+  } else if (R.cur && R.cur.answered && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); nextItem(); }
+}
+
+/* paint */
+function nextPaint() {
+  const R = RUN;
+  let spot = null;
+  for (let t = 0; t < 40 && !spot; t++) { const s = pick(R.pool); if (s.A.length >= 2 && (!R.cur || s !== R.cur.spot)) spot = s; }
+  const brushes = spot.btnOrder.filter(a => a !== spot.defIdx).reverse();
+  R.cur = { spot, painted: new Int16Array(169).fill(spot.defIdx), brush: brushes[0], brushes, answered: false };
+  renderPaint();
+}
+function renderPaint() {
+  const R = RUN, c = R.cur, sp = c.spot;
+  $('#d-run').innerHTML = runHeader() + `<div class="q"><div class="panel board">${boardTop(sp)}
+    <p class="eyebrow" style="margin:0">Paint the range. Tap or drag; tap a painted hand again to clear it.</p>
+    <div class="brushes" id="p-br">${c.brushes.map(a => `<button data-a="${a}" style="background:${kColor(sp.A[a].kind)}" aria-pressed="${a === c.brush}">${actLabel(sp, a, true)}</button>`).join('')}<span class="small muted" style="align-self:center">Unpainted = ${actLabel(sp, sp.defIdx, true).toLowerCase()}</span></div>
+    <div class="grid paint" id="p-grid"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="p-check">Check my range</button><button class="btn ghost" id="p-clear">Clear</button></div></div>
+    <div id="p-fb" class="fb"><div class="panel"><p class="small muted" style="margin:0">Hands you wouldn't hold here (folded earlier) are greyed out. Your score counts only hands that you or the solver play, weighted by combos, so easy folds don't pad it.</p></div></div></div>`;
+  bindRunHeader();
+  const grid = new Grid($('#p-grid')); c.grid = grid;
+  const paintBg = g => { if (!inRange(sp, g)) return 'var(--empty)'; const a = c.painted[g]; return a === sp.defIdx ? 'var(--surface-2)' : kColor(sp.A[a].kind); };
+  const redraw = () => grid.show(sp, { bg: paintBg, marks: g => inRange(sp, g) ? '' : 'out' });
+  redraw();
+  $('#p-br').onclick = e => { const b = e.target.closest('button'); if (!b) return; c.brush = +b.dataset.a; $$('#p-br button').forEach(x => x.setAttribute('aria-pressed', +x.dataset.a === c.brush)); };
+  let painting = false, val = null;
+  const el = $('#p-grid');
+  const apply = (target) => { const cell = target && target.closest && target.closest('.cell'); if (!cell || c.answered) return; const g = +cell.dataset.g; if (!inRange(sp, g)) return; if (val === null) val = c.painted[g] === c.brush ? sp.defIdx : c.brush; if (c.painted[g] !== val) { c.painted[g] = val; cell.style.background = paintBg(g); } };
+  el.addEventListener('pointerdown', e => { if (c.answered) return; painting = true; val = null; try { el.setPointerCapture(e.pointerId); } catch (err) { } apply(e.target); e.preventDefault(); });
+  el.addEventListener('pointermove', e => { if (!painting) return; apply(document.elementFromPoint(e.clientX, e.clientY)); });
+  const stop = () => { painting = false; val = null; };
+  el.addEventListener('pointerup', stop); el.addEventListener('pointercancel', stop);
+  $('#p-clear').onclick = () => { c.painted.fill(sp.defIdx); redraw(); };
+  $('#p-check').onclick = () => checkPaint();
+}
+function checkPaint() {
+  const R = RUN, c = R.cur, sp = c.spot; if (c.answered) return;
+  c.answered = true;
+  let W = 0, ok = 0; const missed = [], extra = [], wrong = [];
+  for (let g = 0; g < 169; g++) {
+    if (!inRange(sp, g)) continue;
+    const a = c.painted[g], solverPlays = playsAt(sp, g), youPlay = a !== sp.defIdx;
+    if (!solverPlays && !youPlay && sp.f[sp.defIdx][g] > 0.9) continue; // easy folds don't count
+    const w = COMBOS[g] * (sp.reach ? sp.reach[g] : 1); W += w;
+    const good = sp.f[a][g] >= 0.35 || a === sp.prim[g];
+    if (good) { ok += w; continue; }
+    if (solverPlays && !youPlay) missed.push(g); else if (!solverPlays && youPlay) extra.push(g); else wrong.push(g);
+  }
+  const acc = W ? ok / W : 0;
+  const gr = acc >= 0.85 ? 'good' : acc >= 0.7 ? 'ok' : 'bad';
+  R[gr]++; R.n++;
+  if (gr === 'bad') R.misses.push({ spot: sp, g: missed[0] ?? extra[0] ?? wrong[0] ?? 0, note: `painted ${Math.round(acc * 100)}%` });
+  c.grid.show(sp, {
+    marks: g => {
+      if (!inRange(sp, g)) return 'out';
+      const a = c.painted[g]; const good = sp.f[a][g] >= 0.35 || a === sp.prim[g];
+      return good ? '' : (sp.f[a][g] >= 0.08 ? 'mark-mix' : 'mark-bad');
+    }
+  });
+  const lst = (arr) => arr.length ? `<div class="taglist">${arr.map(g => `<span>${GRID[g]}</span>`).join('')}</div>` : '<p class="small muted" style="margin:0">none</p>';
+  $('#p-fb').innerHTML = `<div class="verdict ${gr}">${Math.round(acc * 100)}% right<small>${gr === 'good' ? 'Solid.' : gr === 'ok' ? 'Close. Fix the dots.' : 'Study the dots, then retry.'}</small></div>
+    <div class="panel"><p class="small muted" style="margin:0 0 10px">The chart now shows the solver's range. Red dots are your mistakes; amber dots are mixed hands you didn't pick the main action for.</p>
+    <p class="eyebrow">Should play, you folded (${missed.length})</p>${lst(missed)}
+    <p class="eyebrow" style="margin-top:10px">Solver folds, you played (${extra.length})</p>${lst(extra)}
+    <p class="eyebrow" style="margin-top:10px">Right hand, wrong action (${wrong.length})</p>${lst(wrong)}</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="p-next">Next spot ↵</button><button class="btn" id="p-retry">Retry this spot</button></div>`;
+  $('#p-next').onclick = () => nextItem();
+  $('#p-retry').onclick = () => { R.n--; R[gr]--; const s = c.spot; R.cur = { spot: s, painted: new Int16Array(169).fill(s.defIdx), brush: c.brushes[0], brushes: c.brushes, answered: false }; renderPaint(); };
+  $('#p-check').disabled = true;
+}
+
+/* edges */
+function edgeTest(spot) { return g => playsAt(spot, g); }
+function nextEdge() {
+  const R = RUN; let q = null;
+  for (let t = 0; t < 80 && !q; t++) {
+    const spot = pick(R.pool), l = pick(EDGE_LADDERS);
+    if (!l.cells.some(g => inRange(spot, g))) continue;
+    const test = edgeTest(spot), ans = topRunEdge(l, test);
+    const trivial = ans === -1 || ans === l.cells.length - 1;
+    if (trivial && Math.random() > 0.18) continue;
+    q = { spot, l, ans, answered: false };
+  }
+  if (!q) { $('#d-run').innerHTML = '<div class="empty-state">No questions in this deck.</div>'; return; }
+  R.cur = q; renderEdge();
+}
+function renderEdge() {
+  const R = RUN, c = R.cur, sp = c.spot, l = c.l;
+  const verb = CALL_FAMS.has(sp.fam) ? 'call' : 'play';
+  $('#d-run').innerHTML = runHeader() + `<div class="q"><div class="panel board">${boardTop(sp)}
+    <p style="margin:0;font-size:17px">Counting down from <b>${GRID[l.cells[0]]}</b>, what's the weakest <b>${l.name}</b> hand you still ${verb} before the first fold?</p>
+    <div class="ladder-q" id="e-opts">${l.cells.map((g, i) => `<button data-i="${i}" ${inRange(sp, g) ? '' : 'disabled title="not in your range"'}>${GRID[g]}</button>`).join('')}<button data-i="-1">None</button></div></div>
+    <div id="e-fb" class="fb"><div class="panel"><p class="small muted" style="margin:0">“Play” means anything but fold: open, limp, call, raise or shove.</p></div></div></div>`;
+  bindRunHeader();
+  $('#e-opts').onclick = e => { const b = e.target.closest('button'); if (!b || c.answered) return; answerEdge(+b.dataset.i); };
+}
+function answerEdge(i) {
+  const R = RUN, c = R.cur, sp = c.spot, l = c.l; c.answered = true;
+  const gr = i === c.ans ? 'good' : Math.abs(i - c.ans) === 1 ? 'ok' : 'bad';
+  R[gr]++; R.n++;
+  if (gr === 'bad') R.misses.push({ spot: sp, g: l.cells[Math.max(0, c.ans)], note: `${l.short} edge is ${c.ans < 0 ? 'none' : GRID[l.cells[c.ans]]}` });
+  $$('#e-opts button').forEach(b => {
+    const k = +b.dataset.i; b.disabled = true;
+    if (k >= 0) { const g = l.cells[k]; if (inRange(sp, g)) { b.style.background = cellBg(sp, g); if (playsAt(sp, g)) b.classList.add('k-in'); } }
+    if (k === i) b.classList.add('pick'); if (k === c.ans) b.classList.add('ans');
+  });
+  const all = ladderNotation(l, edgeTest(sp)).join(', ') || 'none';
+  $('#e-fb').innerHTML = `<div class="verdict ${gr}">${gr === 'good' ? '✓ Right edge' : gr === 'ok' ? '≈ One step off' : '✗ Not quite'}<small>Edge: ${c.ans < 0 ? 'none play' : GRID[l.cells[c.ans]]}</small></div>
+    <div class="panel"><p class="small" style="margin:0 0 8px"><b>${l.short} that ${CALL_FAMS.has(sp.fam) ? 'call' : 'play'}:</b> <span class="mono">${all}</span></p><div class="grid mini" id="e-grid" style="max-width:440px"></div></div>
+    <div><button class="btn primary" id="e-next">Next ↵</button></div>`;
+  const eg = new Grid($('#e-grid')); eg.show(sp, { marks: g => l.cells.includes(g) ? '' : 'dimmed' });
+  $('#e-next').onclick = () => nextItem();
+}
+
+/* numbers */
+function nextNumber() {
+  const R = RUN; let q = null;
+  const sits = [...new Set(R.pool.map(s => s.sit))].filter(s => s.depths.filter(d => d <= 25).length >= 5 && s.fam !== 'BBvsLimp');
+  for (let t = 0; t < 120 && !q && sits.length; t++) {
+    const sit = pick(sits), metric = CALL_FAMS.has(sit.fam) ? 'C' : 'J';
+    const ds = sit.depths.filter(d => d <= 25);
+    const sp0 = sit.spots[0];
+    const g = weightedPick(handWeights(sp0)); if (g < 0) continue;
+    const th = threshold(sit, g, metric);
+    const trivial = th == null || th === ds[ds.length - 1];
+    if (trivial && Math.random() > 0.2) continue;
+    if (!sit.spots.some(sp => sp.dp <= 25 && inRange(sp, g))) continue;
+    q = { sit, g, metric, ds, th, combo: dealCombo(GRID[g]), answered: false };
+  }
+  if (!q) { $('#d-run').innerHTML = '<div class="empty-state">No questions in this deck. Numbers needs spots with stacks of 25bb or less.</div>'; return; }
+  R.cur = q; renderNumber();
+}
+function renderNumber() {
+  const R = RUN, c = R.cur, sit = c.sit, sp = sit.spots[0];
+  const verb = c.metric === 'C' ? 'call the shove' : 'shove';
+  const where = { RFI: 'first in from the <b>small blind</b>', BBvsJam: 'in the <b>big blind</b> against a shove', BBvsOpen: 'in the <b>big blind</b> against a raise', LimpVsJam: 'after limping and getting shoved on', LimpVsRaise: 'after limping and facing a raise', OpenVsJam: 'after raising and getting shoved on', OpenVs3bet: 'after raising and facing a 3-bet', IsoVsJam: 'after raising a limp and getting shoved on', IsoVs3bet: 'after raising a limp and facing a 3-bet', ThreebetVs4bet: 'after 3-betting and facing a 4-bet', ThreebetVsJam: 'after 3-betting and getting shoved on' }[sit.fam] || '';
+  $('#d-run').innerHTML = runHeader() + `<div class="q"><div class="panel board"><div class="cards">${cardsHTML(c.g, c.combo)}</div>
+    <p style="margin:0;font-size:17px">${where.charAt(0).toUpperCase() + where.slice(1)}: up to how many bb do you <b>${verb}</b> with <b>${GRID[c.g]}</b> at least half the time?</p>
+    <p class="small muted" style="margin:0">${tableDesc(sp)}. Pick the deepest stack.</p>
+    <div class="ladder-q" id="n-opts">${[...c.ds].reverse().map(d => `<button data-d="${d}">${d}</button>`).join('')}<button data-d="0">Never</button></div></div>
+    <div id="n-fb" class="fb"></div></div>`;
+  bindRunHeader();
+  $('#n-opts').onclick = e => { const b = e.target.closest('button'); if (!b || c.answered) return; answerNumber(+b.dataset.d); };
+}
+function answerNumber(d) {
+  const R = RUN, c = R.cur; c.answered = true;
+  const truth = c.th == null ? 0 : c.th;
+  const opts = [0, ...c.ds], ia = opts.indexOf(d), it = opts.indexOf(truth);
+  const gr = ia === it ? 'good' : Math.abs(ia - it) === 1 ? 'ok' : 'bad';
+  R[gr]++; R.n++;
+  if (gr === 'bad') R.misses.push({ spot: c.sit.spots.find(s => s.dp === (truth || c.ds[0])) || c.sit.spots[0], g: c.g, note: `threshold ${truth || 'never'}` });
+  $$('#n-opts button').forEach(b => { const v = +b.dataset.d; b.disabled = true; if (v === d) b.classList.add('pick'); if (v === truth) b.classList.add('ans'); });
+  const g = c.g, sit = c.sit;
+  const strip = `<div class="mx"><div class="mx-row hd" style="min-width:0"><div class="mx-lab"></div><div class="mx-strip" style="--cols:${sit.depths.length}">${[...sit.depths].reverse().map(x => `<span class="d">${x}</span>`).join('')}</div></div><div class="mx-row" style="min-width:0"><div class="mx-lab"><b>${GRID[g]}</b></div><div class="mx-strip" style="--cols:${sit.depths.length}">${[...sit.spots].reverse().map(sp => inRange(sp, g) ? `<i class="c" style="background:${cellBg(sp, g)}" title="${sp.dp}bb"></i>` : '<i class="c na"></i>').join('')}</div></div></div>`;
+  $('#n-fb').innerHTML = `<div class="verdict ${gr}">${gr === 'good' ? '✓ Right number' : gr === 'ok' ? '≈ One step off' : '✗ Off'}<small>Answer: ${truth ? truth + 'bb' : 'never'}</small></div>
+    <div class="panel"><p class="eyebrow">${GRID[g]} at every stack</p>${strip}<p class="small" style="margin:10px 0 0"><b>Rule:</b> ${esc(ruleText(sit, g))}</p></div>
+    <div><button class="btn primary" id="n-next">Next ↵</button></div>`;
+  $('#n-next').onclick = () => nextItem();
+}
+
+/* ---------- boot ---------- */
+readColors();
+const mq = window.matchMedia('(prefers-color-scheme: dark)');
+const recolor = () => { readColors(); if (UI.tab === 'charts') renderFilm(); };
+if (mq.addEventListener) mq.addEventListener('change', recolor);
+new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+/* the phone folds and unfolds without reloading: re-lay out the visible tab so slider ticks and thumbnails fit the new width */
+let resizeT = null;
+window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (UI.tab === 'charts') renderCharts(); else if (UI.tab === 'build') renderBuild(); }, 200); });
+Progress.init();
+if (!SPOTS.length) { document.querySelector('main').innerHTML = '<div class="empty-state">Range data didn’t load. Make sure sng-data.js sits next to this page.</div>'; }
+else { setTab(['charts', 'build', 'lens', 'drill', 'method'].includes(UI.tab) ? UI.tab : 'charts'); }
+Progress.connect();
+</script>
