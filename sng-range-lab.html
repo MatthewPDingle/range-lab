@@ -374,7 +374,7 @@ html.app .ctl .frow .seg button{min-height:30px}
 
 <header class="top">
   <div class="top-in">
-    <div class="brand"><div class="chip-mark" aria-hidden="true">SNG</div><div><b>Sit & Go Range Lab</b><span>Heads-up preflop ranges, 1–72bb</span></div></div>
+    <div class="brand"><div class="chip-mark" aria-hidden="true">SNG</div><div><b>Sit & Go Range Lab</b><span>Heads-up and Spin &amp; Go preflop, 1–72bb</span></div></div>
     <nav class="tabs" role="tablist" id="tabs">
       <button role="tab" data-tab="charts">Charts</button>
       <button role="tab" data-tab="build">Spot builder</button>
@@ -416,7 +416,7 @@ html.app .ctl .frow .seg button{min-height:30px}
       <aside class="ctl">
         <div><p class="eyebrow">Game</p><div class="chips" id="b-game"></div></div>
         <div id="b-sub"></div>
-        <p class="small muted" style="margin:0">Pick each player's action under the table, starting with the small blind. Tap a seat that already acted to change what it did.</p>
+        <p class="small muted" style="margin:0">Pick each player's action under the table. Tap a later seat to skip ahead to it (everyone before it folds), or a seat that already acted to change what it did.</p>
       </aside>
       <div class="stage">
         <div id="b-table"></div>
@@ -503,10 +503,11 @@ html.app .ctl .frow .seg button{min-height:30px}
           <li><div><h4>Defend wide in the big blind</h4><p>Getting 3-to-1 or better, the big blind continues with most hands against a min-raise and calls shoves far wider than feels natural. Paint BB vs raise and BB vs shove until the folds look small.</p></div></li>
           <li><div><h4>Recall it, don't re-read it</h4><p>Painting a range from memory and deciding fast on edge hands trains recall, which is what you use at the table. Drill picks edge hands and brings your misses back on a spaced schedule.</p></div></li>
           <li><div><h4>Compare the formats</h4><p>Switch between MTT heads-up and HU SnG on Charts at the same stack. The ante makes every pot bigger, so the small blind plays more hands and the big blind defends wider.</p></div></li>
+          <li><div><h4>Spins: start with the button</h4><p>Three-handed, learn the button first, then the small blind against each button action (raise, limp, shove), then the big blind. When the button folds, the blinds play heads-up: compare those charts with HU SnG at the same stack.</p></div></li>
         </ol>
       </div>
       <div class="panel">
-        <p class="eyebrow">One-week plan</p>
+        <p class="eyebrow">Eight-day plan</p>
         <table class="plan">
           <tr><th>Day 1</th><td>Small blind first in at 15–25bb: Charts, stepping the slider down, then Paint and Quick-fire “First in”.</td></tr>
           <tr><th>Day 2</th><td>Push/fold under 10bb: the “Push/fold · 1–10” preset, then the Numbers drill.</td></tr>
@@ -514,13 +515,14 @@ html.app .ctl .frow .seg button{min-height:30px}
           <tr><th>Day 4</th><td>Limp lines: limped and raised, limped and shoved on, and the big blind's raise getting 3-bet or shoved on.</td></tr>
           <tr><th>Day 5</th><td>3-bet pots and deeper stacks, 30–72bb.</td></tr>
           <tr><th>Day 6</th><td>The other format: compare MTT heads-up and HU SnG on Charts, then Quick-fire in the one you play less.</td></tr>
-          <tr><th>Day 7</th><td>Only the reddest squares in your “Where you leak” map.</td></tr>
+          <tr><th>Day 7</th><td>Spin &amp; Go: button first in at 25, 15 and 8bb, then the “Blind defence” preset.</td></tr>
+          <tr><th>Day 8</th><td>Only the reddest squares in your “Where you leak” map.</td></tr>
         </table>
         <p class="note" style="margin-top:14px">Every day: 10 minutes of Paint or Edges, then 15 minutes of Quick-fire. Reviews that are due come first automatically.</p>
         <p class="eyebrow" style="margin-top:18px">At the table</p>
         <p style="margin:0 0 8px">Run the same order every hand: <b>effective stack in bb → hand → that hand's number.</b> Heads-up, the effective stack is the shorter of the two stacks.</p>
         <p class="eyebrow" style="margin-top:18px">About the numbers</p>
-        <p class="small muted" style="margin:0" id="m-about">MTT heads-up: Chip EV with an ante, as at the end of a tournament, 1–60bb. HU SnG: no ante, 1–72bb. With two players left, chip value and prize value move together, so these Chip EV ranges hold for heads-up for a title too. Each chart is for one effective stack; the deeper player's extra chips don't matter.</p>
+        <p class="small muted" style="margin:0" id="m-about">MTT heads-up: Chip EV with an ante, as at the end of a tournament, 1–60bb. HU SnG: no ante, 1–72bb. With two players left, chip value and prize value move together, so these Chip EV ranges hold for heads-up for a title too. Each chart is for one effective stack; the deeper player's extra chips don't matter. Spin &amp; Go: 3-handed, no ante, all three stacks equal, 1–33bb. Real Spins soon have uneven stacks, so treat those charts as anchors and lean on the stack of the player you're up against.</p>
       </div>
     </div>
   </section>
@@ -545,15 +547,27 @@ const TAGS = [
     lede: 'Heads-up at the end of a tournament: Chip EV with an ante, every stack from 1 to 60bb (½bb steps below 15). Each chart is for the effective stack, the shorter of the two.' },
   { tag: 'husng', gt: 'HuSngGeneral_V3', label: 'HU SnG', table: 'Heads-up sit & go · no ante', cap: '<b>HU SnG</b><br>no ante', ante: 0,
     lede: 'Heads-up sit & go without an ante, every stack from 1 to 72bb (½bb steps below 15). Each chart is for the effective stack, the shorter of the two.' },
+  { tag: 'spin3', gt: 'SpinsGeneralV2', label: 'Spin & Go', table: 'Spin & Go · 3-handed, no ante', cap: '<b>Spin & Go</b><br>3-handed', ante: 0,
+    lede: 'Spin & Go, 3-handed without an ante, all three stacks equal: {range}.' },
 ];
 const TAG_OF = Object.fromEntries(TAGS.map(t => [t.tag, t]));
+/* a solution set still being filled in says which stacks it has so far */
+function tagLede(t) {
+  if (!t.lede.includes('{range}')) return t.lede;
+  const ds = [...new Set(SPOTS.filter(s => s.tag === t.tag).map(s => s.dp))].sort((a, b) => a - b);
+  return t.lede.replace('{range}', !ds.length || ds[0] <= 1 ? 'every stack from 33bb (above the usual 25bb start) down to 1bb, ½bb steps below 10' : `${ds[ds.length - 1]}bb down to ${ds[0]}bb so far; the shorter stacks are on the way`);
+}
 const PHASES = [];
 const PHASE_OF = Object.fromEntries(PHASES.map((p, i) => [p.gt, i]));
 const FAM = {
   RFI: { label: 'First in', seat: 'Your seat' },
+  vsOpen: { label: 'Facing a raise', seat: 'You vs raiser' },
+  vsLimp: { label: 'Facing a limp', seat: 'You vs limper' },
+  vsJam: { label: 'Facing a shove', seat: 'You vs shover' },
   BBvsLimp: { label: 'BB vs limp', seat: 'Limper' },
   BBvsOpen: { label: 'BB vs raise', seat: 'Raiser' },
   BBvsJam: { label: 'BB vs shove', seat: 'Shover' },
+  Squeeze: { label: 'BB vs raise + call', seat: 'Raiser + caller' },
   LimpVsRaise: { label: 'Limped, got raised', seat: 'Raiser' },
   LimpVsJam: { label: 'Limped, got shoved on', seat: 'Shover' },
   OpenVs3bet: { label: 'Raised, got 3-bet', seat: '3-bettor' },
@@ -562,9 +576,6 @@ const FAM = {
   IsoVsJam: { label: 'Raised a limp, got shoved on', seat: 'Shover' },
   ThreebetVs4bet: { label: '3-bet, got 4-bet', seat: '4-bettor' },
   ThreebetVsJam: { label: '3-bet, got shoved on', seat: 'Shover' },
-  vsOpen: { label: 'Facing a raise', seat: 'You vs raiser' },
-  vsJam: { label: 'Facing a shove', seat: 'You vs shover' },
-  Squeeze: { label: 'Raise + call', seat: 'Raiser + caller' },
 };
 const FAM_ORDER = Object.keys(FAM);
 const CALL_FAMS = new Set(['BBvsJam', 'vsJam', 'OpenVsJam', 'ThreebetVsJam', 'LimpVsJam', 'IsoVsJam']);
@@ -572,7 +583,7 @@ const KORD = { J: 0, B: 1, R: 2, C: 3, X: 4, F: 5 };
 const KNAME = { J: 'All-in', B: 'Bigger raise', R: 'Raise', C: 'Call', X: 'Check', F: 'Fold' };
 const BANDS = [
   { id: 'b1', label: '1–5', lo: 0, hi: 5 }, { id: 'b5', label: '5.5–10', lo: 5.5, hi: 10 }, { id: 'b10', label: '10.5–15', lo: 10.5, hi: 15 },
-  { id: 'b16', label: '16–25', lo: 15.5, hi: 25 }, { id: 'b30', label: '30–72', short: '30+', lo: 25.5, hi: 999 },
+  { id: 'b16', label: '16–25', lo: 15.5, hi: 25 }, { id: 'b30', label: '26–72', short: '26+', lo: 25.5, hi: 999 },
 ];
 const bandOf = dp => BANDS.find(b => dp >= b.lo && dp <= b.hi).id;
 const SUITSYM = { s: '♠', h: '♥', d: '♦', c: '♣' };
@@ -629,7 +640,7 @@ function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch
 function load(k) { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
 function weightedPick(weights) { let t = 0; for (const w of weights) t += w; if (t <= 0) return -1; let x = Math.random() * t; for (let i = 0; i < weights.length; i++) { x -= weights[i]; if (x <= 0) return i; } return weights.length - 1; }
 
-function raiseWord(spot) { return ({ RFI: 'Raise', BBvsOpen: '3-bet', vsOpen: '3-bet', BBvsLimp: 'Raise', LimpVsRaise: '3-bet', IsoVs3bet: '4-bet', OpenVs3bet: '4-bet', ThreebetVs4bet: '5-bet', Squeeze: 'Squeeze' })[spot.fam] || 'Raise'; }
+function raiseWord(spot) { return ({ RFI: 'Raise', BBvsOpen: '3-bet', vsOpen: '3-bet', vsLimp: 'Raise', BBvsLimp: 'Raise', LimpVsRaise: '3-bet', IsoVs3bet: '4-bet', OpenVs3bet: '4-bet', ThreebetVs4bet: '5-bet', Squeeze: 'Squeeze' })[spot.fam] || 'Raise'; }
 function actLabel(spot, a, short) {
   const A = spot.A[a];
   switch (A.kind) {
@@ -647,7 +658,7 @@ function sitLabel(s) {
   switch (s.fam) {
     case 'RFI': return P[s.hero];
     case 'BBvsOpen': case 'BBvsJam': return 'vs ' + P[s.vs];
-    case 'BBvsLimp': return 'vs SB limp';
+    case 'BBvsLimp': return s.caller >= 0 ? 'vs 2 limps' : 'vs ' + P[s.vs] + ' limp';
     case 'Squeeze': return P[s.hero] + ' vs ' + P[s.vs] + ' + ' + P[s.caller];
     default: return P[s.hero] + ' vs ' + P[s.vs];
   }
@@ -680,7 +691,7 @@ function narrate(spot) {
   const P = POS[spot.n], { ev } = simulate(spot), H = spot.hero;
   const out = [];
   let k = 0; while (k < ev.length && ev[k].t === 'F') k++;
-  if (k === ev.length) return spot.n === 2 ? `You're in the <b>SB</b>, on the button, first to act.` : H === 0 ? `You're first to act in <b>${P[0]}</b>.` : `Folds to you in the <b>${P[H]}</b>.`;
+  if (k === ev.length) return spot.n === 2 ? `You're in the <b>SB</b>, on the button, first to act.` : H === 0 ? `You're on the <b>${P[0]}</b>, first to act.` : `Folds to you in the <b>${P[H]}</b>.`;
   let heroActed = false, limped = false;
   for (let e = k; e < ev.length; e++) {
     const x = ev[e]; if (x.t === 'F') continue;
@@ -833,6 +844,7 @@ function handDetailHTML(spot, g) {
 /* ---------- state ---------- */
 const UI = Object.assign({ tab: 'charts', cTag: 'mtthu', cFam: 'RFI', cSit: null, cDp: 20, lTag: 'mtthu', lens: GIDX['K9o'], dMode: 'quick', dTag: 'mtthu', dFams: FAM_ORDER, dBands: BANDS.map(b => b.id), dLen: 40, dHeatBy: 'score' }, load('sng-ui') || {});
 const saveUI = () => store('sng-ui', UI);
+if (!UI.spin3) { if (UI.dFams.includes('vsOpen') && !UI.dFams.includes('vsLimp')) UI.dFams = [...UI.dFams, 'vsLimp']; UI.spin3 = 1; }  // added with Spin & Go
 const tagsHere = () => TAGS.filter(t => SPOTS.some(s => s.tag === t.tag));
 const tagSegHTML = cur => tagsHere().map(t => `<button data-tag="${t.tag}" aria-pressed="${t.tag === cur}">${t.label}</button>`).join('');
 function fixTag(k) { const h = tagsHere(); if (h.length && !h.some(t => t.tag === UI[k])) UI[k] = h[0].tag; }
@@ -893,7 +905,7 @@ function threshold(sit, g, metric, cap = 25) {
   }
   return t;
 }
-const VS_ROLE = { BBvsOpen: 'Raiser', BBvsLimp: 'Limper', BBvsJam: 'Shover', LimpVsRaise: 'Raiser', LimpVsJam: 'Shover', IsoVs3bet: '3-bettor', IsoVsJam: 'Shover', vsOpen: 'Raiser', vsJam: 'Shover', OpenVsJam: 'Shover', OpenVs3bet: '3-bettor', ThreebetVs4bet: '4-bettor', ThreebetVsJam: 'Shover', Squeeze: 'Raiser' };
+const VS_ROLE = { BBvsOpen: 'Raiser', BBvsLimp: 'Limper', vsLimp: 'Limper', BBvsJam: 'Shover', LimpVsRaise: 'Raiser', LimpVsJam: 'Shover', IsoVs3bet: '3-bettor', IsoVsJam: 'Shover', vsOpen: 'Raiser', vsJam: 'Shover', OpenVsJam: 'Shover', OpenVs3bet: '3-bettor', ThreebetVs4bet: '4-bettor', ThreebetVsJam: 'Shover', Squeeze: 'Raiser' };
 /* ---------- Charts filters: one strip of table seats per role ---------- */
 const seatAbbr = nm => nm.replace('UTG+', 'U+');
 const ROLE_KEYS = ['hero', 'vs', 'caller'];
@@ -986,7 +998,7 @@ function filmFollow(el = $('#c-film')) {
 function renderCharts() {
   fixTag('cTag');
   $('#c-tag').innerHTML = tagSegHTML(UI.cTag);
-  $('#c-lede').textContent = TAG_OF[UI.cTag].lede;
+  $('#c-lede').textContent = tagLede(TAG_OF[UI.cTag]);
   const fams = FAM_ORDER.filter(f => sitsWhere(s => s.tag === UI.cTag && s.fam === f).length);
   if (!fams.length) { $('#v-charts').innerHTML = '<div class="empty-state">No range data loaded.</div>'; return; }
   if (!fams.includes(UI.cFam)) UI.cFam = fams[0];
@@ -1302,10 +1314,14 @@ function renderLens() {
   lGrid.show(null, { bg: g2 => g2 === g ? 'var(--accent)' : (COMBOS[g2] === 6 ? 'var(--k-F)' : COMBOS[g2] === 4 ? 'color-mix(in srgb, var(--k-F) 70%, var(--empty))' : 'color-mix(in srgb, var(--k-F) 45%, var(--empty))') });
   $('#l-legend').innerHTML = legendHTML(['J', 'B', 'R', 'C', 'X', 'F']) + '<span><i class="sw" style="background:repeating-linear-gradient(45deg,var(--empty) 0 2px,transparent 2px 4px)"></i>Folded earlier</span>';
   const blocks = [
-    ['RFI', 'Small blind, first in', 'On the button: limp, raise or shove.'],
+    ['RFI', 'First in', 'Folded to you. Heads-up the small blind is the button: limp, raise or shove.'],
+    ['vsOpen', 'Small blind vs a button raise', 'Call, 3-bet or shove.'],
+    ['vsLimp', 'Small blind vs a button limp', 'Complete, raise or fold.'],
+    ['vsJam', 'Small blind vs a button shove', 'Calling ranges, with the big blind still to act.'],
     ['BBvsLimp', 'Big blind vs a limp', 'Check or raise.'],
     ['BBvsOpen', 'Big blind vs a raise', 'Call, 3-bet or shove.'],
     ['BBvsJam', 'Big blind vs a shove', 'Calling ranges. These widen fast as stacks get shorter.'],
+    ['Squeeze', 'Big blind vs a raise and a call', ''],
     ['LimpVsRaise', 'You limped and got raised', ''],
     ['LimpVsJam', 'You limped and got shoved on', 'Call-off ranges after a limp. Striped squares mean you would not have limped the hand.'],
     ['OpenVs3bet', 'You raised and got 3-bet', ''],
@@ -1385,7 +1401,7 @@ function recordAnswer(spot, g, grade, loss) {
 }
 
 /* ---------- DRILL ---------- */
-const HEAT_LABEL = { RFI: 'First in', BBvsLimp: 'BB vs limp', BBvsOpen: 'BB vs raise', BBvsJam: 'BB vs shove', LimpVsRaise: 'Limp → raise', LimpVsJam: 'Limp → shove', OpenVs3bet: 'Raise → 3-bet', OpenVsJam: 'Raise → shove', IsoVs3bet: 'Iso → 3-bet', IsoVsJam: 'Iso → shove', ThreebetVs4bet: '3-bet → 4-bet', ThreebetVsJam: '3-bet → shove', vsOpen: 'vs raise', vsJam: 'vs shove', Squeeze: 'Raise + call' };
+const HEAT_LABEL = { RFI: 'First in', vsLimp: 'vs limp', BBvsLimp: 'BB vs limp', BBvsOpen: 'BB vs raise', BBvsJam: 'BB vs shove', LimpVsRaise: 'Limp → raise', LimpVsJam: 'Limp → shove', OpenVs3bet: 'Raise → 3-bet', OpenVsJam: 'Raise → shove', IsoVs3bet: 'Iso → 3-bet', IsoVsJam: 'Iso → shove', ThreebetVs4bet: '3-bet → 4-bet', ThreebetVsJam: '3-bet → shove', vsOpen: 'vs raise', vsJam: 'vs shove', Squeeze: 'BB vs raise + call' };
 /* leak map cell: big number = Quick-fire score or EV lost per hand (whichever the toggle shows), small = hands answered
    (st = [answered, right, mixed-ok, EV lost in bb, answers with EV recorded]; results from before EV was recorded have none) */
 const heatAcc = st => (st[1] + 0.5 * st[2]) / st[0], heatEv = st => st[4] ? st[3] / st[4] : null;
@@ -1474,12 +1490,12 @@ $('#d-heat').addEventListener('click', e => { const b = e.target.closest('[data-
 $('#d-start').addEventListener('click', () => startDrill());
 /* presets keep the format you picked; they only set spots and stacks */
 const PRESETS = [
-  { label: 'Push/fold · 1–10', fams: ['RFI', 'BBvsJam', 'LimpVsJam', 'OpenVsJam', 'IsoVsJam'], bands: ['b1', 'b5'] },
+  { label: 'Push/fold · 1–10', fams: ['RFI', 'vsJam', 'BBvsJam', 'LimpVsJam', 'OpenVsJam', 'IsoVsJam'], bands: ['b1', 'b5'] },
   { label: 'Small blind first in', fams: ['RFI'], bands: BANDS.map(b => b.id) },
-  { label: 'Big blind defence', fams: ['BBvsLimp', 'BBvsOpen', 'BBvsJam'], bands: BANDS.map(b => b.id) },
+  { label: 'Blind defence', fams: ['vsOpen', 'vsLimp', 'vsJam', 'BBvsLimp', 'BBvsOpen', 'BBvsJam', 'Squeeze'], bands: BANDS.map(b => b.id) },
   { label: 'Limp lines', fams: ['LimpVsRaise', 'LimpVsJam', 'IsoVs3bet', 'IsoVsJam'], bands: BANDS.map(b => b.id) },
   { label: '3-bet pots', fams: ['OpenVs3bet', 'OpenVsJam', 'ThreebetVs4bet', 'ThreebetVsJam'], bands: BANDS.map(b => b.id) },
-  { label: 'Deep · 30–72', fams: FAM_ORDER, bands: ['b30'] },
+  { label: 'Deep · 26+', fams: FAM_ORDER, bands: ['b30'] },
   { label: 'Everything', fams: FAM_ORDER, bands: BANDS.map(b => b.id) },
 ];
 $('#d-presets').innerHTML = PRESETS.map((p, i) => `<button data-p="${i}">${p.label}</button>`).join('');
@@ -1831,7 +1847,8 @@ function nextNumber() {
 function renderNumber() {
   const R = RUN, c = R.cur, sit = c.sit, sp = sit.spots[0];
   const verb = c.metric === 'C' ? 'call the shove' : 'shove';
-  const where = { RFI: 'first in from the <b>small blind</b>', BBvsJam: 'in the <b>big blind</b> against a shove', BBvsOpen: 'in the <b>big blind</b> against a raise', LimpVsJam: 'after limping and getting shoved on', LimpVsRaise: 'after limping and facing a raise', OpenVsJam: 'after raising and getting shoved on', OpenVs3bet: 'after raising and facing a 3-bet', IsoVsJam: 'after raising a limp and getting shoved on', IsoVs3bet: 'after raising a limp and facing a 3-bet', ThreebetVs4bet: 'after 3-betting and facing a 4-bet', ThreebetVsJam: 'after 3-betting and getting shoved on' }[sit.fam] || '';
+  const P = POS[sit.n], at = k => `the <b>${P[k]}</b>`;
+  const where = { RFI: `first in from ${at(sit.hero)}`, vsOpen: `in ${at(sit.hero)} against a raise from ${at(sit.vs)}`, vsLimp: `in ${at(sit.hero)} against a limp from ${at(sit.vs)}`, vsJam: `in ${at(sit.hero)} against a shove from ${at(sit.vs)}`, BBvsJam: `in ${at(sit.hero)} against a shove from ${at(sit.vs)}`, BBvsOpen: `in ${at(sit.hero)} against a raise from ${at(sit.vs)}`, Squeeze: `in ${at(sit.hero)} against a raise from ${at(sit.vs)} and a call from ${at(sit.caller)}`, LimpVsJam: `after limping from ${at(sit.hero)} and getting shoved on`, LimpVsRaise: `after limping from ${at(sit.hero)} and facing a raise`, OpenVsJam: `after raising from ${at(sit.hero)} and getting shoved on`, OpenVs3bet: `after raising from ${at(sit.hero)} and facing a 3-bet`, IsoVsJam: `after raising a limp from ${at(sit.hero)} and getting shoved on`, IsoVs3bet: `after raising a limp from ${at(sit.hero)} and facing a 3-bet`, ThreebetVs4bet: `after 3-betting from ${at(sit.hero)} and facing a 4-bet`, ThreebetVsJam: `after 3-betting from ${at(sit.hero)} and getting shoved on` }[sit.fam] || '';
   $('#d-run').innerHTML = runHeader() + `<div class="q"><div class="panel board"><div class="cards">${cardsHTML(c.g, c.combo)}</div>
     <p style="margin:0;font-size:17px">${where.charAt(0).toUpperCase() + where.slice(1)}: up to how many bb do you <b>${verb}</b> with <b>${GRID[c.g]}</b> at least half the time?</p>
     <p class="small muted" style="margin:0">${tableDesc(sp)}. Pick the deepest stack.</p>

@@ -76,7 +76,7 @@ def build_assets():
     ]), encoding="utf-8")
     (www / "sng.html").write_text(app_page(SOURCES / "sng-range-lab.html", [
         ("<title>Sit & Go Range Lab</title>", "<title>Sit & Go · Range Lab</title>"),
-        ("<b>Sit & Go Range Lab</b><span>Heads-up preflop ranges, 1–72bb</span>", "<b>Sit & Go</b><span>Heads-up, 1–72bb</span>"),
+        ("<b>Sit & Go Range Lab</b><span>Heads-up and Spin &amp; Go preflop, 1–72bb</span>", "<b>Sit & Go</b><span>Heads-up and Spins</span>"),
     ]), encoding="utf-8")
     shutil.copy(SOURCES / "data.js", www / "data.js")
     shutil.copy(SOURCES / "cash-data.js", www / "cash-data.js")

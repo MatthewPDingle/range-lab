@@ -4,7 +4,7 @@ Preflop range trainer for live poker, built from solver output. It's an Android 
 
 - **Tournament**: 9-handed Chip EV, 12.5% ante, 5–100bb (38 depths, every seat matchup, 3-bet and 4-bet pots, multiway pots), plus 8-handed ICM stages (50% left, bubble, ITM 10%, 2 tables, final table).
 - **Live cash**: 8-handed regular games (2x–7x opens, 100–300bb, 10% live rake) and single-straddle games (4–7bb opens, 50–1,600bb).
-- **Sit & Go**: heads-up. MTT heads-up (Chip EV with an ante, 1–60bb) and heads-up sit & go (no ante, 1–72bb), with ½bb steps below 15bb: first in, the big blind against a limp, raise or shove, limp-raise lines and 3-bet pots.
+- **Sit & Go**: heads-up and Spin & Go. MTT heads-up (Chip EV with an ante, 1–60bb) and heads-up sit & go (no ante, 1–72bb), with ½bb steps below 15bb: first in, the big blind against a limp, raise or shove, limp-raise lines and 3-bet pots. Plus 3-handed Spin & Go with equal stacks (no ante, 1–33bb): the button's raise, limp and shove, the small blind against each, the blinds when the button folds, and the big blind against a raise and a call.
 
 Each trainer has Charts (ranges by stack depth), a Spot builder (tap seats on a table to set up the action and see the range for whoever is to act), Hand lens (one hand across every spot and stack), and drills with spaced repetition. Quick fire shows each spot on a poker table.
 
@@ -37,7 +37,7 @@ The range data is solver output from a personal subscription, so it isn't publis
 |---|---|
 | `tournament-range-lab.html` | Tournament trainer page (loads `data.js`, `window.RANGE_DATA`) |
 | `cash-range-lab.html` | Cash trainer page (loads `cash-data.js`, `window.CASH_DATA`) |
-| `sng-range-lab.html` | Sit & Go (heads-up) trainer page (loads `sng-data.js`, `window.SNG_DATA`) |
+| `sng-range-lab.html` | Sit & Go (heads-up and Spin & Go) trainer page (loads `sng-data.js`, `window.SNG_DATA`) |
 | `range-lab-app/web/` | App home screen, app stylesheet (two-pane layout at 600px+), app script |
 | `range-lab-app/android/` | Manifest, WebView activity, icons |
 | `range-lab-app/build.py` | Builds the APK without Gradle |
