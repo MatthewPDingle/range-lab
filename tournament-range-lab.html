@@ -160,7 +160,11 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 
 /* rail */
 .rail .panel h3{font:800 17px/1.1 var(--f-display);text-transform:uppercase;letter-spacing:.02em;margin:0 0 10px}
-.mix{display:flex;flex-direction:column;gap:6px}
+.mix{display:grid;grid-template-columns:max-content minmax(0,1fr) 46px;align-items:center;gap:6px 8px;font-size:13px}
+.mix>.mix-row{display:contents}
+.mix>.mix-row>span:first-child,.mix-w>span{white-space:nowrap}
+.mix-w{grid-column:1;height:0;margin-top:-6px;overflow:hidden;visibility:hidden}
+.mix-w>span{display:block}
 .mix-row{display:grid;grid-template-columns:86px 1fr 46px;align-items:center;gap:8px;font-size:13px}
 .bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
 .bar i{display:block;height:100%}
@@ -830,12 +834,14 @@ function stableMixHTML(spot, spots) {
   for (const s of spots) for (const a of s.order) { const k = s.A[a].kind; if (!kinds.includes(k)) kinds.push(k); }
   kinds.sort((x, y) => KORD[x] - KORD[y]);
   const m = mixOf(spot);
+  const label = (s, k) => { const idx = s.order.filter(a => s.A[a].kind === k); return kindLabel(s, k) + ((k === 'R' || k === 'B') && idx.length ? ` <small class="muted">${fmtBB(s.A[idx[0]].size)}</small>` : ''); };
+  // every label this spot shows at any stack, hidden: it sets the label column's width, so the rows don't move as you slide
+  const sizer = [...new Set(spots.flatMap(s => kinds.map(k => label(s, k))))].map(t => `<span>${t}</span>`).join('');
   return `<div class="mix">${kinds.map(k => {
     const idx = spot.order.filter(a => spot.A[a].kind === k);
     const v = idx.reduce((s, a) => s + m[a], 0);
-    const size = (k === 'R' || k === 'B') && idx.length ? ` <small class="muted">${fmtBB(spot.A[idx[0]].size)}</small>` : '';
-    return `<div class="mix-row"><span style="${idx.length ? '' : 'color:var(--faint)'}">${kindLabel(spot, k)}${size}</span><div class="bar"><i style="width:${(v * 100).toFixed(1)}%;background:${kColor(k)}"></i></div><span class="mono">${pct(v)}</span></div>`;
-  }).join('')}</div>`;
+    return `<div class="mix-row"><span style="${idx.length ? '' : 'color:var(--faint)'}">${label(spot, k)}</span><div class="bar"><i style="width:${(v * 100).toFixed(1)}%;background:${kColor(k)}"></i></div><span class="mono">${pct(v)}</span></div>`;
+  }).join('')}<div class="mix-w" aria-hidden="true">${sizer}</div></div>`;
 }
 function edgesHTML(spot) {
   const rows = EDGE_LADDERS.map(l => {
