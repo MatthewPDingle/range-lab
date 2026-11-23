@@ -8,6 +8,6 @@ __pycache__/
 data.js
 cash-data.js
 sng-data.js
-k-poker-data.js
+k-poker*.js
 *.keystore
 tools/crawler.js

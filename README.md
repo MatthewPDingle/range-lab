@@ -5,7 +5,7 @@ Preflop range trainer for live poker, built from solver output. It's an Android 
 - **Tournament**: 9-handed Chip EV, 12.5% ante, 5–100bb (38 depths, every seat matchup, 3-bet and 4-bet pots, multiway pots), plus 8-handed ICM stages (50% left, bubble, ITM 10%, 2 tables, final table).
 - **Live cash**: 8-handed regular games (2x–7x opens, 100–300bb, 10% live rake) and single-straddle games (4–7bb opens, 50–1,600bb).
 - **Sit & Go**: heads-up and Spin & Go. MTT heads-up (Chip EV with an ante, 1–60bb) and heads-up sit & go (no ante, 1–72bb), with ½bb steps below 15bb: first in, the big blind against a limp, raise or shove, limp-raise lines and 3-bet pots. Plus 3-handed Spin & Go with equal stacks (no ante, 1–33bb): the button's raise, limp and shove, the small blind against each, the blinds when the button folds, and the big blind against a raise and a call.
-- **K Poker**: 7-handed, 100bb, an ante from every seat and a small blind as big as the big blind, with limping allowed. A Hand lens shows one hand in every common spot (first in, against limpers, against an open, after limping into a raise, 3-bet and 4-bet pots), plus Charts and a Spot builder for every line. An open-size slider switches between solves (3.5bb and 5bb opens so far). Frequencies only: multiway spots are marked as estimates.
+- **K Poker**: 7-handed, 100bb, an ante from every seat and a small blind as big as the big blind, with limping allowed. Solved at every open size from 3bb to 7bb in ½bb steps, and laid out like the other trainers with open size where they have stack depth: Charts follow each line across open sizes (with every line that leads to a seat matchup listed by how often it comes up), Spot builder keeps the line as you slide the open size, and Hand lens shows one hand in every spot at every open size. Frequencies only; multiway spots are marked as estimates.
 
 Each trainer has Charts (ranges by stack depth), a Spot builder (tap seats on a table to set up the action and see the range for whoever is to act), Hand lens (one hand across every spot and stack), and drills with spaced repetition. Quick fire shows each spot on a poker table.
 
@@ -30,7 +30,7 @@ At the unfolded Galaxy Z Fold screen size (832 × 860), dark theme.
 
 ## What's not in this repo
 
-The range data is solver output from a personal subscription, so it isn't published here. These files are kept privately: `data.js`, `cash-data.js`, `sng-data.js`, `k-poker-data.js`, the built APK (it bundles the data), the signing keystore, and the crawler and extractor that pull the data. Each trainer needs its data file to show anything.
+The range data is solver output from a personal subscription, so it isn't published here. These files are kept privately: `data.js`, `cash-data.js`, `sng-data.js`, the `k-poker*.js` files, the built APK (it bundles the data), the signing keystore, and the crawler and extractor that pull the data. Each trainer needs its data file to show anything.
 
 ## Layout
 
@@ -39,7 +39,7 @@ The range data is solver output from a personal subscription, so it isn't publis
 | `tournament-range-lab.html` | Tournament trainer page (loads `data.js`, `window.RANGE_DATA`) |
 | `cash-range-lab.html` | Cash trainer page (loads `cash-data.js`, `window.CASH_DATA`) |
 | `sng-range-lab.html` | Sit & Go (heads-up and Spin & Go) trainer page (loads `sng-data.js`, `window.SNG_DATA`) |
-| `kpoker-range-lab.html` | K Poker trainer page (loads `k-poker-data.js`, `window.KPOKER_DATA`; one game per open size) |
+| `kpoker-range-lab.html` | K Poker trainer page (loads the `k-poker-data.js` manifest, then one `k-poker-<open size>.js` per game when it's picked) |
 | `range-lab-app/web/` | App home screen, app stylesheet (two-pane layout at 600px+), app script |
 | `range-lab-app/android/` | Manifest, WebView activity, icons |
 | `range-lab-app/build.py` | Builds the APK without Gradle |
@@ -48,7 +48,7 @@ The range data is solver output from a personal subscription, so it isn't publis
 
 ## Build the app
 
-Needs JDK 21 and the Android SDK (platform 35, build-tools 35.0.0). The paths are at the top of `build.py`. Put `data.js`, `cash-data.js`, `sng-data.js` and `k-poker-data.js` next to the trainer pages and the keystore at `range-lab-app/android/rangelab.keystore`, then:
+Needs JDK 21 and the Android SDK (platform 35, build-tools 35.0.0). The paths are at the top of `build.py`. Put `data.js`, `cash-data.js`, `sng-data.js` and the `k-poker*.js` files next to the trainer pages and the keystore at `range-lab-app/android/rangelab.keystore`, then:
 
 ```bash
 python range-lab-app/build.py
