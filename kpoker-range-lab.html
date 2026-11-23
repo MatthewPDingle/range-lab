@@ -383,10 +383,13 @@ html.app .ctl .frow .seg button{min-height:30px}
 .mx-strip .c.est::after{content:"";position:absolute;right:0;top:0;border-style:solid;border-width:0 5px 5px 0;border-color:transparent rgba(255,255,255,.85) transparent transparent}
 .mx-strip .c.na.est::after{border-right-color:var(--muted)}
 .mx-strip .c[data-k]{cursor:pointer}
-/* Hand lens: with 9 open sizes (the other trainers show 30+ stack depths) full-width columns would stretch each
-   square into a wide block, so the columns keep a fixed width and the strip stays as compact as theirs */
+/* Hand lens: with a handful of columns full-width columns would stretch each square into a wide block, so the
+   columns keep a fixed width and the strip stays as compact as the other trainers' */
 #v-lens .mx-strip,#v-lens .mx-lines,html.app #v-lens .mx-strip,html.app #v-lens .mx-lines{grid-template-columns:repeat(var(--cols),24px)}
 #v-lens .mx-lines{right:auto}
+/* the open-size row is one more line than the other trainers' hand pickers: tighter gaps keep the left pane from scrolling */
+#v-lens .lens-pick{gap:6px}
+.drow{cursor:pointer}
 .sw.est{background:linear-gradient(225deg,var(--muted) 0 35%,var(--empty) 35%)}
 .estnote{font-size:12.5px;color:var(--muted);margin:10px 0 0;padding:6px 10px;border-radius:8px;background:var(--surface-2)}
 .estnote b{color:var(--fg)}
@@ -416,7 +419,7 @@ html.app .ctl .frow .seg button{min-height:30px}
   <!-- CHARTS -->
   <section class="view" id="v-charts" hidden>
     <h2 class="title">Charts</h2>
-    <p class="lede">Every spot at every open size, 7-handed at 100bb with a 1bb ante from every seat and a 1bb small blind. A corner mark means a multiway pot: an estimate.</p>
+    <p class="lede">Every spot at every stack depth, 7-handed with a 1bb ante from every seat and a 1bb small blind. At 100bb you can also slide the open size. A corner mark means a multiway pot: an estimate.</p>
     <div class="charts">
       <aside class="ctl tight">
         <div class="chips tight" id="c-fam" role="group" aria-label="Spot"></div>
@@ -427,9 +430,10 @@ html.app .ctl .frow .seg button{min-height:30px}
         <p class="scn" id="c-scn"></p>
         <div class="grid" id="c-grid"></div>
         <div class="legend" id="c-legend"></div>
-        <div><p class="eyebrow">Every open size for this spot</p><div class="film" id="c-film"></div></div>
+        <div><p class="eyebrow" id="c-film-lab">Every stack depth for this spot</p><div class="film" id="c-film"></div></div>
         <div class="clock dual">
-          <div class="drow on"><div class="dval"><b id="c-dp">5</b><small>bb open</small></div><div class="dmid"><input type="range" id="c-slider" min="0" max="8" step="1" aria-label="Open size"><div class="ticks" id="c-ticks"></div></div></div>
+          <div class="drow" data-axis="open"><div class="dval"><b id="c-op">5</b><small>bb open</small></div><div class="dmid"><input type="range" id="c-op-sl" min="0" max="8" step="1" aria-label="Open size"><div class="ticks" id="c-op-ticks"></div></div></div>
+          <div class="drow" data-axis="depth"><div class="dval"><b id="c-dp">100</b><small>bb</small></div><div class="dmid"><input type="range" id="c-slider" min="0" max="16" step="1" aria-label="Stack depth"><div class="ticks" id="c-ticks"></div></div></div>
         </div>
       </div>
       <aside class="rail" id="c-rail"></aside>
@@ -440,7 +444,7 @@ html.app .ctl .frow .seg button{min-height:30px}
   <section class="view" id="v-build" hidden>
     <div class="charts">
       <aside class="ctl">
-        <div><p class="eyebrow">Game</p><div class="chips" id="b-game"></div></div>
+        <div><p class="eyebrow">Open size</p><div class="chips" id="b-open"></div></div>
         <p class="small muted" style="margin:0">Tap a seat to skip ahead to it: everyone before it folds. Then pick that player's action under the table. Tap a seat that already acted to change what it did.</p>
       </aside>
       <div class="stage">
@@ -451,8 +455,8 @@ html.app .ctl .frow .seg button{min-height:30px}
           <div class="brow"><button class="btn ghost small" id="b-back">Undo</button><button class="btn ghost small" id="b-reset">Start over</button><span class="small muted" id="b-note"></span></div>
         </div>
         <div class="clock">
-          <div class="clock-num"><b id="b-dp">5</b><small>bb open</small></div>
-          <div class="clock-mid"><input type="range" id="b-slider" min="0" max="8" step="1" aria-label="Open size"><div class="ticks" id="b-ticks"></div></div>
+          <div class="clock-num"><b id="b-dp">100</b><small>bb</small></div>
+          <div class="clock-mid"><input type="range" id="b-slider" min="0" max="16" step="1" aria-label="Stack depth"><div class="ticks" id="b-ticks"></div></div>
         </div>
       </div>
       <aside class="rail" id="b-rail">
@@ -467,11 +471,12 @@ html.app .ctl .frow .seg button{min-height:30px}
     <div class="lens-head">
       <div style="flex:1;min-width:260px">
         <h2 class="title">Hand lens</h2>
-        <p class="lede">At the table you see your cards first, so learn each hand across the open sizes you'll face. Each row is one spot and each square one open size, biggest on the left. Each square is the most common line for that seat matchup; tap it for the chart.</p>
+        <p class="lede">At the table you see your cards first, so learn each hand as a set of stack thresholds. Each row is one spot and each square one stack depth, deepest on the left. Each square is the most common line for that seat matchup; tap it for the chart.</p>
         <div class="lens-pick">
           <label class="eyebrow" for="l-input">Hand</label>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="l-input" value="KTs" autocomplete="off" spellcheck="false"><div class="cards" id="l-cards"></div></div>
           <p class="ltop" id="l-top"></p>
+          <div class="frow"><span class="flab">Open (bb)</span><div class="seg" id="l-open"></div></div>
         </div>
       </div>
       <div><p class="eyebrow">Pick a hand</p><div class="grid mini" id="l-grid" style="width:min(340px,86vw)"></div></div>
@@ -547,8 +552,15 @@ const VS_ROLE = { vsLimp: 'Limper', vsOpen: 'Opener', vsOpenCall: 'Opener', vsIs
 /* One game per open size. A situation (sit) is a seat plus the exact action before it, ignoring sizes, so the same
    line can be followed across open sizes the way the other trainers follow a spot across stack depths. */
 const KD = window.KPOKER_DATA || { games: {} };
-const TAGS = Object.keys(KD.games).sort((a, b) => parseFloat(a) - parseFloat(b));
-const OPENS = TAGS.map(t => parseFloat(t));
+const TAGS = Object.keys(KD.games);
+const META = Object.fromEntries(TAGS.map(t => [t, { stack: +KD.games[t].stack, open: +KD.games[t].open }]));
+const uniq = a => [...new Set(a)].sort((x, y) => x - y);
+const STACKS = uniq(TAGS.map(t => META[t].stack)), OPENS = uniq(TAGS.map(t => META[t].open));
+const tagAt = (dp, op) => TAGS.find(t => META[t].stack === dp && META[t].open === op);
+const opensAt = dp => uniq(TAGS.filter(t => META[t].stack === dp).map(t => META[t].open));
+const stacksAt = op => uniq(TAGS.filter(t => META[t].open === op).map(t => META[t].stack));
+const DEF_OPEN = OPENS.includes(5) ? 5 : OPENS[0], DEF_STACK = STACKS.includes(100) ? 100 : STACKS[STACKS.length - 1];
+const nearest = (arr, v) => arr.reduce((b, x) => Math.abs(x - v) < Math.abs(b - v) ? x : b, arr[0]);
 const GAME = {}, SITS = new Map(), SPOT_AT = new Map();
 let POS = ['UTG', 'MP', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
 function dec1(s) { const a = new Float32Array(169); for (let g = 0; g < 169; g++) a[g] = DEC[s[g]] / 63; return a; }
@@ -593,37 +605,43 @@ function classify(sp) {
 }
 function decodeGame(tag, D) {
   POS = D.config.positions;
-  const dp = parseFloat(tag), q = D.q || 63;
-  const G = { tag, dp, label: D.label, cfg: D.config, n: POS.length, spots: [], byKey: new Map(), cell: new Map(), gap: D.gap };
+  const dp = META[tag].stack, op = META[tag].open;
+  const G = { tag, dp, op, label: D.label, cfg: D.config, n: POS.length, spots: [], byKey: new Map(), cell: new Map(), gap: D.gap };
   for (const rec of D.spots) {
     const [path, actor, pot, inv, line, acts, f, reach, bp] = rec;
     const A = acts.map(([label, kind, to, freq], i) => ({ i, label, kind, size: to, freq }));
-    const sp = Object.assign(new Spot(), { tag, G, dp, n: G.n, path, key: path.join('.'), hero: actor, pot, line, A, bp, _raw: [f, reach] });
+    const sp = Object.assign(new Spot(), { tag, G, dp, op, n: G.n, path, key: path.join('.'), hero: actor, pot, line, A, bp, _raw: [f, reach] });
     sp.defIdx = (A.find(a => a.kind === 'F') || A.find(a => a.kind === 'X') || A[0]).i;
     classify(sp);
     G.spots.push(sp); G.byKey.set(sp.key, sp);
     // Hand lens: the most common line for each spot type, seat and opponent (or number of limpers)
     const ck = sp.fam + '|' + sp.hero + '|' + sp.lvs, cur = G.cell.get(ck);
     if (!cur || sp.bp > cur.bp) G.cell.set(ck, sp);
-    // Charts: the same line at every open size
+    // Charts: the same line at every stack depth and open size
     const sitKey = sp.hero + '|' + line.map(([s, k]) => s + k).join(',');
     let sit = SITS.get(sitKey);
     if (!sit) SITS.set(sitKey, sit = { key: sitKey, fam: sp.fam, n: G.n, hero: sp.hero, vs: sp.vs, caller: -1, spots: [], w: 0 });
-    sit.spots.push(sp); sit.w = Math.max(sit.w, bp); sp.sitKey = sitKey;
-    SPOT_AT.set(sitKey + '|' + dp, sp);
+    sit.spots.push(sp); sit.w = Math.max(sit.w, bp); sp.sitKey = sitKey; sp.sit = sit;
+    SPOT_AT.set(sitKey + '|' + dp + '|' + op, sp);
   }
   GAME[tag] = G;
 }
-function finishSits() { for (const s of SITS.values()) { s.spots.sort((a, b) => a.dp - b.dp); s.depths = s.spots.map(x => x.dp); s.spots.forEach((sp, i) => { sp.idx = i; sp.sit = s; }); } }
+function finishSits() { for (const s of SITS.values()) s.spots.sort((a, b) => a.op - b.op || a.dp - b.dp); }
 const sitSort = (a, b) => a.hero - b.hero || a.vs - b.vs || b.w - a.w;
 const sitsWhere = pred => [...SITS.values()].filter(pred).sort(sitSort);
-function loadGames() {
-  return Promise.all(TAGS.map(tag => new Promise((ok, fail) => {
+function loadGames(tags) {
+  const todo = [...new Set(tags)].filter(t => t && !GAME[t]);
+  if (!todo.length) return Promise.resolve();
+  return Promise.all(todo.map(tag => LOADING[tag] = LOADING[tag] || new Promise((ok, fail) => {
     if ((window.KPOKER_GAMES || {})[tag]) return ok();
-    const el = document.createElement('script'); el.src = KD.games[tag].file; el.onload = ok; el.onerror = () => fail(new Error('could not load ' + KD.games[tag].file));
+    const el = document.createElement('script'); el.src = KD.games[tag].file; el.onload = ok; el.onerror = () => { delete LOADING[tag]; fail(new Error('could not load ' + KD.games[tag].file)); };
     document.head.appendChild(el);
-  }))).then(() => { for (const tag of TAGS) { decodeGame(tag, window.KPOKER_GAMES[tag]); delete window.KPOKER_GAMES[tag]; } finishSits(); });
+  }))).then(() => { for (const tag of todo) if (!GAME[tag] && window.KPOKER_GAMES[tag]) { decodeGame(tag, window.KPOKER_GAMES[tag]); delete window.KPOKER_GAMES[tag]; } finishSits(); });
 }
+const LOADING = {};
+/* the same line along one axis: every stack depth at one open size, or every open size at one stack depth */
+function series(sit, axis, fixed) { return sit.spots.filter(s => axis === 'depth' ? s.op === fixed : s.dp === fixed).sort((a, b) => axis === 'depth' ? a.dp - b.dp : a.op - b.op); }
+const axisVal = (sp, axis) => axis === 'depth' ? sp.dp : sp.op;
 
 /* ---------- helpers ---------- */
 const $ = (s, el = document) => el.querySelector(s);
@@ -652,6 +670,7 @@ function actLabel(spot, a, short) {
 }
 function actAbbr(spot, a) { const k = spot.A[a].kind; return k === 'F' ? '' : k === 'X' ? 'X' : k === 'C' ? (spot.raises ? 'C' : 'L') : k === 'J' ? 'AI' : 'R'; }
 const kColor = k => `var(--k-${k})`;
+const spotTitle = sp => `${sp.dp}bb${opensAt(sp.dp).length > 1 || sp.op !== DEF_OPEN ? ' · ' + sp.op + 'bb open' : ''} · ${sitLabel(sp)}`;
 function sitLabel(s) {
   const P = POS;
   if (s.fam === 'RFI') return P[s.hero];
@@ -801,7 +820,13 @@ function handDetailHTML(spot, g) {
 }
 
 /* ---------- state ---------- */
-const UI = Object.assign({ tab: 'charts', cFam: 'RFI', cSit: null, cDp: 5, lens: GIDX['KTs'], bDp: 5, bSeq: [] }, load('kpoker-ui') || {});
+const UI = Object.assign({ tab: 'charts', cFam: 'RFI', cSit: null, cAxis: 'depth', lens: GIDX['KTs'], bSeq: [] }, load('kpoker-ui') || {});
+// before 2.5.0 the only axis was the open size, saved as cDp / bDp
+if (UI.v !== 25) { Object.assign(UI, { v: 25, cDpPref: DEF_STACK, cOpPref: DEF_OPEN, cAxis: 'depth', bDp: DEF_STACK, bOp: DEF_OPEN, lOp: DEF_OPEN }); delete UI.cDp; }
+if (!STACKS.includes(UI.cDpPref)) UI.cDpPref = DEF_STACK;
+if (!OPENS.includes(UI.cOpPref)) UI.cOpPref = DEF_OPEN;
+if (!tagAt(UI.bDp, UI.bOp)) { UI.bDp = DEF_STACK; UI.bOp = DEF_OPEN; }
+if (!OPENS.includes(UI.lOp)) UI.lOp = DEF_OPEN;
 if (!['charts', 'build', 'lens', 'method'].includes(UI.tab)) UI.tab = 'charts';
 if (!Array.isArray(UI.bSeq)) UI.bSeq = [];
 const saveUI = () => store('kpoker-ui', UI);
@@ -816,13 +841,22 @@ function setTab(t) {
   UI.tab = t; saveUI();
   for (const b of $$('#tabs button')) b.setAttribute('aria-selected', b.dataset.tab === t);
   for (const v of $$('.view')) v.hidden = v.id !== 'v-' + t;
-  if (t === 'charts') renderCharts();
-  if (t === 'build') renderBuild();
-  if (t === 'lens') renderLens();
-  if (t === 'method') renderMethod();
-  window.scrollTo({ top: 0 }); resetScroll();
+  const draw = () => {
+    if (UI.tab !== t) return;
+    if (t === 'charts') renderCharts();
+    if (t === 'build') renderBuild();
+    if (t === 'lens') renderLens();
+    if (t === 'method') renderMethod();
+    window.scrollTo({ top: 0 }); resetScroll();
+  };
+  loadGames(tabTags(t)).then(draw, loadFailed);
 }
 $('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.tab); });
+/* the games each view needs: Charts the stacks at its open size (or the open sizes at its stack), Spot builder its
+   game, Hand lens every stack at its open size */
+function chartTags() { return UI.cAxis === 'open' ? opensAt(UI.cDpPref).map(op => tagAt(UI.cDpPref, op)) : stacksAt(UI.cOpPref).map(dp => tagAt(dp, UI.cOpPref)).concat(tagAt(UI.cDpPref, UI.cOpPref)); }
+function tabTags(t) { return t === 'charts' ? chartTags() : t === 'build' ? [tagAt(UI.bDp, UI.bOp)] : t === 'lens' ? stacksAt(UI.lOp).map(dp => tagAt(dp, UI.lOp)) : [tagAt(DEF_STACK, DEF_OPEN)]; }
+function loadFailed(err) { document.querySelector('main').innerHTML = `<div class="empty-state">${esc(err.message)}. Make sure the k-poker-*.js files sit next to this page.</div>`; }
 
 /* ---------- CHARTS ---------- */
 const cGrid = new Grid($('#c-grid'), { onCell: g => { cSel = g; renderChartsRail(); renderChartsGrid(false); } });
@@ -835,18 +869,19 @@ function cCurSit() {
 }
 function cCurSpot() {
   const s = cCurSit(); if (!s) return null;
-  if (UI.cDpPref == null) UI.cDpPref = UI.cDp;
-  const want = UI.cDpPref;  // the open size you picked; a line that isn't solved there shows the nearest one
-  let best = s.spots[0]; for (const sp of s.spots) if (Math.abs(sp.dp - want) < Math.abs(best.dp - want)) best = sp;
+  // the stack and open size you picked; a line that isn't solved there shows the nearest one, same open size first
+  const wd = UI.cDpPref, wo = UI.cOpPref;
+  let best = null, bs = Infinity;
+  for (const sp of s.spots) { const d = (sp.op === wo ? 0 : 1000 * (1 + Math.abs(sp.op - wo))) + Math.abs(Math.log(sp.dp / wd)); if (d < bs) { bs = d; best = sp; } }
   return best;
 }
-function ticksHTML(depths, cur, width) {
+function ticksHTML(depths, cur, width, prefer = [10, 20, 50, 100, 200, 500, 5, 3, 4, 6, 7]) {
   const n = depths.length; if (!n) return '';
   const posOf = i => n > 1 ? 1 - i / (n - 1) : 0.5;  // biggest on the left, like the slider
   const minGap = 26 / Math.max(width, 120);
   const chosen = [];
   const tryAdd = i => { if (i < 0 || chosen.includes(i)) return; if (chosen.every(j => Math.abs(posOf(j) - posOf(i)) >= minGap)) chosen.push(i); };
-  [depths[0], depths[n - 1], 5, 3, 4, 6, 7].forEach(d => tryAdd(depths.indexOf(d)));
+  [depths[0], depths[n - 1], ...prefer].forEach(d => tryAdd(depths.indexOf(d)));
   depths.forEach((d, i) => tryAdd(i));
   return chosen.sort((a, b) => a - b).map(i => `<span style="left:${(posOf(i) * 100).toFixed(2)}%" class="${depths[i] === cur ? 'on' : ''}">${depths[i]}</span>`).join('');
 }
@@ -944,51 +979,62 @@ function renderLines(sit) {
   const peers = cSits().filter(s => s.hero === sit.hero && s.vs === sit.vs).sort((a, b) => b.w - a.w);
   if (peers.length < 2) { $('#c-lines').innerHTML = ''; return; }
   let shown = peers.slice(0, LINE_MAX); if (!shown.includes(sit)) shown = [...shown, sit];
-  const want = cCurSpot().dp, at = s => s.spots.find(x => x.dp === want) || s.spots.reduce((b, x) => x.bp > b.bp ? x : b);
+  const cur = cCurSpot(), at = s => s.spots.find(x => x.dp === cur.dp && x.op === cur.op) || s.spots.reduce((b, x) => x.bp > b.bp ? x : b);
   $('#c-lines').innerHTML = shown.map(s => { const sp = at(s); return `<button role="option" data-s="${esc(s.key)}" aria-pressed="${s === sit}"><span>${esc(lineShort(sp))}</span><span>${often(sp.bp)}</span></button>`; }).join('') + (peers.length > LINE_MAX ? `<div class="more">${peers.length - LINE_MAX} rarer lines not listed. Find them in Spot builder.</div>` : '');
   const on = $('#c-lines [aria-pressed="true"]'), box = $('#c-lines');
   if (on && (on.offsetTop < box.scrollTop || on.offsetTop + on.offsetHeight > box.scrollTop + box.clientHeight)) box.scrollTop = on.offsetTop - box.clientHeight / 2;
 }
+function cSer(sp = cCurSpot()) { return series(sp.sit, UI.cAxis, UI.cAxis === 'depth' ? sp.op : sp.dp); }
 function renderCharts() {
   const fams = FAM_ORDER.filter(f => sitsWhere(s => s.fam === f).length);
   if (!fams.length) { $('#v-charts').innerHTML = '<div class="empty-state">No range data loaded.</div>'; return; }
   if (!fams.includes(UI.cFam)) UI.cFam = fams[0];
   $('#c-fam').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${f === UI.cFam}" title="${FAM[f].label}">${FAM[f].chip}</button>`).join('');
-  const sits = cSits(), sit = cCurSit();
-  const shownD = cCurSpot().dp;  // seats not solved at the open size on screen are dimmed
-  $('#c-sit').innerHTML = seatRowsHTML(sits, sit, POS, s => s.depths.includes(shownD));
+  const sits = cSits(), sit = cCurSit(), sp = cCurSpot();
+  // seats not solved at the stack and open size on screen are dimmed
+  $('#c-sit').innerHTML = seatRowsHTML(sits, sit, POS, s => s.spots.some(x => x.dp === sp.dp && x.op === sp.op));
   renderLines(sit);
-  const sp = cCurSpot(); UI.cDp = sp.dp;
-  const sl = $('#c-slider'); sl.max = sit.depths.length - 1; sl.value = sp.idx;
-  $('#c-ticks').innerHTML = ticksHTML(sit.depths, sp.dp, $('#c-ticks').clientWidth || 300);
+  renderClock(sp);
   renderChartsGrid(false);
   renderFilm();
   renderChartsRail();
   saveUI();
 }
+/* two sliders like the cash trainer's: stack depth, and the open size where more than one is solved at that depth */
+function renderClock(sp) {
+  const dps = series(sp.sit, 'depth', sp.op).map(s => s.dp), ops = opensAt(sp.dp);
+  $('#c-dp').textContent = sp.dp; $('#c-op').textContent = sp.op;
+  const sd = $('#c-slider'), so = $('#c-op-sl');
+  sd.max = Math.max(0, dps.length - 1); sd.value = dps.indexOf(sp.dp); sd.disabled = dps.length < 2;
+  so.max = Math.max(0, ops.length - 1); so.value = ops.indexOf(sp.op); so.disabled = ops.length < 2;
+  $('#c-ticks').innerHTML = ticksHTML(dps, sp.dp, $('#c-ticks').clientWidth || 300);
+  $('#c-op-ticks').innerHTML = ticksHTML(ops, sp.op, $('#c-op-ticks').clientWidth || 300);
+  $$('#v-charts .drow').forEach(r => r.classList.toggle('on', r.dataset.axis === UI.cAxis));
+  $('#c-film-lab').textContent = UI.cAxis === 'depth' ? 'Every stack depth for this spot' : `Every open size for this spot at ${sp.dp}bb`;
+  cDps = dps; cOps = ops;
+}
+let cDps = [], cOps = [];
 function renderChartsGrid(animate) {
   const sp = cCurSpot();
-  $('#c-dp').textContent = sp.dp;
   $('#c-scn').innerHTML = narrate(sp);
   const kinds = [...new Set(sp.order.map(a => sp.A[a].kind))];
   $('#c-legend').innerHTML = legendHTML(kinds, sp);
   cGrid.show(sp, { animate, marks: g => (g === cSel ? 'sel' : '') });
 }
 function renderFilm() {
-  const sit = cCurSit(), sp = cCurSpot();
-  const el = $('#c-film');
-  const spots = [...sit.spots].reverse();  // biggest first, like the slider
-  el.innerHTML = spots.map(s => `<figure data-dp="${s.dp}" class="${s === sp ? 'on' : ''}"><canvas></canvas><figcaption>${s.dp}</figcaption></figure>`).join('');
+  const sp = cCurSpot(), el = $('#c-film');
+  const spots = [...cSer(sp)].reverse();  // biggest first, like the slider
+  el.innerHTML = spots.map(s => `<figure data-v="${axisVal(s, UI.cAxis)}" class="${s === sp ? 'on' : ''}"><canvas></canvas><figcaption>${axisVal(s, UI.cAxis)}</figcaption></figure>`).join('');
   $$('canvas', el).forEach((cv, i) => drawMini(cv, spots[i], 4));
   filmFollow();
 }
-function mixChartSVG(sit, cur) {
+function mixChartSVG(ser, cur) {
   const W = 300, H = 96, pad = { l: 26, r: 6, t: 6, b: 16 };
-  const n = sit.spots.length; if (n < 2) return '';
+  const n = ser.length; if (n < 2) return '';
   const xs = i => pad.l + (W - pad.l - pad.r) * (1 - i / (n - 1));  // biggest on the left, like the slider
   const ys = v => pad.t + (H - pad.t - pad.b) * (1 - v);
   const kinds = ['J', 'B', 'R', 'C', 'X'];
-  const mixes = sit.spots.map(sp => { const m = mixOf(sp); const o = {}; kinds.forEach(k => o[k] = 0); sp.A.forEach((a, i) => { if (a.kind !== 'F') o[a.kind] += m[i]; }); return o; });
+  const mixes = ser.map(sp => { const m = mixOf(sp); const o = {}; kinds.forEach(k => o[k] = 0); sp.A.forEach((a, i) => { if (a.kind !== 'F') o[a.kind] += m[i]; }); return o; });
   let base = new Array(n).fill(0); const paths = [];
   for (const k of kinds) {
     if (!mixes.some(m => m[k] > 0.004)) continue;
@@ -997,51 +1043,62 @@ function mixChartSVG(sit, cur) {
     paths.push(`<path d="${d}" fill="${kColor(k)}" opacity=".92"/>`);
     base = top;
   }
-  const ci = sit.spots.indexOf(cur);
+  const ci = ser.indexOf(cur), ax = UI.cAxis, unit = ax === 'depth' ? 'bb' : 'bb open';
   const grid = [0.25, 0.5].map(v => `<line x1="${pad.l}" x2="${W - pad.r}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--line)" stroke-dasharray="2 3"/><text x="${pad.l - 4}" y="${ys(v) + 3}" text-anchor="end" font-size="9" fill="var(--faint)" font-family="var(--f-mono)">${v * 100}%</text>`).join('');
-  const lab = sit.spots.map((sp, i) => `<text x="${xs(i)}" y="${H - 3}" text-anchor="middle" font-size="9" fill="${i === ci ? 'var(--fg)' : 'var(--faint)'}" font-family="var(--f-mono)">${sp.dp}</text>`).join('');
-  const hit = sit.spots.map((sp, i) => `<rect x="${xs(i) - (W / n) / 2}" y="0" width="${W / n}" height="${H}" fill="transparent" data-dp="${sp.dp}" style="cursor:pointer"><title>${sp.dp}bb open</title></rect>`).join('');
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Share of hands played by action at each open size" style="display:block;margin-top:12px">${grid}${paths.join('')}<line x1="${xs(ci)}" x2="${xs(ci)}" y1="${pad.t - 2}" y2="${H - pad.b}" stroke="var(--fg)" stroke-width="1.5"/>${lab}${hit}</svg><p class="small muted" style="margin:4px 0 0">Share of hands played, by action, at every open size. Tap to jump.</p>`;
+  const show = (sp, i) => ax === 'open' || [10, 20, 50, 100, 200, 500].includes(sp.dp) || i === 0 || i === n - 1;
+  const lab = ser.map((sp, i) => show(sp, i) ? `<text x="${xs(i)}" y="${H - 3}" text-anchor="middle" font-size="9" fill="${i === ci ? 'var(--fg)' : 'var(--faint)'}" font-family="var(--f-mono)">${axisVal(sp, ax)}</text>` : '').join('');
+  const hit = ser.map((sp, i) => `<rect x="${xs(i) - (W / n) / 2}" y="0" width="${W / n}" height="${H}" fill="transparent" data-v="${axisVal(sp, ax)}" style="cursor:pointer"><title>${axisVal(sp, ax)}${unit}</title></rect>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Share of hands played by action at each ${ax === 'depth' ? 'stack depth' : 'open size'}" style="display:block;margin-top:12px">${grid}${paths.join('')}<line x1="${xs(ci)}" x2="${xs(ci)}" y1="${pad.t - 2}" y2="${H - pad.b}" stroke="var(--fg)" stroke-width="1.5"/>${lab}${hit}</svg><p class="small muted" style="margin:4px 0 0">Share of hands played, by action, at every ${ax === 'depth' ? 'stack' : 'open size'}. Tap to jump.</p>`;
 }
 function renderChartsRail() {
   const sp = cCurSpot();
   const parts = [];
-  parts.push(`<div class="panel"><h3>${sp.dp}bb open · ${esc(sitLabel(sp))}</h3>${stableMixHTML(sp, sp.sit.spots)}<p class="small muted" style="margin:8px 0 0">Pot ${num(sp.pot)}bb · this line comes up in ${often(sp.bp)} of hands.</p>${sp.est ? EST_NOTE : ''}${mixChartSVG(sp.sit, sp)}${rankChartSVG(sp, sp.sit.spots)}</div>`);
+  const ser = cSer(sp);
+  parts.push(`<div class="panel"><h3>${esc(spotTitle(sp))}</h3>${stableMixHTML(sp, ser)}<p class="small muted" style="margin:8px 0 0">Pot ${num(sp.pot)}bb · this line comes up in ${often(sp.bp)} of hands.</p>${sp.est ? EST_NOTE : ''}${mixChartSVG(ser, sp)}${rankChartSVG(sp, ser)}</div>`);
   parts.push(`<div class="panel" id="c-hand"><h3>Hand</h3>${handDetailHTML(sp, cSel)}</div>`);
   parts.push(`<div class="panel"><h3>Edges</h3><p class="small muted" style="margin:-4px 0 10px">Each ladder from strongest to weakest, and where it stops.</p>${edgesHTML(sp)}</div>`);
   $('#c-rail').innerHTML = parts.join('');
 }
 $('#c-rail').addEventListener('click', e => {
   const b = e.target.closest('[data-lens]'); if (b) { UI.lens = +b.dataset.lens; setTab('lens'); return; }
-  const r = e.target.closest('rect[data-dp]'); if (r) { const sit = cCurSit(); setDepthIdx(sit.depths.indexOf(+r.dataset.dp)); }
+  const r = e.target.closest('rect[data-v]'); if (r) setAxisVal(UI.cAxis, +r.dataset.v);
 });
 $('#c-fam').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cFam = b.dataset.f; UI.cSit = null; renderCharts(); });
 $('#c-lines').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (!b) return; UI.cSit = b.dataset.s; renderCharts(); });
 scrubSeats($('#c-sit'), (k, v) => { const s = pickSeat(cSits(), cCurSit(), k, v); if (!s || s.key === UI.cSit) return; UI.cSit = s.key; renderCharts(); });
+/* moving either slider makes it the axis the thumbnails and the chart in the rail follow; the games it needs load first */
+function setAxisVal(axis, v, animate = true) {
+  const switched = UI.cAxis !== axis; UI.cAxis = axis;
+  if (axis === 'depth') UI.cDpPref = v; else UI.cOpPref = v;
+  const before = cCurSpot();
+  loadGames(chartTags()).then(() => {
+    const sp = cCurSpot();
+    if (switched || sp.op !== before.op || !$('#c-film figure.on')) { renderCharts(); return; }
+    renderClock(sp); renderChartsGrid(animate); renderChartsRail(); renderLines(sp.sit);
+    $$('#c-film figure').forEach(f => f.classList.toggle('on', +f.dataset.v === axisVal(sp, UI.cAxis)));
+    filmFollow(); saveUI();
+  }, loadFailed);
+}
+$$('#v-charts .drow').forEach(r => r.addEventListener('pointerdown', () => { if (UI.cAxis !== r.dataset.axis) { const sp = cCurSpot(); setAxisVal(r.dataset.axis, axisVal(sp, r.dataset.axis)); } }));
 function setDepthIdx(i, animate = true) {
-  const sit = cCurSit(); i = Math.max(0, Math.min(sit.depths.length - 1, i));
-  if (sit.depths[i] === UI.cDp) return false;
-  UI.cDp = UI.cDpPref = sit.depths[i]; saveUI();
-  $('#c-slider').value = i;
-  $$('#c-ticks span').forEach(s => s.classList.toggle('on', +s.textContent === UI.cDp));
-  renderChartsGrid(animate); renderChartsRail(); renderLines(sit);
-  $$('#c-film figure').forEach(f => f.classList.toggle('on', +f.dataset.dp === UI.cDp));
-  filmFollow();
+  const vals = UI.cAxis === 'depth' ? cDps : cOps; i = Math.max(0, Math.min(vals.length - 1, i));
+  setAxisVal(UI.cAxis, vals[i], animate);
   return true;
 }
-$('#c-slider').addEventListener('input', e => setDepthIdx(+e.target.value));
-$('#c-film').addEventListener('click', e => { const f = e.target.closest('figure'); if (!f) return; const sit = cCurSit(); setDepthIdx(sit.depths.indexOf(+f.dataset.dp)); });
+$('#c-slider').addEventListener('input', e => setAxisVal('depth', cDps[+e.target.value]));
+$('#c-op-sl').addEventListener('input', e => setAxisVal('open', cOps[+e.target.value]));
+$('#c-film').addEventListener('click', e => { const f = e.target.closest('figure'); if (f) setAxisVal(UI.cAxis, +f.dataset.v); });
 document.addEventListener('keydown', e => {
   if (e.target && e.target.closest && e.target.closest('input,textarea')) return;
-  if (UI.tab === 'charts' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); setDepthIdx(cCurSpot().idx + (e.key === 'ArrowLeft' ? 1 : -1)); }
+  if (UI.tab === 'charts' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); const vals = UI.cAxis === 'depth' ? cDps : cOps; setDepthIdx(vals.indexOf(axisVal(cCurSpot(), UI.cAxis)) + (e.key === 'ArrowLeft' ? 1 : -1)); }
 });
-function openInCharts(spot, g) { UI.cFam = spot.fam; UI.cSit = spot.sitKey; UI.cDp = UI.cDpPref = spot.dp; cSel = g; setTab('charts'); }
+function openInCharts(spot, g) { UI.cFam = spot.fam; UI.cSit = spot.sitKey; UI.cDpPref = spot.dp; UI.cOpPref = spot.op; UI.cAxis = 'depth'; cSel = g; setTab('charts'); }
 
 /* ---------- SPOT BUILDER ---------- */
 /* The chosen line is kept as a list of action kinds, so sliding the open size follows the same line in each solve */
 const TBL = { cx: 16.65, cy: 13.2, rx: 13.6, ry: 11.4, potY: 11.0 };
 let bSel = null, bPrev = null, bMsg = '';
-const bGame = () => GAME[TAGS.find(t => GAME[t].dp === UI.bDp)];
+const bGame = () => GAME[tagAt(UI.bDp, UI.bOp)];
 /* betting state after a line: what each seat has in, what it did, and who acts next (null once the betting is closed) */
 function tableState(G, line) {
   const n = G.n, posts = G.cfg.posts, bet = posts.slice(), st = Array(n).fill(null), word = Array(n).fill('');
@@ -1103,10 +1160,10 @@ function bTableHTML(S) {
   return `<div class="tblw"><div class="tbl"><div class="felt"></div>${out}</div></div>`;
 }
 function renderBuild() {
-  if (!OPENS.includes(UI.bDp)) UI.bDp = OPENS.includes(5) ? 5 : OPENS[OPENS.length - 1];
-  $('#b-game').innerHTML = `<button aria-pressed="true">K Poker · 7-handed</button>`;
-  const sl = $('#b-slider'); sl.max = OPENS.length - 1; sl.value = OPENS.indexOf(UI.bDp);
-  $('#b-ticks').innerHTML = ticksHTML(OPENS, UI.bDp, $('#b-ticks').clientWidth || 300);
+  const ops = opensAt(UI.bDp), dps = stacksAt(UI.bOp);
+  $('#b-open').innerHTML = ops.map(o => `<button data-o="${o}" aria-pressed="${o === UI.bOp}">${o}bb</button>`).join('');
+  const sl = $('#b-slider'); sl.max = dps.length - 1; sl.value = dps.indexOf(UI.bDp);
+  $('#b-ticks').innerHTML = ticksHTML(dps, UI.bDp, $('#b-ticks').clientWidth || 300);
   renderBuildSpot();
 }
 function renderBuildSpot() {
@@ -1118,7 +1175,7 @@ function renderBuildSpot() {
   $('#b-who').innerHTML = S.actor == null ? 'Everyone has acted.' : `<b>${POS[S.actor]}</b> to act${opts.length ? '' : '. No later spots are stored from here.'}`;
   $('#b-acts').innerHTML = opts.map(a => `<button data-k="${a.kind}" class="${bPrev && bPrev.seat === S.actor && bPrev.k === a.kind ? 'prev' : ''}" style="background:${kColor(a.kind)}">${actLabel(sp, a.i)}</button>`).join('');
   const notes = [];
-  if (S.cut) notes.push(`At ${S.dp}bb opens the rest of that line isn't in the solutions.`);
+  if (S.cut) notes.push(`At ${S.dp}bb the rest of that line isn't in the solutions.`);
   if (bMsg) notes.push(bMsg);
   $('#b-note').textContent = notes.join(' ');
   bMsg = '';
@@ -1128,7 +1185,7 @@ function renderBuildSpot() {
   if (sp) {
     bGrid.show(sp, { marks: g => (g === bSel ? 'sel' : '') });
     $('#b-legend').innerHTML = legendHTML([...new Set(sp.order.map(a => sp.A[a].kind))], sp);
-    $('#b-info').innerHTML = `<div class="panel"><h3>${sp.dp}bb open · ${esc(sitLabel(sp))}</h3>${stableMixHTML(sp, sp.sit.spots)}${sp.est ? EST_NOTE : ''}<div style="margin-top:12px"><button class="btn ghost small" id="b-open">Open in Charts →</button></div></div><div class="panel"><h3>Hand</h3>${handDetailHTML(sp, bSel)}</div>`;
+    $('#b-info').innerHTML = `<div class="panel"><h3>${esc(spotTitle(sp))}</h3>${stableMixHTML(sp, series(sp.sit, 'depth', sp.op))}${sp.est ? EST_NOTE : ''}<div style="margin-top:12px"><button class="btn ghost small" id="b-open">Open in Charts →</button></div></div><div class="panel"><h3>Hand</h3>${handDetailHTML(sp, bSel)}</div>`;
   } else {
     $('#b-empty').textContent = S.actor == null ? 'The betting is closed. Tap a seat to change what happened.' : `No stored ranges for ${POS[S.actor]} here: the solver almost never gets here. Tap a seat to change what happened.`;
     $('#b-info').innerHTML = '';
@@ -1153,7 +1210,10 @@ function bTapSeat(s) {
   bMsg = `${POS[s]} doesn't get to act from here.`; renderBuildSpot();
 }
 const bGrid = new Grid($('#b-grid'), { onCell: g => { bSel = g; renderBuildSpot(); } });
-$('#b-slider').addEventListener('input', e => { UI.bDp = OPENS[+e.target.value]; renderBuildSpot(); });
+/* the stack slider runs over the depths solved at this open size; the open-size chips over those solved at this depth */
+function bGo() { loadGames([tagAt(UI.bDp, UI.bOp)]).then(renderBuild, loadFailed); }
+$('#b-slider').addEventListener('input', e => { UI.bDp = stacksAt(UI.bOp)[+e.target.value]; bGo(); });
+$('#b-open').addEventListener('click', e => { const b = e.target.closest('[data-o]'); if (!b) return; UI.bOp = +b.dataset.o; bGo(); });
 $('#b-table').addEventListener('click', e => { const b = e.target.closest('[data-seat]'); if (b) bTapSeat(+b.dataset.seat); });
 $('#b-acts').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; const S = bState(); UI.bSeq = [...S.seq.slice(0, S.path.length), { k: b.dataset.k }]; bPrev = null; renderBuildSpot(); });
 $('#b-back').addEventListener('click', () => {
@@ -1180,14 +1240,14 @@ function cardsHTML(g, combo) {
 function defaultCombo(n) { if (n.length === 2) return [[n[0], 's'], [n[1], 'h']]; return n[2] === 's' ? [[n[0], 'h'], [n[1], 'h']] : [[n[0], 's'], [n[1], 'd']]; }
 /* rows are seat matchups (with a heading per seat you're in when there are several), squares are open sizes */
 function lensMatrix(title, fam, g, note) {
-  const opens = [...TAGS].reverse();  // biggest first, like the sliders
+  const opens = stacksAt(UI.lOp).reverse().map(dp => tagAt(dp, UI.lOp)).filter(t => GAME[t]);  // deepest first, like the sliders
   const keys = new Map();
-  for (const t of TAGS) for (const [k, sp] of GAME[t].cell) if (sp.fam === fam && !keys.has(k)) keys.set(k, { hero: sp.hero, lvs: sp.lvs });
+  for (const t of opens) for (const [k, sp] of GAME[t].cell) if (sp.fam === fam && !keys.has(k)) keys.set(k, { hero: sp.hero, lvs: sp.lvs });
   const rows = [...keys.entries()].sort((a, b) => a[1].hero - b[1].hero || a[1].lvs - b[1].lvs);
   if (!rows.length) return '';
-  const keyD = new Set([5]);
-  const head = `<div class="mx-row hd"><div class="mx-lab"></div><div class="mx-strip" style="--cols:${opens.length}">${opens.map(t => `<span class="d ${keyD.has(+t) ? 'k' : ''}">${t}</span>`).join('')}</div></div>`;
-  const lines = `<div class="mx-lines" style="--cols:${opens.length}" aria-hidden="true">${opens.map(t => `<i class="${keyD.has(+t) ? 'on' : ''}"></i>`).join('')}</div>`;
+  const keyD = new Set([20, 50, 100, 200]), dv = t => GAME[t].dp;
+  const head = `<div class="mx-row hd"><div class="mx-lab"></div><div class="mx-strip" style="--cols:${opens.length}">${opens.map(t => `<span class="d ${keyD.has(dv(t)) ? 'k' : ''}">${dv(t)}</span>`).join('')}</div></div>`;
+  const lines = `<div class="mx-lines" style="--cols:${opens.length}" aria-hidden="true">${opens.map(t => `<i class="${keyD.has(dv(t)) ? 'on' : ''}"></i>`).join('')}</div>`;
   const group = fam !== 'RFI' && new Set(rows.map(r => r[1].hero)).size > 1;  // one heading per seat you're in
   const rowLab = (sp, v) => fam === 'RFI' ? POS[v.hero] : fam === 'vsLimp' ? `vs ${v.lvs} limp${v.lvs > 1 ? 's' : ''}` : 'vs ' + POS[v.lvs];
   const html = rows.map(([k, v], i) => {
@@ -1195,7 +1255,7 @@ function lensMatrix(title, fam, g, note) {
     const cells = opens.map(t => {
       const sp = GAME[t].cell.get(k);
       if (!sp) return '<i class="c none"></i>';
-      const tip = `${t}bb open: ${narrate(sp).replace(/<[^>]+>/g, '')}`;
+      const tip = `${dv(t)}bb: ${narrate(sp).replace(/<[^>]+>/g, '')}`;
       if (!inRange(sp, g)) return `<i class="c na${sp.est ? ' est' : ''}" data-k="${t}|${sp.key}" title="${esc(tip)} Not in your range."></i>`;
       return `<i class="c${sp.est ? ' est' : ''}" data-k="${t}|${sp.key}" title="${esc(tip + ' ' + sp.order.map(a => actLabel(sp, a, true) + ' ' + pct(sp.f[a][g])).join(', '))}" style="background:${cellBg(sp, g)}"></i>`;
     }).join('');
@@ -1208,6 +1268,7 @@ function renderLens() {
   $('#l-input').value = GRID[g];
   $('#l-cards').innerHTML = cardsHTML(g);
   $('#l-top').innerHTML = handTopHTML(g);
+  $('#l-open').innerHTML = OPENS.map(o => `<button data-o="${o}" aria-pressed="${o === UI.lOp}" title="${o}bb opens: ${stacksAt(o).length} stack depth${stacksAt(o).length > 1 ? 's' : ''}">${o}</button>`).join('');
   lGrid.show(null, { bg: g2 => g2 === g ? 'var(--accent)' : (COMBOS[g2] === 6 ? 'var(--k-F)' : COMBOS[g2] === 4 ? 'color-mix(in srgb, var(--k-F) 70%, var(--empty))' : 'color-mix(in srgb, var(--k-F) 45%, var(--empty))') });
   $('#l-legend').innerHTML = legendHTML(['J', 'R', 'C', 'X', 'F']) + '<span><i class="sw" style="background:repeating-linear-gradient(45deg,var(--empty) 0 2px,transparent 2px 4px)"></i>Folded earlier</span><span><i class="sw est"></i>Multiway: an estimate</span>';
   const blocks = [
@@ -1230,24 +1291,25 @@ $('#l-input').addEventListener('change', e => {
   if (v.length === 3 && GIDX[v] == null) { const sw = v[1] + v[0] + v[2]; if (GIDX[sw] != null) v = sw; }
   if (GIDX[v] != null) { UI.lens = GIDX[v]; saveUI(); renderLens(); } else e.target.value = GRID[UI.lens];
 });
+$('#l-open').addEventListener('click', e => { const b = e.target.closest('[data-o]'); if (!b) return; UI.lOp = +b.dataset.o; saveUI(); loadGames(tabTags('lens')).then(renderLens, loadFailed); });
 $('#l-blocks').addEventListener('click', e => { const c = e.target.closest('[data-k]'); if (!c) return; const [t, key] = c.dataset.k.split('|'); const sp = GAME[t].byKey.get(key); if (sp) openInCharts(sp, UI.lens); });
 
 /* ---------- METHOD ---------- */
 function renderMethod() {
-  const G = GAME[TAGS.find(t => GAME[t].dp === 5) || TAGS[0]], c = G.cfg;
+  const G = GAME[tagAt(DEF_STACK, DEF_OPEN)], c = G.cfg;
   const rows = [
     ['Table', `${G.n}-handed: ${POS.join(', ')}`],
-    ['Stacks', `${c.stack}bb each`],
+    ['Stacks', `${STACKS.join(', ')}bb, everyone the same`],
     ['Blinds', `SB ${c.posts[POS.indexOf('SB')]}bb, BB ${c.posts[POS.indexOf('BB')]}bb and a ${c.ante}bb ante from every seat: ${num(c.ante * G.n + c.posts.reduce((a, b) => a + b, 0))}bb in the pot before anyone acts`],
-    ['Opens', `${OPENS.join(', ')}bb (one solve each), plus ${c.limper_extra}bb for each limper`],
+    ['Opens', `${DEF_OPEN}bb at every stack, and ${OPENS.join(', ')}bb at ${DEF_STACK}bb (one solve each); plus ${c.limper_extra}bb for each limper`],
     ['3-bets', `${(c.raise_mults || []).join(', ')}x, plus one more raise size for each caller`],
     ['4-bets', `${(c.fourbet_mults || []).join(', ')}x; at most ${c.max_raises} raises, all-in always allowed`],
     ['All-in', `Once a raise would commit more than ${Math.round(c.allin_threshold * 100)}% of the stack, the raise is all-in`],
     ['Rake', `${c.rake_pct}%, capped at ${c.rake_cap}bb${c.no_flop_no_drop ? ', no flop no drop' : ''}`],
   ];
   $('#m-cfg').innerHTML = rows.map(([a, b]) => `<tr><th>${a}</th><td>${esc(b)}</td></tr>`).join('');
-  const total = TAGS.reduce((t, x) => t + GAME[x].spots.length, 0);
-  $('#m-about').textContent = `${total.toLocaleString()} decision spots across ${TAGS.length} open sizes: from each seat's first-in spot, every line the solver plays at least once in 10,000 times. These are equilibrium ranges, frequencies only. A table that limps or calls far more than this is worth adjusting against, but learn the baseline first.`;
+  const total = TAGS.reduce((t, x) => t + KD.games[x].spots, 0);
+  $('#m-about').textContent = `${total.toLocaleString()} decision spots in ${TAGS.length} solves: from each seat's first-in spot, every line the solver plays at least once in 10,000 times. These are equilibrium ranges, frequencies only. A table that limps or calls far more than this is worth adjusting against, but learn the baseline first.`;
 }
 
 /* ---------- boot ---------- */
@@ -1261,5 +1323,5 @@ new MutationObserver(recolor).observe(document.documentElement, { attributes: tr
 let resizeT = null;
 window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (!SITS.size) return; if (UI.tab === 'charts') renderCharts(); else if (UI.tab === 'build') renderBuild(); }, 200); });
 if (!TAGS.length) document.querySelector('main').innerHTML = '<div class="empty-state">Range data didn’t load. Make sure k-poker-data.js sits next to this page.</div>';
-else loadGames().then(() => setTab(UI.tab), err => { document.querySelector('main').innerHTML = `<div class="empty-state">${esc(err.message)}. Make sure the k-poker-*.js files sit next to this page.</div>`; });
+else setTab(UI.tab);
 </script>
