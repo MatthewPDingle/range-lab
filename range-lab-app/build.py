@@ -1,6 +1,6 @@
 """Build the Range Lab Android app (RangeLab.apk) without Gradle.
 
-Steps: assemble the web assets from the three trainer pages, compile resources with aapt2,
+Steps: assemble the web assets from the trainer pages, compile resources with aapt2,
 compile the activity with javac, dex it with d8, then zipalign and sign with apksigner.
 
 Usage:  python build.py
@@ -78,9 +78,14 @@ def build_assets():
         ("<title>Sit & Go Range Lab</title>", "<title>Sit & Go · Range Lab</title>"),
         ("<b>Sit & Go Range Lab</b><span>Heads-up and Spin &amp; Go preflop, 1–72bb</span>", "<b>Sit & Go</b><span>Heads-up and Spins</span>"),
     ]), encoding="utf-8")
+    (www / "kpoker.html").write_text(app_page(SOURCES / "kpoker-range-lab.html", [
+        ("<title>K Poker Range Lab</title>", "<title>K Poker · Range Lab</title>"),
+        ("<b>K Poker Range Lab</b><span>7-handed preflop, 100bb, an ante from every seat</span>", "<b>K Poker</b><span>7-handed, 100bb</span>"),
+    ]), encoding="utf-8")
     shutil.copy(SOURCES / "data.js", www / "data.js")
     shutil.copy(SOURCES / "cash-data.js", www / "cash-data.js")
     shutil.copy(SOURCES / "sng-data.js", www / "sng-data.js")
+    shutil.copy(SOURCES / "k-poker-data.js", www / "k-poker-data.js")
 
 
 def build_apk():
