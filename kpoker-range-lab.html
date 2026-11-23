@@ -383,6 +383,10 @@ html.app .ctl .frow .seg button{min-height:30px}
 .mx-strip .c.est::after{content:"";position:absolute;right:0;top:0;border-style:solid;border-width:0 5px 5px 0;border-color:transparent rgba(255,255,255,.85) transparent transparent}
 .mx-strip .c.na.est::after{border-right-color:var(--muted)}
 .mx-strip .c[data-k]{cursor:pointer}
+/* Hand lens: with 9 open sizes (the other trainers show 30+ stack depths) full-width columns would stretch each
+   square into a wide block, so the columns keep a fixed width and the strip stays as compact as theirs */
+#v-lens .mx-strip,#v-lens .mx-lines,html.app #v-lens .mx-strip,html.app #v-lens .mx-lines{grid-template-columns:repeat(var(--cols),24px)}
+#v-lens .mx-lines{right:auto}
 .sw.est{background:linear-gradient(225deg,var(--muted) 0 35%,var(--empty) 35%)}
 .estnote{font-size:12.5px;color:var(--muted);margin:10px 0 0;padding:6px 10px;border-radius:8px;background:var(--surface-2)}
 .estnote b{color:var(--fg)}

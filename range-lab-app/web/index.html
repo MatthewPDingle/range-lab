@@ -27,20 +27,19 @@ header h1{margin:0;font:800 44px/0.95 var(--f-display);text-transform:uppercase;
 header p{margin:6px 0 0;color:var(--muted)}
 .doors{flex:1 1 0;min-height:0;display:grid;grid-auto-flow:column;grid-auto-columns:100%;grid-template-rows:minmax(0,1fr);gap:16px;padding-block:12px 10px;margin-inline:20px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none}
 .doors::-webkit-scrollbar{display:none}
-@media (min-width:600px){ .doors{grid-auto-columns:calc((100% - 20px) / 2);gap:20px;padding-block:10px 8px} a.door h2{font-size:34px} }
+@media (min-width:600px){ .doors{grid-auto-columns:calc((100% - 20px) / 2);gap:20px;padding-block:10px 8px} }
 a.door{scroll-snap-align:start;min-height:0;display:flex;flex-direction:column;gap:12px;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;position:relative;overflow:hidden}
 a.door:active{transform:scale(.99)}
-a.door .eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
 a.door h2{margin:0;font:800 40px/0.95 var(--f-display);text-transform:uppercase}
 a.door p{margin:0;color:var(--muted);max-width:42ch}
 a.door .foot{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 a.door .stats{display:flex;flex-direction:column;gap:2px;font-size:13px;min-width:0}
 a.door .stats b{font-variant-numeric:tabular-nums}
 a.door .go{flex:none;padding:10px 18px;border-radius:999px;font-weight:700;color:var(--go-fg)}
-.mtt .eyebrow{color:var(--mtt)} .mtt .go{background:var(--mtt)}
-.cash .eyebrow{color:var(--cash)} .cash .go{background:var(--cash)}
-.sng .eyebrow{color:var(--sng)} .sng .go{background:var(--sng)}
-.kp .eyebrow{color:var(--kp)} .kp .go{background:var(--kp)}
+.mtt h2{color:var(--mtt)} .mtt .go{background:var(--mtt)}
+.cash h2{color:var(--cash)} .cash .go{background:var(--cash)}
+.sng h2{color:var(--sng)} .sng .go{background:var(--sng)}
+.kp h2{color:var(--kp)} .kp .go{background:var(--kp)}
 svg.motif{display:none}
 .chart-box{display:flex;flex:1 1 0;min-height:0;container-type:size}
 .chart{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:2px;width:min(100cqw,100cqh,420px);margin:auto auto 0}  /* bottom-aligned so the three line up */
@@ -62,32 +61,28 @@ footer .ver{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 <main class="doors">
   <a class="door mtt" href="tournament.html">
     <svg class="motif" viewBox="0 0 44 44" aria-hidden="true" id="m1"></svg>
-    <span class="eyebrow">Tournament</span>
-    <h2>Short stacks<br>to 100bb</h2>
+    <h2>Tournament</h2>
     <p>9-handed with a big-blind ante, 5–100bb. Opens, shoves, 3-bets and 4-bets, multiway pots, and ICM from half the field left to the final table.</p>
     <div class="chart-box" aria-hidden="true"><div class="chart" id="c1"></div></div>
     <div class="foot"><div class="stats" id="s-mtt"></div><span class="go">Open</span></div>
   </a>
   <a class="door cash" href="cash.html">
     <svg class="motif" viewBox="0 0 44 44" aria-hidden="true" id="m2"></svg>
-    <span class="eyebrow">Live cash</span>
-    <h2>Regular and<br>straddle games</h2>
+    <h2>Live Cash</h2>
     <p>8-handed with live rake: 100–300bb with opens up to 7x, and straddle games to 1,600bb. 3-bet and 4-bet pots, squeezes, and how a straddle changes things.</p>
     <div class="chart-box" aria-hidden="true"><div class="chart" id="c2"></div></div>
     <div class="foot"><div class="stats" id="s-cash"></div><span class="go">Open</span></div>
   </a>
   <a class="door sng" href="sng.html">
     <svg class="motif" viewBox="0 0 44 44" aria-hidden="true" id="m3"></svg>
-    <span class="eyebrow">Sit &amp; Go</span>
-    <h2>Heads-up<br>and Spins</h2>
+    <h2>Heads-Up &amp; Spins</h2>
     <p>MTT heads-up, heads-up sit &amp; go and 3-handed Spin &amp; Go, 1–72bb. Limp, raise and shove lines, 3-bet pots and push/fold.</p>
     <div class="chart-box" aria-hidden="true"><div class="chart" id="c3"></div></div>
     <div class="foot"><div class="stats" id="s-sng"></div><span class="go">Open</span></div>
   </a>
   <a class="door kp" href="kpoker.html">
     <svg class="motif" viewBox="0 0 44 44" aria-hidden="true" id="m4"></svg>
-    <span class="eyebrow">K Poker</span>
-    <h2>Limps, opens<br>and antes</h2>
+    <h2>K Poker</h2>
     <p>7-handed at 100bb with an ante from every seat and a 1bb small blind. First in, limped pots, opens from 3 to 7bb, 3-bet and 4-bet pots.</p>
     <div class="chart-box" aria-hidden="true"><div class="chart" id="c4"></div></div>
     <div class="foot"><div class="stats" id="s-kp"><span>Charts, Spot builder and Hand lens</span></div><span class="go">Open</span></div>
@@ -123,7 +118,7 @@ chart('c4', 'R', 'C', 18.5, 11);
 // one dot per door; the dots of the doors in view are lit, and tapping a dot scrolls its door into view
 (function () {
   const box = document.querySelector('.doors'), doors = [...box.querySelectorAll('a.door')], dots = document.getElementById('dots');
-  dots.innerHTML = doors.map((d, i) => `<button aria-label="${d.querySelector('.eyebrow').textContent}" data-i="${i}"></button>`).join('');
+  dots.innerHTML = doors.map((d, i) => `<button aria-label="${d.querySelector('h2').textContent}" data-i="${i}"></button>`).join('');
   const sync = () => { const r = box.getBoundingClientRect(); [...dots.children].forEach((b, i) => { const c = doors[i].getBoundingClientRect(); b.classList.toggle('on', c.left >= r.left - 2 && c.right <= r.right + 2); }); };
   dots.addEventListener('click', e => { const b = e.target.closest('button'); if (b) box.scrollTo({ left: doors[+b.dataset.i].offsetLeft - doors[0].offsetLeft, behavior: 'smooth' }); });
   box.addEventListener('scroll', () => requestAnimationFrame(sync), { passive: true });
