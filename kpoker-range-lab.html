@@ -383,10 +383,14 @@ html.app .ctl .frow .seg button{min-height:30px}
 .mx-strip .c.est::after{content:"";position:absolute;right:0;top:0;border-style:solid;border-width:0 5px 5px 0;border-color:transparent rgba(255,255,255,.85) transparent transparent}
 .mx-strip .c.na.est::after{border-right-color:var(--muted)}
 .mx-strip .c[data-k]{cursor:pointer}
-/* Hand lens: with a handful of columns full-width columns would stretch each square into a wide block, so the
-   columns keep a fixed width and the strip stays as compact as the other trainers' */
-#v-lens .mx-strip,#v-lens .mx-lines,html.app #v-lens .mx-strip,html.app #v-lens .mx-lines{grid-template-columns:repeat(var(--cols),24px)}
+/* Hand lens: a column is at most 24px wide, so a handful of columns stays as compact as the other trainers' squares
+   instead of stretching into wide blocks, and many columns shrink to fit the pane */
+#v-lens .mx-strip,#v-lens .mx-lines,html.app #v-lens .mx-strip,html.app #v-lens .mx-lines{grid-template-columns:repeat(var(--cols),minmax(0,24px))}
 #v-lens .mx-lines{right:auto}
+/* the strips fit the pane at every width (the other trainers' lens scrolls sideways on the cover screen) */
+#v-lens .mx-in,html.app #v-lens .mx-in{min-width:0;--lab:84px}
+#v-lens .mx{overflow:visible}
+#v-lens .mx-lab b{font-size:12px;white-space:nowrap}
 /* the open-size row is one more line than the other trainers' hand pickers: tighter gaps keep the left pane from scrolling */
 #v-lens .lens-pick{gap:6px}
 .drow{cursor:pointer}
@@ -1246,7 +1250,8 @@ function lensMatrix(title, fam, g, note) {
   const rows = [...keys.entries()].sort((a, b) => a[1].hero - b[1].hero || a[1].lvs - b[1].lvs);
   if (!rows.length) return '';
   const keyD = new Set([20, 50, 100, 200]), dv = t => GAME[t].dp;
-  const head = `<div class="mx-row hd"><div class="mx-lab"></div><div class="mx-strip" style="--cols:${opens.length}">${opens.map(t => `<span class="d ${keyD.has(dv(t)) ? 'k' : ''}">${dv(t)}</span>`).join('')}</div></div>`;
+  const shown = (t, i) => keyD.has(dv(t)) || i === 0 || i === opens.length - 1 || opens.length <= 8;  // key depths only when columns are narrow, like the other trainers
+  const head = `<div class="mx-row hd"><div class="mx-lab"></div><div class="mx-strip" style="--cols:${opens.length}">${opens.map((t, i) => `<span class="d ${keyD.has(dv(t)) ? 'k' : ''}">${shown(t, i) ? dv(t) : ''}</span>`).join('')}</div></div>`;
   const lines = `<div class="mx-lines" style="--cols:${opens.length}" aria-hidden="true">${opens.map(t => `<i class="${keyD.has(dv(t)) ? 'on' : ''}"></i>`).join('')}</div>`;
   const group = fam !== 'RFI' && new Set(rows.map(r => r[1].hero)).size > 1;  // one heading per seat you're in
   const rowLab = (sp, v) => fam === 'RFI' ? POS[v.hero] : fam === 'vsLimp' ? `vs ${v.lvs} limp${v.lvs > 1 ? 's' : ''}` : 'vs ' + POS[v.lvs];
