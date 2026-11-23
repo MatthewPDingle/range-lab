@@ -6,27 +6,27 @@
 <title>Range Lab</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
-/* Home: three doors, one per trainer. Unfolded they sit side by side; folded they stack.
+/* Home: three doors, one per trainer, plus a slim K Poker strip under them. Unfolded the doors sit side by side; folded they stack.
    The page never scrolls at phone sizes: the doors fill the height left by the header and footer, and
    unfolded the decorative chart takes whatever height is spare (full size when there's room). */
 :root{
   --bg:#eceff1; --surface:#ffffff; --line:#d3dade; --fg:#13212b; --muted:#56666f;
-  --mtt:#9c6a17; --cash:#2f7d78; --sng:#6a4fc0; --go-fg:#ffffff; --k-F:#5a85ad; --k-R:#de5546; --k-J:#991e3b; --k-C:#3a965a; --empty:#dfe5e8;
+  --mtt:#9c6a17; --cash:#2f7d78; --sng:#6a4fc0; --kp:#b23c5a; --go-fg:#ffffff; --k-F:#5a85ad; --k-R:#de5546; --k-J:#991e3b; --k-C:#3a965a; --empty:#dfe5e8;
   --f-display:'Big Shoulders Display','Roboto Condensed','sans-serif-condensed',sans-serif;
   --f-body:'Figtree',system-ui,sans-serif; --f-mono:'IBM Plex Mono',monospace;
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){ --bg:#0e1418; --surface:#151d22; --line:#29343b; --fg:#e4eaed; --muted:#92a1aa; --mtt:#e0aa55; --cash:#5cc2b8; --sng:#a690f2; --go-fg:#10161a; --k-F:#3c6990; --k-R:#d4513e; --k-J:#8c1b37; --k-C:#359157; --empty:#212b31; color-scheme:dark; }
+  :root:not([data-theme="light"]){ --bg:#0e1418; --surface:#151d22; --line:#29343b; --fg:#e4eaed; --muted:#92a1aa; --mtt:#e0aa55; --cash:#5cc2b8; --sng:#a690f2; --kp:#ec8aa3; --go-fg:#10161a; --k-F:#3c6990; --k-R:#d4513e; --k-J:#8c1b37; --k-C:#359157; --empty:#212b31; color-scheme:dark; }
 }
-:root[data-theme="dark"]{ --bg:#0e1418; --surface:#151d22; --line:#29343b; --fg:#e4eaed; --muted:#92a1aa; --mtt:#e0aa55; --cash:#5cc2b8; --sng:#a690f2; --go-fg:#10161a; --k-F:#3c6990; --k-R:#d4513e; --k-J:#8c1b37; --k-C:#359157; --empty:#212b31; color-scheme:dark; }
+:root[data-theme="dark"]{ --bg:#0e1418; --surface:#151d22; --line:#29343b; --fg:#e4eaed; --muted:#92a1aa; --mtt:#e0aa55; --cash:#5cc2b8; --sng:#a690f2; --kp:#ec8aa3; --go-fg:#10161a; --k-F:#3c6990; --k-R:#d4513e; --k-J:#8c1b37; --k-C:#359157; --empty:#212b31; color-scheme:dark; }
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body);display:flex;flex-direction:column;overflow-y:auto;-webkit-tap-highlight-color:transparent}
 header{padding-inline:20px;padding-block:22px 6px}
 header h1{margin:0;font:800 44px/0.95 var(--f-display);text-transform:uppercase;letter-spacing:.01em}
 header p{margin:6px 0 0;color:var(--muted)}
-.doors{flex:1 1 0;min-height:0;display:grid;grid-template-columns:minmax(0,1fr);grid-auto-rows:1fr;gap:16px;padding-inline:20px;padding-block:16px 20px}
-@media (min-width:600px){ .doors{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding-block:10px 14px} a.door h2{font-size:34px} }
+.doors{flex:1 1 0;min-height:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(3,minmax(0,1fr)) auto;gap:16px;padding-inline:20px;padding-block:16px 20px}
+@media (min-width:600px){ .doors{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:minmax(0,1fr) auto;gap:16px 20px;padding-block:10px 14px} a.door h2{font-size:34px} }
 a.door{display:flex;flex-direction:column;gap:12px;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;position:relative;overflow:hidden}
 a.door:active{transform:scale(.99)}
 a.door .eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
@@ -39,13 +39,20 @@ a.door .go{flex:none;padding:10px 18px;border-radius:999px;font-weight:700;color
 .mtt .eyebrow{color:var(--mtt)} .mtt .go{background:var(--mtt)}
 .cash .eyebrow{color:var(--cash)} .cash .go{background:var(--cash)}
 .sng .eyebrow{color:var(--sng)} .sng .go{background:var(--sng)}
+.kp .eyebrow{color:var(--kp)} .kp .go{background:var(--kp)}
+/* K Poker: one row across the bottom of the doors, sized to its content so the doors keep the spare height */
+a.door.kp{grid-column:1 / -1;flex-direction:row;align-items:center;gap:6px 16px;padding:12px 20px;border-radius:14px;flex-wrap:wrap}
+a.door.kp .kp-name{display:flex;flex-direction:column;gap:2px;flex:none}
+a.door.kp h2{font-size:28px}
+a.door.kp p{flex:1 1 200px;font-size:13.5px;line-height:1.35}
+a.door.kp .go{margin-left:auto}
 svg.motif{position:absolute;right:16px;top:16px;width:88px;height:88px;opacity:.9}
 .chart-box{display:none;flex:1 1 0;min-height:0;container-type:size}
 .chart{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:2px;width:min(100cqw,100cqh,420px);margin:auto auto 0}  /* bottom-aligned so the three line up */
 .chart i{aspect-ratio:1;border-radius:2px;background:var(--empty)}
 @media (min-width:600px){ .chart-box{display:flex} svg.motif{display:none} }
 /* cover screen: the three doors stack, so drop the descriptions and trim the spacing to leave headroom for wider phone fonts */
-@media (max-width:599px){ header{padding-block:16px 4px} .doors{gap:10px;padding-block:10px 14px} a.door{padding:14px 16px;gap:8px} a.door p{display:none} a.door h2{font-size:34px} }
+@media (max-width:599px){ header{padding-block:16px 4px} .doors{gap:10px;padding-block:10px 14px} a.door{padding:14px 16px;gap:8px} a.door p{display:none} a.door h2{font-size:34px} a.door.kp{padding:10px 16px} a.door.kp h2{font-size:24px} }
 footer{padding-inline:20px;padding-block:0 20px;color:var(--muted);font-size:12.5px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px}
 footer .ver{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 </style>
@@ -79,6 +86,11 @@ footer .ver{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
     <p>MTT heads-up, heads-up sit &amp; go and 3-handed Spin &amp; Go, 1–72bb. Limp, raise and shove lines, 3-bet pots and push/fold.</p>
     <div class="chart-box" aria-hidden="true"><div class="chart" id="c3"></div></div>
     <div class="foot"><div class="stats" id="s-sng"></div><span class="go">Open</span></div>
+  </a>
+  <a class="door kp" href="kpoker.html">
+    <div class="kp-name"><span class="eyebrow">K Poker</span><h2>7-handed, 100bb</h2></div>
+    <p>An ante from every seat and big opens. Hand lens and charts for limps, opens, 3-bets and 4-bets.</p>
+    <span class="go">Open</span>
   </a>
 </main>
 <footer><span>Everything runs offline; your drill progress stays on this phone.</span><span class="ver">Version __VERSION__</span></footer>
