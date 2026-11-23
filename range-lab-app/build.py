@@ -85,7 +85,8 @@ def build_assets():
     shutil.copy(SOURCES / "data.js", www / "data.js")
     shutil.copy(SOURCES / "cash-data.js", www / "cash-data.js")
     shutil.copy(SOURCES / "sng-data.js", www / "sng-data.js")
-    shutil.copy(SOURCES / "k-poker-data.js", www / "k-poker-data.js")
+    for f in SOURCES.glob("k-poker*.js"):   # the K Poker manifest and one file per open size
+        shutil.copy(f, www / f.name)
 
 
 def build_apk():

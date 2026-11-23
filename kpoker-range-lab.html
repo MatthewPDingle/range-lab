@@ -3,11 +3,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
-/* Layout: a clock bar (stack depth or open size is the hero numeral), the 13x13 chart centre stage,
-   spot controls on the left, a reading rail on the right; tabs for hand lens, straddle effect, drills and method. */
+/* Layout: a tournament-clock bar (stack depth is the hero numeral), the 13x13 chart centre stage,
+   spot controls on the left, a reading rail on the right; tabs for hand lens, ICM, drills and method. */
 :root{
   --bg:#eceff1; --surface:#ffffff; --surface-2:#f4f6f7; --line:#d3dade; --fg:#13212b; --muted:#56666f; --faint:#87949c;
-  --accent:#2f7d78; --accent-soft:#d8ece9; --accent-fg:#ffffff;
+  --accent:#9c6a17; --accent-soft:#f1e4cb; --accent-fg:#ffffff;
   --k-F:#5a85ad; --k-C:#3a965a; --k-X:#4f8d70; --k-R:#de5546; --k-B:#e08a2c; --k-J:#991e3b;
   --empty:#dfe5e8; --cell-fg:#ffffff; --cell-dim:#93a1aa;
   --good:#2c8a4d; --ok:#ad7618; --bad:#c43f3c;
@@ -21,7 +21,7 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#0e1418; --surface:#151d22; --surface-2:#1b252b; --line:#29343b; --fg:#e4eaed; --muted:#92a1aa; --faint:#64737c;
-    --accent:#5cc2b8; --accent-soft:#16302e; --accent-fg:#06201d;
+    --accent:#e0aa55; --accent-soft:#33291a; --accent-fg:#1a1206;
     --k-F:#3c6990; --k-C:#359157; --k-X:#46866a; --k-R:#d4513e; --k-B:#cf7e2a; --k-J:#8c1b37;
     --empty:#212b31; --cell-fg:#ffffff; --cell-dim:#5b6a73;
     --good:#47ad69; --ok:#d49a3d; --bad:#e25f5a;
@@ -32,7 +32,7 @@
 }
 :root[data-theme="dark"]{
   --bg:#0e1418; --surface:#151d22; --surface-2:#1b252b; --line:#29343b; --fg:#e4eaed; --muted:#92a1aa; --faint:#64737c;
-  --accent:#5cc2b8; --accent-soft:#16302e; --accent-fg:#06201d;
+  --accent:#e0aa55; --accent-soft:#33291a; --accent-fg:#1a1206;
   --k-F:#3c6990; --k-C:#359157; --k-X:#46866a; --k-R:#d4513e; --k-B:#cf7e2a; --k-J:#8c1b37;
   --empty:#212b31; --cell-fg:#ffffff; --cell-dim:#5b6a73;
   --good:#47ad69; --ok:#d49a3d; --bad:#e25f5a;
@@ -45,10 +45,12 @@ body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body);margin:0}
 button{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .wrap{max-width:1380px;margin:0 auto;padding-inline:16px;padding-block:0 48px}
+
+/* header */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
 .top-in{max-width:1380px;margin:0 auto;padding-inline:16px;padding-block:10px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:10px;margin-right:auto}
-.chip-mark{width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font:800 12px/1 var(--f-display);letter-spacing:.02em;box-shadow:inset 0 0 0 3px var(--bg),inset 0 0 0 5px var(--accent)}
+.chip-mark{width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font:800 13px/1 var(--f-display);letter-spacing:.02em;box-shadow:inset 0 0 0 3px var(--bg),inset 0 0 0 5px var(--accent)}
 .brand b{font:800 22px/1 var(--f-display);letter-spacing:.01em;text-transform:uppercase}
 .brand span{display:block;font-size:12px;color:var(--muted);line-height:1.2}
 .tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;max-width:100%}
@@ -58,10 +60,13 @@ button{font:inherit;color:inherit}
 .sync i{width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block}
 .sync.on i{background:var(--good)}
 @media (max-width:720px){.sync{display:none}.brand span{display:none}}
+
 .view{padding-block:18px 0}
 .eyebrow{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 7px}
 h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spacing:.01em;margin:0 0 4px;text-wrap:balance}
-.lede{color:var(--muted);margin:0 0 16px;max-width:70ch}
+.lede{color:var(--muted);margin:0 0 16px;max-width:68ch}
+
+/* controls */
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chips button,.seg button{border:1px solid var(--line);background:var(--surface);padding:6px 11px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;color:var(--fg)}
 .chips button[aria-pressed="true"]{background:var(--fg);border-color:var(--fg);color:var(--bg)}
@@ -77,6 +82,8 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .muted{color:var(--muted)}
 .small{font-size:13px}
 .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* charts layout */
 .charts{display:grid;grid-template-columns:250px minmax(0,1fr) 330px;gap:20px;align-items:start}
 .ctl{display:flex;flex-direction:column;gap:18px;position:sticky;top:76px}
 .stage{min-width:0;display:flex;flex-direction:column;gap:12px}
@@ -97,26 +104,19 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
   .pcard{width:64px;height:90px}.pcard .rk{font-size:38px}.pcard .st{font-size:26px}
   .acts button{min-width:0;padding:12px 6px}
 }
+
+/* the stack clock */
 .clock{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;flex-wrap:wrap}
-.clock-num{display:flex;align-items:baseline;gap:4px;min-width:110px}
+.clock-num{display:flex;align-items:baseline;gap:4px;min-width:96px}
 .clock-num b{font:800 64px/0.9 var(--f-display);font-variant-numeric:tabular-nums;color:var(--accent)}
 .clock-num small{font:600 18px/1 var(--f-display);color:var(--muted);text-transform:uppercase}
 .clock-mid{flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px}
 .clock-mid input[type=range]{width:100%;accent-color:var(--accent);margin:0;direction:rtl}
-/* Charts: open size and stack depth, one slider each */
-#c-scn{line-height:1.25;min-height:2.5em}
-.clock.dual{flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:8px;padding:4px 12px}
-.drow{display:flex;align-items:center;gap:12px}
-.dval{flex:none;width:100px;display:flex;align-items:baseline;gap:4px}
-.dval b{font:800 28px/1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--fg)}
-.dval small{font:600 12px/1 var(--f-display);color:var(--muted);text-transform:uppercase;white-space:nowrap}
-.drow.on .dval b{color:var(--accent)}
-.dmid{flex:1;min-width:0;display:flex;flex-direction:column}
-.dmid .ticks{height:14px}
-.dmid input[type=range]{width:100%;accent-color:var(--accent);margin:0;direction:rtl}
 .ticks{position:relative;height:16px;font:500 10px/1 var(--f-mono);color:var(--faint)}
 .ticks span{position:absolute;transform:translateX(-50%);top:3px;white-space:nowrap}
 .ticks span.on{color:var(--fg);font-weight:600}
+
+/* scenario + seats */
 .scn{font-size:15px;margin:0}
 .scn b{font-weight:700}
 .seats{display:flex;gap:4px;flex-wrap:wrap}
@@ -127,22 +127,17 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .seat.s-C{background:var(--k-C);color:#fff;border-color:transparent}
 .seat.me{box-shadow:0 0 0 2px var(--accent);color:var(--fg);opacity:1;text-decoration:none}
 .seat em{font-style:normal;font-weight:500;opacity:.85}
+
+/* range grid */
 .grid{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:2px;width:100%;max-width:640px;user-select:none;-webkit-user-select:none}
 .grid.mini{max-width:340px;gap:1px}
 .cell{position:relative;aspect-ratio:1;border-radius:3px;background:var(--empty);color:var(--cell-fg);font:600 clamp(7.5px,1.15vw,12.5px)/1 var(--f-mono);padding:3px 3px;overflow:hidden;cursor:pointer;transition:box-shadow .15s}
 .grid.mini .cell{font-size:clamp(6.5px,1.6vw,9px);padding:2px;border-radius:2px}
 .cell .nm{position:relative;z-index:1;text-shadow:0 1px 1px rgba(0,0,0,.25)}
 .cell.out .nm{color:var(--cell-dim);text-shadow:none}
-.cell .val{position:absolute;inset:0;display:grid;place-items:center;padding-top:28%;font:700 clamp(8px,1.25vw,13px)/1 var(--f-mono);z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+.cell .val{position:absolute;inset:0;display:grid;place-items:center;padding-top:28%;font:700 clamp(9px,1.5vw,16px)/1 var(--f-mono);z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.3)}
 .cell.sel{box-shadow:inset 0 0 0 2px var(--fg)}
 .cell.target{box-shadow:0 0 0 3px var(--accent),inset 0 0 0 1px var(--bg);z-index:2}
-.cell.chg-in{box-shadow:inset 0 0 0 2.5px #3fe07a}
-.cell.chg-out{box-shadow:inset 0 0 0 2.5px #ff5d5d;opacity:.9}
-.cell.chg-sw{box-shadow:inset 0 0 0 2.5px #ffc04a}
-/* a selected hand keeps its ring on top of a change ring */
-.cell.sel.chg-in{box-shadow:inset 0 0 0 2.5px #3fe07a,inset 0 0 0 4.5px var(--fg)}
-.cell.sel.chg-out{box-shadow:inset 0 0 0 2.5px #ff5d5d,inset 0 0 0 4.5px var(--fg)}
-.cell.sel.chg-sw{box-shadow:inset 0 0 0 2.5px #ffc04a,inset 0 0 0 4.5px var(--fg)}
 #b-sub:empty{display:none}
 .cell.dimmed{opacity:.28}
 .cell.pop{animation:pop .42s ease-out}
@@ -150,24 +145,27 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 @media (prefers-reduced-motion: reduce){.cell.pop{animation:none}}
 .grid.paint .cell{cursor:crosshair;touch-action:none}
 .grid.paint{touch-action:none}
-.cell.mark-bad::after,.cell.mark-mix::after{content:"";position:absolute;right:2px;bottom:2px;width:30%;height:30%;border-radius:50%;z-index:2}
+.cell.mark-ok::after,.cell.mark-bad::after,.cell.mark-mix::after{content:"";position:absolute;right:2px;bottom:2px;width:30%;height:30%;border-radius:50%;z-index:2}
 .cell.mark-bad::after{background:#ff4d4d;box-shadow:0 0 0 1.5px #fff}
 .cell.mark-mix::after{background:#ffc04a;box-shadow:0 0 0 1.5px #fff}
+
 .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:5px}
 .sw{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
 .film{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
 .film figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px;border-radius:6px;border:1px solid transparent}
 .film figure.on{border-color:var(--accent);background:var(--accent-soft)}
-.film figcaption{font:600 11px/1 var(--f-mono);color:var(--muted);white-space:nowrap}
+.film figcaption{font:600 11px/1 var(--f-mono);color:var(--muted)}
 .film figure.on figcaption{color:var(--fg)}
+
+/* rail */
 .rail .panel h3{font:800 17px/1.1 var(--f-display);text-transform:uppercase;letter-spacing:.02em;margin:0 0 10px}
 .mix{display:grid;grid-template-columns:max-content minmax(0,1fr) 46px;align-items:center;gap:6px 8px;font-size:13px}
 .mix>.mix-row{display:contents}
 .mix>.mix-row>span:first-child,.mix-w>span{white-space:nowrap}
 .mix-w{grid-column:1;height:0;margin-top:-6px;overflow:hidden;visibility:hidden}
 .mix-w>span{display:block}
-.mix-row{display:grid;grid-template-columns:96px 1fr 46px;align-items:center;gap:8px;font-size:13px}
+.mix-row{display:grid;grid-template-columns:86px 1fr 46px;align-items:center;gap:8px;font-size:13px}
 .bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
 .bar i{display:block;height:100%}
 .edges{display:grid;grid-template-columns:max-content 1fr;gap:5px 10px;font-size:12.5px;align-items:center}
@@ -179,29 +177,35 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .handbox .hn{font:800 26px/1 var(--f-display)}
 .taglist{font-family:var(--f-mono);font-size:12.5px;line-height:1.7}
 .taglist span{display:inline-block;padding:0 5px;border-radius:4px;background:var(--surface-2);margin:0 3px 3px 0}
+
+/* lens */
 .lens-head{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}
-.lens-pick{display:flex;flex-direction:column;gap:12px}
-.lens-pick #l-input{font:600 16px var(--f-mono);padding:8px 10px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--fg);width:120px}
-.lens-blocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));gap:16px}
-.lens-blocks h3{font:800 18px/1.1 var(--f-display);text-transform:uppercase;margin:0 0 4px}
-.tri{display:grid;gap:3px;overflow-x:auto;padding-bottom:4px}
-.tri .h{font:600 10.5px/1 var(--f-mono);color:var(--muted);display:grid;place-items:center;white-space:nowrap}
-.tri .h.row{justify-items:end;padding-right:4px}
-.tri .c{height:34px;border-radius:4px;background:var(--empty);display:grid;place-items:center;font:700 11px/1 var(--f-mono);color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.3)}
-.tri .c.na{background:repeating-linear-gradient(45deg,var(--empty) 0 3px,transparent 3px 6px)}
-.tri .c.none{background:transparent}
+.lens-pick{display:flex;flex-direction:column;gap:8px}
+.lens-pick input{font:600 16px var(--f-mono);padding:8px 10px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--fg);width:120px;text-transform:none}
+.lens-blocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,560px),1fr));gap:16px}
 .mx{overflow-x:auto}
-.mx-row{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:center;padding:5px 0;border-top:1px solid var(--line)}
+.mx-in{position:relative;min-width:520px}
+.mx-row{display:grid;grid-template-columns:var(--lab,132px) minmax(0,1fr);gap:10px;align-items:center;padding:5px 0;border-top:1px solid var(--line)}
+.mx-lines{position:absolute;top:0;bottom:0;left:calc(var(--lab,132px) + 10px);right:0;display:grid;grid-template-columns:repeat(var(--cols),minmax(14px,1fr));gap:2px;pointer-events:none;z-index:0}
+.mx-in>.mx-row{position:relative;z-index:1}
+.mx-lines i{position:relative}
+.mx-lines i.on::after{content:"";position:absolute;left:50%;top:15px;bottom:2px;width:1px;margin-left:-.5px;background:color-mix(in srgb,var(--fg) 45%,transparent)}
 .mx-row.hd{border-top:0;padding-bottom:2px}
+/* the stack labels repeat under the last row; the marker lines stop above them */
+.mx-row.hd.ft{border-top:1px solid var(--line);padding:4px 0 0}
+.mx-in.has-ft .mx-lines i.on::after{bottom:18px}
+.mx-row.mx-grp{border-top:0;padding:10px 0 0}
+.mx-grp .mx-lab{font:700 10.5px/1.2 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
 .mx-lab b{font:600 13px var(--f-mono)}
 .mx-lab .rule{display:block;font-size:11.5px;color:var(--muted);line-height:1.3}
-.mx-strip{display:grid;grid-template-columns:repeat(var(--cols),minmax(18px,1fr));gap:2px}
+.mx-strip{display:grid;grid-template-columns:repeat(var(--cols),minmax(14px,1fr));gap:2px}
 .mx-strip .c{height:22px;border-radius:3px;background:var(--empty)}
 .mx-strip .c.na{background:repeating-linear-gradient(45deg,var(--empty) 0 3px,transparent 3px 6px)}
+.mx-strip .c.none{background:transparent}
 .mx-strip .d{font:500 10px/1 var(--f-mono);color:var(--faint);text-align:center}
-.cmp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-@media (max-width:640px){.cmp{grid-template-columns:minmax(0,1fr)}}
-.cmp h3{font:800 18px/1.1 var(--f-display);text-transform:uppercase;margin:0 0 8px}
+.mx-strip .d.k{color:var(--fg);font-weight:600}
+
+/* drill */
 .drill-home{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:900px){.drill-home{grid-template-columns:minmax(0,1fr)}}
 .modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
@@ -217,6 +221,7 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .heat button.hc.none{cursor:pointer}
 .heat .hl{font-weight:600;color:var(--muted);align-self:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .heat .hb{font-size:10.5px;text-align:center}
+
 .q{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:900px){.q{grid-template-columns:minmax(0,1fr)}}
 .qbar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:12px}
@@ -266,7 +271,7 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .tbl .pcard .st{font-size:2.2em}
 .tcap{position:absolute;left:0;top:0;font-size:.85em;line-height:1.3;color:var(--muted);max-width:8.5em}
 .tcap b{color:var(--fg);font-weight:700}
-.verdict{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;font-weight:700;font-size:17px;flex-wrap:wrap}
+.verdict{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;font-weight:700;font-size:17px}
 .board.qtable{gap:10px}
 .verdict.good{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
 .verdict.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
@@ -284,13 +289,16 @@ h2.title{font:800 30px/1.05 var(--f-display);text-transform:uppercase;letter-spa
 .score{font:800 52px/1 var(--f-display);font-variant-numeric:tabular-nums}
 .summary-list{display:flex;flex-direction:column;gap:6px;font-size:13px}
 .summary-list button{all:unset;cursor:pointer;color:var(--accent);font-weight:600}
+
+/* method */
 .method{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:22px;align-items:start}
 @media (max-width:900px){.method{grid-template-columns:minmax(0,1fr)}}
-.principles{display:flex;flex-direction:column;gap:14px;counter-reset:p;padding:0;margin:0}
+.principles{display:flex;flex-direction:column;gap:14px;counter-reset:p}
 .principles li{list-style:none;display:grid;grid-template-columns:34px 1fr;gap:10px}
 .principles li::before{counter-increment:p;content:counter(p);font:800 28px/1 var(--f-display);color:var(--accent)}
 .principles h4{margin:0 0 3px;font-size:16px}
 .principles p{margin:0;color:var(--muted);max-width:62ch}
+.principles ul{padding:0;margin:0}
 table.plan{border-collapse:collapse;width:100%;font-size:13.5px}
 table.plan th,table.plan td{text-align:left;padding:8px 8px;border-top:1px solid var(--line);vertical-align:top}
 table.plan th{font:800 15px/1.1 var(--f-display);text-transform:uppercase;white-space:nowrap;color:var(--accent)}
@@ -322,9 +330,7 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .evr.top .ev{color:var(--good)}
 .evr.you{background:var(--surface-2)}
 .evr.you:not(.top) .ev{color:var(--bad)}
-.ltop{margin:0;font-size:14px}
-.lens-hand{display:flex;gap:10px;align-items:center}
-.lens-hand #l-input{width:96px}
+.ltop{margin:10px 0 0;font-size:15px}
 .ltop b{color:var(--accent);font-size:17px}
 .heat-head{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;margin:0 0 7px}
 .heat-head .eyebrow{margin:0}
@@ -334,15 +340,24 @@ button.ts:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .heat-key i{flex:0 1 120px;min-width:40px;height:8px;border-radius:999px;background:linear-gradient(90deg,var(--good),var(--ok),var(--bad));background:linear-gradient(90deg in oklch,var(--good),var(--bad))}
 .heat button.hc:not(.none):not(.nodata){text-shadow:0 1px 2px rgba(0,0,0,.45)}
 .heat .hc.nodata{background:var(--surface-2);color:var(--muted)}
-/* unfolded app: the left pane fits without scrolling at full chart and thumbnail size */
-@media (min-width:600px){
-  html.app #v-charts .stage{gap:5px;padding-bottom:0}
-  html.app #v-charts .film{scrollbar-width:none;padding-bottom:0}
-  html.app #v-charts .film figure{padding:1px 3px;gap:2px}
-}
 /* Charts filters: compact rows with the label on the left; seats as one strip per role */
 .ctl.tight{gap:10px}
 html.app .charts>.ctl.tight{gap:8px}
+#c-scn,#i-scn{line-height:1.25;min-height:2.5em}
+.clock.dual{flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:8px;padding:4px 12px}
+.drow{display:flex;align-items:center;gap:12px}
+.dval{flex:none;width:100px;display:flex;align-items:baseline;gap:4px}
+.dval b{font:800 28px/1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--fg)}
+.dval small{font:600 12px/1 var(--f-display);color:var(--muted);text-transform:uppercase;white-space:nowrap}
+.drow.on .dval b{color:var(--accent)}
+.dmid{flex:1;min-width:0;display:flex;flex-direction:column}
+.dmid .ticks{height:14px}
+.dmid input[type=range]{width:100%;accent-color:var(--accent);margin:0;direction:rtl}
+.seg.grow{display:flex;flex:1;flex-wrap:nowrap;gap:2px;padding:2px;border-radius:10px}
+.seg.grow button{flex:1 1 auto;min-width:0;min-height:30px;padding:0 5px;border-radius:8px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.app .seg.grow button{min-height:30px}
+/* unfolded app: both chart pages fit their left pane without scrolling, with the same spacing */
+@media (min-width:600px){html.app #v-icm .stage,html.app #v-charts .stage{gap:6px;padding-bottom:2px}html.app #v-icm .film,html.app #v-charts .film{scrollbar-width:none;padding-bottom:0}html.app #v-icm .film figure,html.app #v-charts .film figure{padding:1px 3px;gap:2px}}
 .frow{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;align-items:center}
 .frow[hidden]{display:none}
 .flab{font:700 10.5px/1.15 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -359,105 +374,73 @@ html.app .ctl .frow .seg button{min-height:30px}
 .seatpick button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
 .seatpick button.off{color:var(--muted)}
 .seatpick button:disabled{opacity:.22;cursor:default}
-/* unfolded app: Hand lens keeps the hand grid in the lower left, full width, with the controls above it */
-@media (min-width:600px){
-  html.app #v-lens .lens-pick{gap:10px}
-  html.app #v-lens .lens-grid{margin-top:auto;padding-top:10px;align-self:stretch}
-  html.app #v-lens .lens-head>div:first-child{align-self:stretch;flex:none}
-  html.app #v-lens #l-grid{width:100%!important;max-width:none}
-  html.app #v-lens #l-cards .pcard{width:60px;height:84px}
-  html.app #v-lens #l-cards .pcard .rk{font-size:36px}
-  html.app #v-lens #l-cards .pcard .st{font-size:24px}
-}
-/* ---------- K Poker additions ---------- */
-#c-scn{min-height:3.75em}
-.kb h3{font:800 14px/1.1 var(--f-display);text-transform:uppercase;letter-spacing:.02em;margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kb h3 small{font:500 11px/1 var(--f-body);text-transform:none;letter-spacing:0;color:var(--muted)}
-.kb .tri{gap:2px;overflow:visible;padding:0}
-.kb .tri .c{height:21px;font-size:9.5px;position:relative;cursor:pointer;min-width:0}
-.kb .tri .c.none{cursor:default}
-.kb .tri .h{font-size:9.5px;min-width:0;overflow:hidden}
-.kb .tri .h.row{padding-right:3px}
-.kb .tri .c.est::after{content:"";position:absolute;right:1px;top:1px;border-style:solid;border-width:0 6px 6px 0;border-color:transparent rgba(255,255,255,.85) transparent transparent}
-.kb .tri .c.na.est::after{border-right-color:var(--muted)}
-.kb.wide .tri .c{height:28px;font-size:11px}
-.binfo .panel h3{font:800 17px/1.1 var(--f-display);text-transform:uppercase;letter-spacing:.02em;margin:0 0 10px}
-.kgame{padding:4px 12px}
-.kgame .dval{width:92px}
-.kgame input:disabled{opacity:.45}
-.kblocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,170px),1fr));gap:12px 16px;align-content:start}
+/* ---------- K Poker ---------- */
+:root{--accent:#b23c5a;--accent-soft:#f4dbe2;--accent-fg:#ffffff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--accent:#ec8aa3;--accent-soft:#3a1e26;--accent-fg:#22070f}}
+:root[data-theme="dark"]{--accent:#ec8aa3;--accent-soft:#3a1e26;--accent-fg:#22070f}
+/* multiway spots: the solver estimates the flop, so they carry a corner mark */
+.mx-strip .c.est,.tri .c.est{position:relative}
+.mx-strip .c.est::after{content:"";position:absolute;right:0;top:0;border-style:solid;border-width:0 5px 5px 0;border-color:transparent rgba(255,255,255,.85) transparent transparent}
+.mx-strip .c.na.est::after{border-right-color:var(--muted)}
+.mx-strip .c[data-k]{cursor:pointer}
+/* Hand lens: with 9 open sizes (the other trainers show 30+ stack depths) full-width columns would stretch each
+   square into a wide block, so the columns keep a fixed width and the strip stays as compact as theirs */
+#v-lens .mx-strip,#v-lens .mx-lines,html.app #v-lens .mx-strip,html.app #v-lens .mx-lines{grid-template-columns:repeat(var(--cols),24px)}
+#v-lens .mx-lines{right:auto}
 .sw.est{background:linear-gradient(225deg,var(--muted) 0 35%,var(--empty) 35%)}
-.lines{display:flex;flex-direction:column;gap:2px;max-height:168px;overflow-y:auto;border:1px solid var(--line);border-radius:10px;padding:2px;background:var(--surface)}
-.lines button{border:0;background:none;text-align:left;padding:5px 8px;border-radius:8px;font:500 12px/1.3 var(--f-mono);display:flex;justify-content:space-between;align-items:baseline;gap:10px;cursor:pointer;color:var(--fg);min-height:30px}
+.estnote{font-size:12.5px;color:var(--muted);margin:10px 0 0;padding:6px 10px;border-radius:8px;background:var(--surface-2)}
+.estnote b{color:var(--fg)}
+/* Charts: the lines that lead to this seat matchup, most common first (K Poker has many per matchup) */
+.lines{display:flex;flex-direction:column;gap:2px;max-height:136px;overflow-y:auto;border:1px solid var(--line);border-radius:10px;padding:2px;background:var(--surface)}
+.lines:empty{display:none}
+.lines button{border:0;background:none;text-align:left;padding:4px 8px;border-radius:8px;font:500 12px/1.3 var(--f-mono);display:flex;justify-content:space-between;align-items:baseline;gap:10px;cursor:pointer;color:var(--fg);min-height:28px}
 .lines button span:last-child{color:var(--muted);white-space:nowrap}
 .lines button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
 .lines button[aria-pressed="true"] span:last-child{color:var(--accent-fg)}
 .lines .more{font:500 11.5px/1.3 var(--f-body);color:var(--muted);padding:4px 8px}
-.estnote{font-size:12.5px;color:var(--muted);margin:10px 0 0;padding:6px 10px;border-radius:8px;background:var(--surface-2)}
-.estnote b{color:var(--fg)}
-.kmeta{font-size:12.5px;color:var(--muted);margin:10px 0 0}
-.acts button span{display:block}
-#b-who{min-height:1.5em}
-#b-acts{min-height:56px;flex-wrap:nowrap}
-#b-acts button{min-width:0;padding:10px 4px}
-.estb{color:var(--fg);font-weight:600;text-decoration:underline dotted}
-@media (min-width:600px){
-  html.app #v-lens .lens-blocks.kblocks{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px}
-  html.app #v-lens #l-rfi{margin-top:4px}
-}
 </style>
 
 <header class="top">
   <div class="top-in">
-    <div class="brand"><div class="chip-mark" aria-hidden="true">K7</div><div><b>K Poker Range Lab</b><span>7-handed preflop, 100bb, an ante from every seat</span></div></div>
+    <div class="brand"><div class="chip-mark" aria-hidden="true">KP</div><div><b>K Poker Range Lab</b><span>7-handed preflop, 100bb, an ante from every seat</span></div></div>
     <nav class="tabs" role="tablist" id="tabs">
-      <button role="tab" data-tab="lens">Hand lens</button>
       <button role="tab" data-tab="charts">Charts</button>
       <button role="tab" data-tab="build">Spot builder</button>
-      <button role="tab" data-tab="method">About</button>
+      <button role="tab" data-tab="lens">Hand lens</button>
+      <button role="tab" data-tab="method">Method</button>
     </nav>
   </div>
 </header>
 
 <main class="wrap">
-  <section class="view" id="v-lens" hidden>
-    <div class="lens-head">
-      <div style="flex:1;min-width:260px">
-        <h2 class="title">Hand lens</h2>
-        <div class="lens-pick">
-          <div class="lens-hand"><input id="l-input" value="KTs" autocomplete="off" spellcheck="false" aria-label="Hand"><div class="cards" id="l-cards"></div></div>
-          <p class="ltop" id="l-top"></p>
-          <div class="clock dual kgame" id="l-tag"></div>
-          <div id="l-rfi"></div>
-        </div>
-      </div>
-      <div class="lens-grid"><p class="eyebrow">Pick a hand</p><div class="grid mini" id="l-grid" style="width:min(340px,86vw)"></div></div>
-    </div>
-    <div class="legend" id="l-legend" style="margin-bottom:12px"></div>
-    <div class="lens-blocks kblocks" id="l-blocks"></div>
-  </section>
-
+  <!-- CHARTS -->
   <section class="view" id="v-charts" hidden>
+    <h2 class="title">Charts</h2>
+    <p class="lede">Every spot at every open size, 7-handed at 100bb with a 1bb ante from every seat and a 1bb small blind. A corner mark means a multiway pot: an estimate.</p>
     <div class="charts">
       <aside class="ctl tight">
-        <div class="clock dual kgame" id="c-tag"></div>
         <div class="chips tight" id="c-fam" role="group" aria-label="Spot"></div>
-        <div class="frow"><span class="flab">You</span><div class="seatpick" id="c-hero"></div></div>
-        <div class="lines" id="c-lines" role="listbox" aria-label="Action before you"></div>
+        <div class="srows" id="c-sit"></div>
+        <div class="lines" id="c-lines" role="listbox" aria-label="The action before you"></div>
       </aside>
       <div class="stage">
         <p class="scn" id="c-scn"></p>
         <div class="grid" id="c-grid"></div>
         <div class="legend" id="c-legend"></div>
+        <div><p class="eyebrow">Every open size for this spot</p><div class="film" id="c-film"></div></div>
+        <div class="clock dual">
+          <div class="drow on"><div class="dval"><b id="c-dp">5</b><small>bb open</small></div><div class="dmid"><input type="range" id="c-slider" min="0" max="8" step="1" aria-label="Open size"><div class="ticks" id="c-ticks"></div></div></div>
+        </div>
       </div>
       <aside class="rail" id="c-rail"></aside>
     </div>
   </section>
 
+  <!-- SPOT BUILDER -->
   <section class="view" id="v-build" hidden>
     <div class="charts">
       <aside class="ctl">
-        <div class="clock dual kgame" id="b-tag"></div>
+        <div><p class="eyebrow">Game</p><div class="chips" id="b-game"></div></div>
         <p class="small muted" style="margin:0">Tap a seat to skip ahead to it: everyone before it folds. Then pick that player's action under the table. Tap a seat that already acted to change what it did.</p>
       </aside>
       <div class="stage">
@@ -467,31 +450,64 @@ html.app .ctl .frow .seg button{min-height:30px}
           <div class="acts" id="b-acts"></div>
           <div class="brow"><button class="btn ghost small" id="b-back">Undo</button><button class="btn ghost small" id="b-reset">Start over</button><span class="small muted" id="b-note"></span></div>
         </div>
-        <div id="b-info" class="binfo"></div>
+        <div class="clock">
+          <div class="clock-num"><b id="b-dp">5</b><small>bb open</small></div>
+          <div class="clock-mid"><input type="range" id="b-slider" min="0" max="8" step="1" aria-label="Open size"><div class="ticks" id="b-ticks"></div></div>
+        </div>
       </div>
       <aside class="rail" id="b-rail">
         <div class="panel"><h3 id="b-title"></h3><div class="grid" id="b-grid"></div><p class="small muted" id="b-empty" style="margin:0" hidden></p><div class="legend" id="b-legend" style="margin-top:8px"></div></div>
-        <div id="b-hand"></div>
+        <div id="b-info" class="binfo"></div>
       </aside>
     </div>
   </section>
 
+  <!-- HAND LENS -->
+  <section class="view" id="v-lens" hidden>
+    <div class="lens-head">
+      <div style="flex:1;min-width:260px">
+        <h2 class="title">Hand lens</h2>
+        <p class="lede">At the table you see your cards first, so learn each hand across the open sizes you'll face. Each row is one spot and each square one open size, biggest on the left. Each square is the most common line for that seat matchup; tap it for the chart.</p>
+        <div class="lens-pick">
+          <label class="eyebrow" for="l-input">Hand</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="l-input" value="KTs" autocomplete="off" spellcheck="false"><div class="cards" id="l-cards"></div></div>
+          <p class="ltop" id="l-top"></p>
+        </div>
+      </div>
+      <div><p class="eyebrow">Pick a hand</p><div class="grid mini" id="l-grid" style="width:min(340px,86vw)"></div></div>
+    </div>
+    <div class="legend" id="l-legend" style="margin-bottom:12px"></div>
+    <div class="lens-blocks" id="l-blocks"></div>
+  </section>
+
+  <!-- METHOD -->
   <section class="view" id="v-method" hidden>
-    <h2 class="title">About these ranges</h2>
-    <p class="lede">K Poker plays 7-handed with an ante from every seat and a small blind as big as the big blind, so the pot starts at 9bb before anyone acts. Limping is common and opens are big. These charts come from a preflop solver run on exactly those rules.</p>
+    <h2 class="title">How to study K Poker ranges</h2>
+    <p class="lede">K Poker plays 7-handed with an ante from every seat and a small blind as big as the big blind, so the pot starts at 9bb before anyone acts. Limping is common and opens are big, and the open size changes everything after it.</p>
     <div class="method">
       <div class="panel">
-        <ol class="principles">
-          <li><div><h4>Start from the hand</h4><p>At the table you see your cards first. Hand lens shows one hand in every common spot: first in from each seat, against limpers, against an open, after you limped and someone raised, and in 3-bet and 4-bet pots.</p></div></li>
-          <li><div><h4>Each square is the most common line</h4><p>Many lines lead to the same seat matchup (who limped before the raise, who called after). Each lens square shows the line that comes up most often; tap it to open that exact spot in Charts, where every other line for the seat is listed with how often it comes up.</p></div></li>
-          <li><div><h4>Multiway pots are estimates</h4><p>When two or more players are already in, the solver values the flop with a learned estimate rather than solving it out. Those spots carry a small corner mark: learn the shape, but trust them less than heads-up spots.</p></div></li>
+        <ol class="principles" style="padding:0;margin:0">
+          <li><div><h4>Start from the hand</h4><p>At the table you see your cards first. Hand lens shows one hand in every common spot, at every open size: first in from each seat, against limpers, against an open, after you limped and someone raised, and in 3-bet and 4-bet pots.</p></div></li>
+          <li><div><h4>Learn the open size as a slider</h4><p>Pick the open size your game uses, then step it up and down one notch on Charts, watching the thumbnails. Only a few hands change at each step, so you learn the other sizes as changes rather than new charts.</p></div></li>
+          <li><div><h4>Each line is its own spot</h4><p>Many lines lead to the same seat matchup (who limped before the raise, who called after). Charts lists every line for your seat with how often it comes up; Hand lens shows the most common one.</p></div></li>
+          <li><div><h4>Multiway pots are estimates</h4><p>When two or more players are already in, the solver values the flop with a learned estimate rather than solving it out. Those spots carry a corner mark: learn the shape, but trust them less than heads-up spots.</p></div></li>
           <li><div><h4>Frequencies only</h4><p>The solver gives how often each hand takes each action, not what each choice is worth. A hand split between two actions is close to indifferent between them.</p></div></li>
         </ol>
       </div>
       <div class="panel">
-        <p class="eyebrow">Game settings</p>
+        <p class="eyebrow">Suggested order</p>
+        <table class="plan">
+          <tr><th>Step 1</th><td>First in at your game's open size: limp, raise or fold from each seat. Charts, then Hand lens on the hands that mix.</td></tr>
+          <tr><th>Step 2</th><td>Facing limpers: overlimp, isolate or fold, and the blinds checking or raising.</td></tr>
+          <tr><th>Step 3</th><td>You limped and someone raised: call, re-raise or fold.</td></tr>
+          <tr><th>Step 4</th><td>Facing an open, then an open and a caller.</td></tr>
+          <tr><th>Step 5</th><td>3-bet and 4-bet pots.</td></tr>
+          <tr><th>Then</th><td>Step the open-size slider one notch at a time and learn what changes.</td></tr>
+        </table>
+        <p class="eyebrow" style="margin-top:18px">Game settings</p>
         <table class="plan" id="m-cfg"></table>
-        <p class="note" style="margin-top:14px" id="m-note"></p>
+        <p class="eyebrow" style="margin-top:18px">About the numbers</p>
+        <p class="small muted" style="margin:0" id="m-about"></p>
       </div>
     </div>
   </section>
@@ -500,34 +516,42 @@ html.app .ctl .frow .seg button{min-height:30px}
 <script src="k-poker-data.js"></script>
 <script>
 'use strict';
-/* ---------- hands ---------- */
+/* ---------- constants ---------- */
 const RANKS = 'AKQJT98765432';
 const GRID = [];
 for (let i = 0; i < 13; i++) for (let j = 0; j < 13; j++) GRID.push(i === j ? RANKS[i] + RANKS[i] : i < j ? RANKS[i] + RANKS[j] + 's' : RANKS[j] + RANKS[i] + 'o');
 const GIDX = Object.fromEntries(GRID.map((n, i) => [n, i]));
-const COMBOS = GRID.map(n => n.length === 2 ? 6 : n[2] === 's' ? 4 : 12);
 const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 const DEC = {}; [...B64].forEach((c, i) => DEC[c] = i);
+const COMBOS = GRID.map(n => n.length === 2 ? 6 : n[2] === 's' ? 4 : 12);
 const SUITSYM = { s: '♠', h: '♥', d: '♦', c: '♣' };
-const KORD = { J: 0, R: 1, C: 2, X: 3, F: 4 };
-const KNAME = { J: 'All-in', R: 'Raise', C: 'Limp / call', X: 'Check', F: 'Fold' };
-const FAMS = {
+const FAM = {
   RFI: { label: 'First in', chip: 'First in' },
-  vsLimp: { label: 'Facing limpers', chip: 'Vs limpers' },
-  vsOpen: { label: 'Facing an open', chip: 'Vs open' },
-  vsOpenCall: { label: 'Facing an open and caller(s)', chip: 'Open + call' },
+  vsLimp: { label: 'Facing limpers', chip: 'vs limpers' },
+  vsOpen: { label: 'Facing an open', chip: 'vs open' },
+  vsOpenCall: { label: 'Open and a call in front of you', chip: 'Open + call' },
   vsIso: { label: 'Facing a raise over limpers', chip: 'Raise over limps' },
-  limpVsRaise: { label: 'You limped, facing a raise', chip: 'Limped, vs raise' },
-  vs3bet: { label: 'You raised, facing a 3-bet', chip: 'Raised, vs 3-bet' },
-  vs4bet: { label: 'Facing a 4-bet or more', chip: 'Vs 4-bet' },
+  limpVsRaise: { label: 'You limped and got raised', chip: 'Limped → raise' },
+  vs3bet: { label: 'You raised and got 3-bet', chip: 'Raised → 3-bet' },
+  vs4bet: { label: 'Facing a 4-bet', chip: '3-bet → 4-bet' },
   cold: { label: 'Facing a raise and a 3-bet', chip: 'Cold vs 3-bet' },
-  callVs3bet: { label: 'You called, facing a 3-bet', chip: 'Called, vs 3-bet' },
-  limpVs3bet: { label: 'You limped, facing a 3-bet', chip: 'Limped, vs 3-bet' },
+  callVs3bet: { label: 'You called and it was 3-bet', chip: 'Called → 3-bet' },
+  limpVs3bet: { label: 'You limped, then a raise and a 3-bet', chip: 'Limped → 3-bet' },
 };
-const FAM_ORDER = Object.keys(FAMS);
+const FAM_ORDER = Object.keys(FAM);
+const KORD = { J: 0, B: 1, R: 2, C: 3, X: 4, F: 5 };
+const KNAME = { J: 'All-in', B: 'Bigger raise', R: 'Raise', C: 'Limp / call', X: 'Check', F: 'Fold' };
+const VS_ROLE = { vsLimp: 'Limper', vsOpen: 'Opener', vsOpenCall: 'Opener', vsIso: 'Raiser', limpVsRaise: 'Raiser', vs3bet: '3-bettor', vs4bet: '4-bettor', cold: '3-bettor', callVs3bet: '3-bettor', limpVs3bet: '3-bettor' };
 
-/* ---------- decode ---------- */
-function dec2(s) { const a = new Float32Array(169); for (let g = 0; g < 169; g++) a[g] = (DEC[s[2 * g]] * 64 + DEC[s[2 * g + 1]]) / 4095; return a; }
+/* ---------- decode data ---------- */
+/* One game per open size. A situation (sit) is a seat plus the exact action before it, ignoring sizes, so the same
+   line can be followed across open sizes the way the other trainers follow a spot across stack depths. */
+const KD = window.KPOKER_DATA || { games: {} };
+const TAGS = Object.keys(KD.games).sort((a, b) => parseFloat(a) - parseFloat(b));
+const OPENS = TAGS.map(t => parseFloat(t));
+const GAME = {}, SITS = new Map(), SPOT_AT = new Map();
+let POS = ['UTG', 'MP', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
+function dec1(s) { const a = new Float32Array(169); for (let g = 0; g < 169; g++) a[g] = DEC[s[g]] / 63; return a; }
 class Spot {
   get f() { return this._f || inflate(this)._f; }
   get reach() { if (!this._f) inflate(this); return this._reach; }
@@ -535,7 +559,7 @@ class Spot {
   get order() { return this._order || inflate(this)._order; }
 }
 function inflate(sp) {
-  const A = sp.A, fr = sp._raw[0].map(dec2), reach = dec2(sp._raw[1]), prim = new Uint8Array(169);
+  const A = sp.A, fr = sp._raw[0].map(dec1), reach = dec1(sp._raw[1]), prim = new Uint8Array(169);
   for (let g = 0; g < 169; g++) {
     let t = 0, b = 0;
     for (let a = 0; a < A.length; a++) { t += fr[a][g]; if (fr[a][g] > fr[b][g]) b = a; }
@@ -550,48 +574,55 @@ function inflate(sp) {
 /* who did what before this spot, from the spot's own point of view */
 function classify(sp) {
   const H = sp.hero;
-  let raises = 0, limps = 0, callers = 0, lastRaiser = -1, lastKind = null, heroPrev = null, heroRaiseNo = 0;
+  let raises = 0, limps = 0, callers = 0, lastRaiser = -1, firstLimper = -1, heroPrev = null, heroRaiseNo = 0;
   const entrants = new Set();
   for (const [s, k] of sp.line) {
     if (k === 'F') continue;
     if (s !== H) entrants.add(s);
-    if (k === 'R' || k === 'J') { raises++; lastRaiser = s; lastKind = k; callers = 0; if (s === H) { heroPrev = 'R'; heroRaiseNo = raises; } }
-    else { if (!raises) limps++; else callers++; if (s === H) heroPrev = raises ? 'C' : 'L'; }
+    if (k === 'R' || k === 'J') { raises++; lastRaiser = s; callers = 0; if (s === H) { heroPrev = 'R'; heroRaiseNo = raises; } }
+    else { if (!raises) { limps++; if (firstLimper < 0) firstLimper = s; } else callers++; if (s === H) heroPrev = raises ? 'C' : 'L'; }
   }
-  Object.assign(sp, { raises, limps, callers, lastRaiser, lastKind, heroPrev, est: entrants.size >= 2 });
-  let fam, vs = -1;
-  if (!raises) { fam = limps ? 'vsLimp' : 'RFI'; vs = limps; }
-  else if (raises === 1) {
-    vs = lastRaiser;
-    if (heroPrev === 'L') fam = 'limpVsRaise';
-    else fam = limps ? 'vsIso' : callers ? 'vsOpenCall' : 'vsOpen';
-  } else {
-    vs = lastRaiser;
-    if (!heroPrev) fam = 'cold';
-    else if (heroPrev === 'R') fam = raises === 2 && heroRaiseNo === 1 ? 'vs3bet' : 'vs4bet';
-    else if (heroPrev === 'C') fam = 'callVs3bet';
-    else fam = 'limpVs3bet';
-  }
-  sp.fam = fam; sp.vs = vs;
+  Object.assign(sp, { raises, limps, callers, heroPrev, est: entrants.size >= 2 });
+  let fam, vs = lastRaiser, lvs = lastRaiser;
+  if (!raises) { fam = limps ? 'vsLimp' : 'RFI'; vs = limps ? firstLimper : -1; lvs = limps; }
+  else if (raises === 1) fam = heroPrev === 'L' ? 'limpVsRaise' : limps ? 'vsIso' : callers ? 'vsOpenCall' : 'vsOpen';
+  else if (!heroPrev) fam = 'cold';
+  else if (heroPrev === 'R') fam = raises === 2 && heroRaiseNo === 1 ? 'vs3bet' : 'vs4bet';
+  else fam = heroPrev === 'C' ? 'callVs3bet' : 'limpVs3bet';
+  Object.assign(sp, { fam, vs, lvs, caller: -1 });
 }
-const KD = window.KPOKER_DATA || { games: {} };
-const TAGS = Object.keys(KD.games).sort((a, b) => parseFloat(a) - parseFloat(b));  // games by open size; the slider shows the biggest on the left
-const GAME = {};
-for (const tag of TAGS) {
-  const D = KD.games[tag], P = D.config.positions;
-  const G = { tag, label: D.label || tag + 'bb opens', cfg: D.config, P, n: P.length, spots: [], byKey: new Map(), cell: new Map(), gap: D.gap };
+function decodeGame(tag, D) {
+  POS = D.config.positions;
+  const dp = parseFloat(tag), q = D.q || 63;
+  const G = { tag, dp, label: D.label, cfg: D.config, n: POS.length, spots: [], byKey: new Map(), cell: new Map(), gap: D.gap };
   for (const rec of D.spots) {
     const [path, actor, pot, inv, line, acts, f, reach, bp] = rec;
     const A = acts.map(([label, kind, to, freq], i) => ({ i, label, kind, size: to, freq }));
-    const sp = Object.assign(new Spot(), { id: G.spots.length, tag, G, path, key: path.join('.'), hero: actor, pot, inv, line, A, bp, _raw: [f, reach] });
+    const sp = Object.assign(new Spot(), { tag, G, dp, n: G.n, path, key: path.join('.'), hero: actor, pot, line, A, bp, _raw: [f, reach] });
     sp.defIdx = (A.find(a => a.kind === 'F') || A.find(a => a.kind === 'X') || A[0]).i;
     classify(sp);
     G.spots.push(sp); G.byKey.set(sp.key, sp);
-    // lens: the most common line for each spot type, seat and opponent (or number of limpers)
-    const ck = sp.fam + '|' + sp.hero + '|' + sp.vs, cur = G.cell.get(ck);
+    // Hand lens: the most common line for each spot type, seat and opponent (or number of limpers)
+    const ck = sp.fam + '|' + sp.hero + '|' + sp.lvs, cur = G.cell.get(ck);
     if (!cur || sp.bp > cur.bp) G.cell.set(ck, sp);
+    // Charts: the same line at every open size
+    const sitKey = sp.hero + '|' + line.map(([s, k]) => s + k).join(',');
+    let sit = SITS.get(sitKey);
+    if (!sit) SITS.set(sitKey, sit = { key: sitKey, fam: sp.fam, n: G.n, hero: sp.hero, vs: sp.vs, caller: -1, spots: [], w: 0 });
+    sit.spots.push(sp); sit.w = Math.max(sit.w, bp); sp.sitKey = sitKey;
+    SPOT_AT.set(sitKey + '|' + dp, sp);
   }
   GAME[tag] = G;
+}
+function finishSits() { for (const s of SITS.values()) { s.spots.sort((a, b) => a.dp - b.dp); s.depths = s.spots.map(x => x.dp); s.spots.forEach((sp, i) => { sp.idx = i; sp.sit = s; }); } }
+const sitSort = (a, b) => a.hero - b.hero || a.vs - b.vs || b.w - a.w;
+const sitsWhere = pred => [...SITS.values()].filter(pred).sort(sitSort);
+function loadGames() {
+  return Promise.all(TAGS.map(tag => new Promise((ok, fail) => {
+    if ((window.KPOKER_GAMES || {})[tag]) return ok();
+    const el = document.createElement('script'); el.src = KD.games[tag].file; el.onload = ok; el.onerror = () => fail(new Error('could not load ' + KD.games[tag].file));
+    document.head.appendChild(el);
+  }))).then(() => { for (const tag of TAGS) { decodeGame(tag, window.KPOKER_GAMES[tag]); delete window.KPOKER_GAMES[tag]; } finishSits(); });
 }
 
 /* ---------- helpers ---------- */
@@ -602,62 +633,85 @@ const pct = x => Math.round(x * 100) + '%';
 const num = x => String(Math.round(x * 100) / 100);
 const fmtBB = x => num(x) + 'bb';
 const often = x => x >= 0.0995 ? (x * 100).toFixed(0) + '%' : x >= 0.000995 ? (x * 100).toFixed(1) + '%' : '<0.1%';
-const inRange = (sp, g) => sp.reach[g] > 0.04;
-const kindAt = (sp, g) => sp.A[sp.prim[g]].kind;
-const kColor = k => `var(--k-${k})`;
+const inRange = (spot, g) => spot.reach[g] > 0.04;
+const kindAt = (spot, g) => spot.A[spot.prim[g]].kind;
+const playsAt = (spot, g) => inRange(spot, g) && spot.f[spot.defIdx][g] < 0.5;
 function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
 function load(k) { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
-const raiseWord = n => n === 0 ? 'Raise' : n === 1 ? '3-bet' : n === 2 ? '4-bet' : '5-bet';
-function actLabel(sp, a) {
-  const A = sp.A[a];
+const raiseNo = n => n === 0 ? 'Raise' : n === 1 ? '3-bet' : n === 2 ? '4-bet' : '5-bet';
+function raiseWord(spot) { return spot.raises ? raiseNo(spot.raises) : spot.limps ? 'Raise' : 'Open'; }
+function actLabel(spot, a, short) {
+  const A = spot.A[a];
   switch (A.kind) {
     case 'F': return 'Fold';
     case 'X': return 'Check';
-    case 'C': return sp.raises ? 'Call' : 'Limp';
+    case 'C': return spot.raises ? 'Call' : 'Limp';
     case 'J': return 'All-in';
-    default: return (sp.raises ? raiseWord(sp.raises) : sp.limps ? 'Raise' : 'Open') + ' ' + fmtBB(A.size);
+    default: return short ? raiseWord(spot) : raiseWord(spot) + ' ' + fmtBB(A.size);
   }
 }
-function actAbbr(sp, a) { const k = sp.A[a].kind; return k === 'F' ? '' : k === 'X' ? 'X' : k === 'C' ? (sp.raises ? 'C' : 'L') : k === 'J' ? 'AI' : 'R'; }
+function actAbbr(spot, a) { const k = spot.A[a].kind; return k === 'F' ? '' : k === 'X' ? 'X' : k === 'C' ? (spot.raises ? 'C' : 'L') : k === 'J' ? 'AI' : 'R'; }
+const kColor = k => `var(--k-${k})`;
+function sitLabel(s) {
+  const P = POS;
+  if (s.fam === 'RFI') return P[s.hero];
+  if (s.fam === 'vsLimp') { const sp = s.spots ? s.spots[0] : s; return `${P[s.hero]} vs ${sp.limps} limp${sp.limps > 1 ? 's' : ''}`; }
+  return P[s.hero] + ' vs ' + P[s.vs];
+}
 /* the action before the spot, in words */
-function lineWords(G, line, hero) {
-  const P = G.P, out = [];
+function narrate(spot) {
+  const P = POS, out = [];
   let raises = 0, limps = 0;
-  for (const [s, k, to] of line) {
+  for (const [s, k, to] of spot.line) {
     if (k === 'F') continue;
-    const me = s === hero, who = me ? 'You' : `<b>${P[s]}</b>`, v = w => me ? w : w + 's';
-    let t;
-    if (k === 'X') t = `${who} ${v('check')}`;
-    else if (k === 'C') { t = `${who} ${raises ? v('call') : v('limp')}`; if (!raises) limps++; }
-    else if (k === 'J') { raises++; t = `${who} ${me ? 'go' : 'goes'} all-in`; }
-    else { raises++; t = `${who} ${raises === 1 ? (limps ? v('raise') : v('open')) : raises === 2 ? v('3-bet') : raises === 3 ? v('4-bet') : v('5-bet')} to ${fmtBB(to)}`; }
-    out.push(t);
+    const me = s === spot.hero, who = me ? 'You' : `<b>${P[s]}</b>`, v = w => me ? w : w + 's';
+    if (k === 'X') out.push(`${who} ${v('check')}`);
+    else if (k === 'C') { out.push(`${who} ${raises ? v('call') : v('limp')}`); if (!raises) limps++; }
+    else if (k === 'J') { raises++; out.push(`${who} ${me ? 'go' : 'goes'} all-in`); }
+    else { raises++; out.push(`${who} ${raises === 1 ? (limps ? v('raise') : v('open')) : raises === 2 ? v('3-bet') : raises === 3 ? v('4-bet') : v('5-bet')} to ${fmtBB(to)}`); }
   }
-  return out;
+  if (!out.length) return spot.hero === 0 ? `You're first to act in <b>${P[0]}</b>.` : `Folds to you in the <b>${P[spot.hero]}</b>.`;
+  return out.join(', ') + '. ' + (spot.heroPrev ? 'Back to you.' : `You're in the <b>${P[spot.hero]}</b>.`);
 }
-function narrate(sp) {
-  const P = sp.G.P, w = lineWords(sp.G, sp.line, sp.hero);
-  if (!w.length) return sp.hero === 0 ? `You're first to act in the <b>${P[0]}</b>.` : `Folds to you in the <b>${P[sp.hero]}</b>.`;
-  return w.join(', ') + '. ' + (sp.heroPrev ? 'Back to you.' : `You're in the <b>${P[sp.hero]}</b>.`);
-}
-function lineShort(sp) {
-  const P = sp.G.P, out = []; let raises = 0;
-  for (const [s, k, to] of sp.line) {
+function lineShort(spot) {
+  const out = []; let raises = 0;
+  for (const [s, k, to] of spot.line) {
     if (k === 'F') continue;
-    const who = s === sp.hero ? 'you' : P[s];
+    const who = s === spot.hero ? 'you' : POS[s];
     if (k === 'X') out.push(who + ' X'); else if (k === 'C') out.push(who + (raises ? ' C' : ' L')); else if (k === 'J') { raises++; out.push(who + ' AI'); } else { raises++; out.push(who + ' ' + num(to)); }
   }
   return out.length ? out.join(' · ') : 'Folds to you';
 }
 const EST_NOTE = '<p class="estnote"><b>Multiway: an estimate.</b> Two or more players are already in, and the solver values multiway flops with a learned estimate rather than solving them out.</p>';
 
-/* ---------- painting ---------- */
-function cellBg(sp, g) {
-  if (!sp) return 'var(--empty)';
-  const reach = sp.reach[g];
+/* ---------- range notation & ladders ---------- */
+const LADDERS = (() => {
+  const L = [{ name: 'Pairs', short: 'Pairs', pair: true, cells: [...Array(13).keys()].map(i => i * 13 + i) }];
+  for (let i = 0; i < 12; i++) L.push({ name: RANKS[i] + 'x suited', short: RANKS[i] + 'xs', cells: [...Array(12 - i).keys()].map(d => i * 13 + i + 1 + d) });
+  for (let i = 0; i < 12; i++) L.push({ name: RANKS[i] + 'x offsuit', short: RANKS[i] + 'xo', cells: [...Array(12 - i).keys()].map(d => (i + 1 + d) * 13 + i) });
+  return L;
+})();
+const EDGE_LADDERS = LADDERS.filter(l => l.pair || ['Axs', 'Kxs', 'Qxs', 'Jxs', 'Txs', '9xs', 'Axo', 'Kxo', 'Qxo', 'Jxo', 'Txo'].includes(l.short));
+function ladderRuns(l, test) {
+  const c = l.cells, runs = []; let s = -1;
+  for (let k = 0; k <= c.length; k++) { const on = k < c.length && test(c[k]); if (on && s < 0) s = k; if (!on && s >= 0) { runs.push([s, k - 1]); s = -1; } }
+  return runs;
+}
+function ladderNotation(l, test) {
+  const n = l.cells.map(g => GRID[g]);
+  return ladderRuns(l, test).map(([a, b]) => a === 0 ? n[b] + '+' : a === b ? n[a] : n[a] + '–' + n[b]);
+}
+
+/* ---------- cell painting ---------- */
+function cellBg(spot, g) {
+  if (!spot) return 'var(--empty)';
+  const reach = spot.reach[g];
   if (reach < 0.04) return 'var(--empty)';
   const segs = []; let x = 0;
-  for (const a of sp.order) { const p = sp.f[a][g]; if (p < 0.004) continue; segs.push(`${kColor(sp.A[a].kind)} ${(x * 100).toFixed(1)}% ${((x + p) * 100).toFixed(1)}%`); x += p; }
+  for (const a of spot.order) {
+    const p = spot.f[a][g]; if (p < 0.004) continue;
+    segs.push(`${kColor(spot.A[a].kind)} ${(x * 100).toFixed(1)}% ${((x + p) * 100).toFixed(1)}%`); x += p;
+  }
   if (!segs.length) return 'var(--empty)';
   const grad = `linear-gradient(90deg,${segs.join(',')})`;
   if (reach < 0.97) return `${grad} bottom/100% ${(reach * 100).toFixed(0)}% no-repeat,var(--empty)`;
@@ -665,50 +719,95 @@ function cellBg(sp, g) {
 }
 class Grid {
   constructor(el, opts = {}) {
-    this.el = el; this.cells = []; el.innerHTML = '';
-    for (let g = 0; g < 169; g++) { const c = document.createElement('div'); c.className = 'cell'; c.dataset.g = g; c.innerHTML = `<span class="nm">${GRID[g]}</span><span class="val"></span>`; el.appendChild(c); this.cells.push(c); }
+    this.el = el; this.opts = opts; this.cells = [];
+    el.innerHTML = '';
+    for (let g = 0; g < 169; g++) {
+      const c = document.createElement('div'); c.className = 'cell'; c.dataset.g = g;
+      c.innerHTML = `<span class="nm">${GRID[g]}</span><span class="val"></span>`;
+      el.appendChild(c); this.cells.push(c);
+    }
     if (opts.onCell) el.addEventListener('click', e => { const c = e.target.closest('.cell'); if (c) opts.onCell(+c.dataset.g); });
     this.prevK = new Array(169).fill(null);
   }
-  show(sp, { marks, animate, bg } = {}) {
+  show(spot, { marks, values, animate, bg } = {}) {
     for (let g = 0; g < 169; g++) {
       const c = this.cells[g];
-      c.style.background = bg ? bg(g) : cellBg(sp, g);
-      const out = sp ? !inRange(sp, g) : false;
+      c.style.background = bg ? bg(g) : cellBg(spot, g);
+      const out = spot ? !inRange(spot, g) : false;
       let cls = 'cell' + (out ? ' out' : '');
       if (marks) { const m = marks(g); if (m) cls += ' ' + m; }
-      const k = sp && !out ? kindAt(sp, g) : 'out';
+      const k = spot && !out ? kindAt(spot, g) : 'out';
       if (animate && this.prevK[g] !== null && this.prevK[g] !== k) cls += ' pop';
-      this.prevK[g] = k; c.className = cls;
+      this.prevK[g] = k;
+      c.className = cls;
+      c.querySelector('.val').textContent = values ? (values(g) ?? '') : '';
     }
   }
 }
-function legendHTML(kinds, extra = '', out = true) { return kinds.map(k => `<span><i class="sw" style="background:${kColor(k)}"></i>${KNAME[k]}</span>`).join('') + (out ? `<span><i class="sw" style="background:var(--empty)"></i>Not in your range</span>` : '') + extra; }
-function mixOf(sp) {
-  const tot = new Float64Array(sp.A.length); let W = 0;
-  for (let g = 0; g < 169; g++) { const w = COMBOS[g] * sp.reach[g]; W += w; for (let a = 0; a < sp.A.length; a++) tot[a] += w * sp.f[a][g]; }
+function kindLabel(spot, k) { return k === 'F' ? 'Fold' : k === 'X' ? 'Check' : k === 'C' ? (spot.raises ? 'Call' : 'Limp') : k === 'J' ? 'All-in' : raiseWord(spot); }
+/* the legend names calls "Limp" where nobody has raised yet */
+function legendHTML(kinds, spot) {
+  return kinds.map(k => `<span><i class="sw" style="background:${kColor(k)}"></i>${spot ? kindLabel(spot, k) : KNAME[k]}</span>`).join('') +
+    `<span><i class="sw" style="background:var(--empty)"></i>Not in your range</span>`;
+}
+let COLORS = {};
+function readColors() { const cs = getComputedStyle(document.documentElement); for (const k of ['F', 'C', 'X', 'R', 'B', 'J']) COLORS[k] = cs.getPropertyValue('--k-' + k).trim(); COLORS.empty = cs.getPropertyValue('--empty').trim(); }
+function drawMini(cv, spot, size = 5) {
+  const gap = 1, W = 13 * size + 12 * gap, dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = W * dpr; cv.style.width = cv.style.height = W + 'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, W);
+  for (let g = 0; g < 169; g++) {
+    const x = (g % 13) * (size + gap), y = Math.floor(g / 13) * (size + gap);
+    ctx.fillStyle = COLORS.empty; ctx.fillRect(x, y, size, size);
+    if (!spot || !inRange(spot, g)) continue;
+    let off = 0;
+    for (const a of spot.order) { const p = spot.f[a][g]; if (p < 0.01) continue; ctx.fillStyle = COLORS[spot.A[a].kind]; ctx.fillRect(x + off * size, y, Math.max(p * size, 0.6), size); off += p; }
+  }
+}
+function mixOf(spot) {
+  const tot = new Float64Array(spot.A.length); let W = 0;
+  for (let g = 0; g < 169; g++) { const w = COMBOS[g] * spot.reach[g]; W += w; for (let a = 0; a < spot.A.length; a++) tot[a] += w * spot.f[a][g]; }
   return [...tot].map(x => W ? x / W : 0);
 }
-function mixHTML(sp) {
-  const m = mixOf(sp);
-  return `<div class="mix">${sp.order.map(a => `<div class="mix-row"><span>${actLabel(sp, a)}</span><div class="bar"><i style="width:${(m[a] * 100).toFixed(1)}%;background:${kColor(sp.A[a].kind)}"></i></div><span class="mono">${pct(m[a])}</span></div>`).join('')}</div>`;
+/* one row per action type that exists anywhere in the series, so rows never appear or vanish while sliding */
+function stableMixHTML(spot, spots) {
+  const kinds = [];
+  for (const s of spots) for (const a of s.order) { const k = s.A[a].kind; if (!kinds.includes(k)) kinds.push(k); }
+  kinds.sort((x, y) => KORD[x] - KORD[y]);
+  const m = mixOf(spot);
+  const label = (s, k) => { const idx = s.order.filter(a => s.A[a].kind === k); return kindLabel(s, k) + ((k === 'R' || k === 'B') && idx.length ? ` <small class="muted">${fmtBB(s.A[idx[0]].size)}</small>` : ''); };
+  // every label this spot shows at any open size, hidden: it sets the label column's width, so the rows don't move as you slide
+  const sizer = [...new Set(spots.flatMap(s => kinds.map(k => label(s, k))))].map(t => `<span>${t}</span>`).join('');
+  return `<div class="mix">${kinds.map(k => {
+    const idx = spot.order.filter(a => spot.A[a].kind === k);
+    const v = idx.reduce((s, a) => s + m[a], 0);
+    return `<div class="mix-row"><span style="${idx.length ? '' : 'color:var(--faint)'}">${label(spot, k)}</span><div class="bar"><i style="width:${(v * 100).toFixed(1)}%;background:${kColor(k)}"></i></div><span class="mono">${pct(v)}</span></div>`;
+  }).join('')}<div class="mix-w" aria-hidden="true">${sizer}</div></div>`;
 }
-function handDetailHTML(sp, g) {
-  if (g == null) return '<p class="small muted" style="margin:0">Tap a hand in the chart to see exactly how often it takes each action.</p>';
-  if (!inRange(sp, g)) return `<div class="handbox"><span class="hn">${GRID[g]}</span><span class="muted">Not in your range here. You'd have folded it earlier.</span></div>`;
-  const rows = sp.order.map(a => `<div class="mix-row"><span>${actLabel(sp, a)}</span><div class="bar"><i style="width:${(sp.f[a][g] * 100).toFixed(1)}%;background:${kColor(sp.A[a].kind)}"></i></div><span class="mono">${pct(sp.f[a][g])}</span></div>`).join('');
+function edgesHTML(spot) {
+  const rows = EDGE_LADDERS.map(l => {
+    const lad = l.cells.map(g => `<i title="${GRID[g]}" style="background:${inRange(spot, g) ? cellBg(spot, g) : 'var(--empty)'}"></i>`).join('');
+    const txt = ladderNotation(l, g => playsAt(spot, g)).join(', ') || 'none';
+    return `<span class="nm">${l.short}</span><div class="lad">${lad}<span>${txt}</span></div>`;
+  });
+  return `<div class="edges">${rows.join('')}</div>`;
+}
+/* frequencies only: this solver gives no values per hand */
+function handDetailHTML(spot, g) {
+  if (g == null) return '<p class="small muted" style="margin:0">Tap a hand in the chart to see its exact frequencies.</p>';
+  if (!inRange(spot, g)) return `<div class="handbox"><span class="hn">${GRID[g]}</span><span class="muted">Not in your range here. You'd have folded it earlier.</span></div>`;
+  const rows = spot.order.map(a => `<div class="mix-row"><span>${actLabel(spot, a, true)}</span><div class="bar"><i style="width:${(spot.f[a][g] * 100).toFixed(1)}%;background:${kColor(spot.A[a].kind)}"></i></div><span class="mono">${pct(spot.f[a][g])}</span></div>`).join('');
   return `<div class="handbox"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="hn">${GRID[g]}</span><button class="btn ghost small" data-lens="${g}">Open in Hand lens →</button></div><div class="mix">${rows}</div></div>`;
-}
-function spotInfoHTML(sp, extra = '', short = false) {
-  const est = !sp.est ? '' : short ? ' · <b class="estb" title="Two or more players are already in: the solver values multiway flops with a learned estimate rather than solving them.">multiway, an estimate</b>' : '';
-  return `<div class="panel"><h3>${esc(FAMS[sp.fam].label)}</h3>${mixHTML(sp)}<p class="kmeta">Pot ${num(sp.pot)}bb · this line comes up in ${often(sp.bp)} of hands${est}</p>${sp.est && !short ? EST_NOTE : ''}${extra}</div>`;
 }
 
 /* ---------- state ---------- */
-const UI = Object.assign({ tab: 'lens', lens: GIDX['KTs'], tag: TAGS.includes('5') ? '5' : TAGS[TAGS.length - 1], cFam: 'RFI', cHero: 0, cKey: null, bPath: [], bAuto: [] }, load('kpoker-ui') || {});
-if (!GAME[UI.tag]) UI.tag = TAGS.includes('5') ? '5' : TAGS[TAGS.length - 1];
+const UI = Object.assign({ tab: 'charts', cFam: 'RFI', cSit: null, cDp: 5, lens: GIDX['KTs'], bDp: 5, bSeq: [] }, load('kpoker-ui') || {});
+if (!['charts', 'build', 'lens', 'method'].includes(UI.tab)) UI.tab = 'charts';
+if (!Array.isArray(UI.bSeq)) UI.bSeq = [];
 const saveUI = () => store('kpoker-ui', UI);
-const game = () => GAME[UI.tag];
+
+/* ---------- tabs ---------- */
+/* jumping to a tab from a link (Open in Hand lens, Open chart…) starts it at the top; in the app the panes scroll, not the window */
 function resetScroll() {
   const m = document.querySelector('main'); if (m) m.scrollTop = 0;
   $$('.view:not([hidden]) .stage, .view:not([hidden]) .rail, .view:not([hidden]) .ctl, .lens-head, .lens-blocks, .method > .panel').forEach(el => { el.scrollTop = 0; });
@@ -717,138 +816,232 @@ function setTab(t) {
   UI.tab = t; saveUI();
   for (const b of $$('#tabs button')) b.setAttribute('aria-selected', b.dataset.tab === t);
   for (const v of $$('.view')) v.hidden = v.id !== 'v-' + t;
-  if (t === 'lens') renderLens();
   if (t === 'charts') renderCharts();
   if (t === 'build') renderBuild();
+  if (t === 'lens') renderLens();
   if (t === 'method') renderMethod();
   window.scrollTo({ top: 0 }); resetScroll();
 }
 $('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.tab); });
-/* open-size slider: one step per game in the data file, so a new solve (another open size) needs no code change */
-function tagSeg(el) {
-  if (!el.firstChild) el.innerHTML = `<div class="drow on"><div class="dval"><b></b><small>bb open</small></div><div class="dmid"><input type="range" min="0" step="1" aria-label="Open size"><div class="ticks"></div></div></div>`;
-  const sl = $('input', el), i = TAGS.indexOf(UI.tag);
-  $('b', el).textContent = UI.tag;
-  sl.max = Math.max(0, TAGS.length - 1); sl.value = i; sl.disabled = TAGS.length < 2;
-  $('.ticks', el).innerHTML = ticksHTML(TAGS, UI.tag, $('.ticks', el).clientWidth || 260);
-}
-function ticksHTML(labels, cur, width) {
-  const n = labels.length; if (!n) return '';
-  const posOf = i => n > 1 ? 1 - i / (n - 1) : 0.5;  // biggest on the left, like the slider
-  const minGap = 30 / Math.max(width, 120), chosen = [];
-  const tryAdd = i => { if (i < 0 || chosen.includes(i)) return; if (chosen.every(j => Math.abs(posOf(j) - posOf(i)) >= minGap)) chosen.push(i); };
-  tryAdd(0); tryAdd(n - 1); labels.forEach((d, i) => tryAdd(i));
-  return chosen.sort((a, b) => a - b).map(i => `<span style="left:${(posOf(i) * 100).toFixed(2)}%" class="${String(labels[i]) === String(cur) ? 'on' : ''}">${labels[i]}</span>`).join('');
-}
-for (const id of ['#l-tag', '#c-tag', '#b-tag']) $(id).addEventListener('input', e => {
-  const t = TAGS[+e.target.value]; if (!t || t === UI.tag) return;
-  UI.tag = t; UI.cKey = null; UI.bPath = []; UI.bAuto = []; setTab(UI.tab);
-});
-function openInCharts(sp, g) { UI.tag = sp.tag; UI.cFam = sp.fam; UI.cHero = sp.hero; UI.cKey = sp.key; cSel = g; setTab('charts'); }
-
-/* ---------- HAND LENS ---------- */
-/* how strong each starting hand is: [top % of the 1,326 combos ranked at or above it, % equity against a random hand] */
-const HAND_TOP = {'AA':[0.5,85.2],'KK':[0.9,82.4],'QQ':[1.4,79.9],'JJ':[1.8,77.5],'TT':[2.3,75.0],'99':[2.7,72.1],'88':[3.2,69.2],'AKs':[3.5,67.1],'AQs':[3.8,66.2],'77':[4.2,66.2],'AJs':[4.5,65.4],'AKo':[5.4,65.3],'ATs':[5.7,64.6],'AQo':[6.6,64.3],'AJo':[7.5,63.6],'KQs':[7.8,63.4],'66':[8.3,63.2],'A9s':[8.6,62.8],'ATo':[9.5,62.7],'KJs':[9.8,62.5],'A8s':[10.1,62.0],'KTs':[10.4,61.8],'KQo':[11.3,61.4],'A7s':[11.6,61.0],'A9o':[12.5,60.8],'KJo':[13.4,60.5],'55':[13.9,60.3],'QJs':[14.2,60.2],'K9s':[14.5,60.0],'A5s':[14.8,60.0],'A6s':[15.1,59.9],'A8o':[16.0,59.9],'KTo':[16.9,59.7],'QTs':[17.2,59.4],'A4s':[17.5,59.0],'A7o':[18.4,58.9],'K8s':[18.7,58.4],'A3s':[19.0,58.2],'QJo':[19.9,58.1],'K9o':[20.8,57.8],'A6o':[21.7,57.7],'Q9s':[22.0,57.7],'A5o':[22.9,57.7],'K7s':[23.2,57.5],'JTs':[23.5,57.5],'A2s':[23.8,57.4],'QTo':[24.7,57.3],'44':[25.2,57.1],'A4o':[26.1,56.7],'K6s':[26.4,56.6],'K8o':[27.3,56.0],'Q8s':[27.6,55.9],'A3o':[28.5,55.9],'K5s':[28.8,55.8],'J9s':[29.1,55.6],'Q9o':[30.0,55.3],'JTo':[30.9,55.3],'K7o':[31.8,55.2],'A2o':[32.7,55.0],'K4s':[33.0,54.9],'Q7s':[33.3,54.3],'K6o':[34.2,54.2],'K3s':[34.5,54.1],'J8s':[34.8,54.1],'T9s':[35.1,54.0],'33':[35.6,53.7],'Q6s':[35.9,53.6],'Q8o':[36.8,53.5],'K5o':[37.7,53.4],'J9o':[38.6,53.3],'K2s':[38.9,53.2],'Q5s':[39.2,52.8],'T8s':[39.5,52.3],'K4o':[40.4,52.3],'J7s':[40.7,52.3],'Q4s':[41.0,51.8],'Q7o':[41.9,51.8],'J8o':[42.8,51.5],'T9o':[43.7,51.5],'K3o':[44.6,51.4],'Q6o':[45.6,51.0],'Q3s':[45.9,50.9],'98s':[46.2,50.8],'T7s':[46.5,50.6],'J6s':[46.8,50.6],'K2o':[47.7,50.5],'22':[48.1,50.3],'Q2s':[48.4,50.2],'Q5o':[49.3,50.2],'J5s':[49.6,50.0],'T8o':[50.5,49.7],'J7o':[51.4,49.7],'97s':[51.7,49.2],'Q4o':[52.6,49.1],'J4s':[52.9,49.1],'T6s':[53.2,48.9],'J3s':[53.5,48.2],'Q3o':[54.4,48.2],'98o':[55.4,48.1],'T7o':[56.3,47.9],'87s':[56.6,47.9],'J6o':[57.5,47.8],'96s':[57.8,47.5],'J2s':[58.1,47.4],'Q2o':[59.0,47.3],'T5s':[59.3,47.2],'J5o':[60.2,47.2],'T4s':[60.5,46.5],'97o':[61.4,46.3],'86s':[61.7,46.2],'J4o':[62.6,46.2],'T6o':[63.5,46.2],'95s':[63.8,45.7],'T3s':[64.1,45.7],'76s':[64.4,45.4],'J3o':[65.3,45.2],'87o':[66.2,45.1],'T2s':[66.5,44.8],'85s':[66.8,44.6],'96o':[67.7,44.4],'J2o':[68.6,44.3],'T5o':[69.5,44.3],'94s':[69.8,43.9],'75s':[70.1,43.7],'T4o':[71.0,43.5],'93s':[71.3,43.3],'86o':[72.2,43.2],'65s':[72.5,43.2],'84s':[72.9,42.7],'T3o':[73.8,42.6],'95o':[74.7,42.6],'92s':[75.0,42.5],'76o':[75.9,42.3],'74s':[76.2,41.9],'T2o':[77.1,41.7],'54s':[77.4,41.4],'85o':[78.3,41.4],'64s':[78.6,41.3],'83s':[78.9,40.8],'94o':[79.8,40.7],'75o':[80.7,40.5],'82s':[81.0,40.3],'93o':[81.9,40.0],'73s':[82.2,40.0],'65o':[83.1,39.9],'53s':[83.4,39.8],'63s':[83.7,39.6],'84o':[84.6,39.5],'92o':[85.5,39.1],'43s':[85.8,38.7],'74o':[86.7,38.6],'54o':[87.6,38.2],'72s':[87.9,38.1],'64o':[88.8,38.0],'52s':[89.1,37.9],'62s':[89.4,37.7],'83o':[90.3,37.5],'42s':[90.6,36.8],'82o':[91.6,36.8],'73o':[92.5,36.6],'53o':[93.4,36.3],'32s':[93.7,36.1],'63o':[94.6,36.0],'43o':[95.5,35.2],'72o':[96.4,34.5],'52o':[97.3,34.3],'62o':[98.2,34.0],'42o':[99.1,33.2],'32o':[100.0,32.2]};
-const handTopHTML = g => { const t = HAND_TOP[GRID[g]]; return t ? `<b>Top ${t[0].toFixed(1)}%</b> of starting hands <span class="muted">· ${t[1].toFixed(1)}% vs a random hand</span>` : ''; };
-const lGrid = new Grid($('#l-grid'), { onCell: g => { UI.lens = g; saveUI(); renderLens(); } });
-function defaultCombo(n) { if (n.length === 2) return [[n[0], 's'], [n[1], 'h']]; return n[2] === 's' ? [[n[0], 'h'], [n[1], 'h']] : [[n[0], 's'], [n[1], 'd']]; }
-function cardsHTML(g) { return defaultCombo(GRID[g]).map(([r, s]) => `<div class="pcard s-${s}"><span class="rk">${r === 'T' ? '10' : r}</span><span class="st">${SUITSYM[s]}</span></div>`).join(''); }
-function lensCell(sp, g) {
-  if (!sp) return '<i class="c none"></i>';
-  const tip = esc(narrate(sp).replace(/<[^>]+>/g, ''));
-  if (!inRange(sp, g)) return `<i class="c na${sp.est ? ' est' : ''}" data-k="${sp.key}" title="${tip} Not in your range here."></i>`;
-  const ab = actAbbr(sp, sp.prim[g]), mx = Math.max(...sp.order.map(a => sp.f[a][g]));
-  const t2 = sp.order.map(a => actLabel(sp, a) + ' ' + pct(sp.f[a][g])).join(', ');
-  return `<i class="c${sp.est ? ' est' : ''}" data-k="${sp.key}" title="${tip} ${esc(t2)}" style="background:${cellBg(sp, g)}">${ab}${mx < 0.65 && ab ? '~' : ''}</i>`;
-}
-/* one small table per spot type: rows are your seat, columns the opponent; only seats that occur are shown */
-const LENS_BLOCKS = [
-  { fam: 'vsLimp', title: 'Facing limpers', sub: 'cols: limpers', colLab: c => String(c) },
-  { fam: 'vsOpen', title: 'Facing an open', sub: 'cols: opener' },
-  { fam: 'vsOpenCall', title: 'Open + caller', sub: 'cols: opener' },
-  { fam: 'vsIso', title: 'Raise over limps', sub: 'cols: raiser' },
-  { fam: 'limpVsRaise', title: 'Limped, vs raise', sub: 'cols: raiser' },
-  { fam: 'vs3bet', title: 'Raised, vs 3-bet', sub: 'cols: 3-bettor' },
-  { fam: 'vs4bet', title: 'Facing a 4-bet', sub: 'cols: 4-bettor' },
-  { fam: 'cold', title: 'Cold vs 3-bet', sub: 'cols: 3-bettor' },
-];
-function blockHTML(G, b, g) {
-  const rows = new Set(), cols = new Set();
-  for (const k of G.cell.keys()) { const [f, h, v] = k.split('|'); if (f === b.fam) { rows.add(+h); cols.add(+v); } }
-  if (!rows.size) return '';
-  const R = [...rows].sort((a, c) => a - c), C = [...cols].sort((a, c) => a - c), lab = b.colLab || (c => G.P[c]);
-  let h = `<div class="tri" style="grid-template-columns:30px repeat(${C.length},minmax(0,1fr))"><span class="h" title="${esc(b.sub)}"></span>${C.map(c => `<span class="h">${lab(c)}</span>`).join('')}`;
-  for (const r of R) h += `<span class="h row">${G.P[r]}</span>` + C.map(c => lensCell(G.cell.get(b.fam + '|' + r + '|' + c), g)).join('');
-  return `<section class="kb" title="Rows: your seat. ${esc(b.sub[0].toUpperCase() + b.sub.slice(1))}."><h3>${b.title}</h3>${h}</div></section>`;
-}
-function renderLens() {
-  const G = game(); if (!G) return;
-  const g = UI.lens;
-  $('#l-input').value = GRID[g];
-  $('#l-cards').innerHTML = cardsHTML(g);
-  $('#l-top').innerHTML = handTopHTML(g);
-  tagSeg($('#l-tag'));
-  lGrid.show(null, { bg: g2 => g2 === g ? 'var(--accent)' : (COMBOS[g2] === 6 ? 'var(--k-F)' : COMBOS[g2] === 4 ? 'color-mix(in srgb, var(--k-F) 70%, var(--empty))' : 'color-mix(in srgb, var(--k-F) 45%, var(--empty))') });
-  const seats = [...Array(G.n - 1).keys()];
-  $('#l-rfi').innerHTML = `<section class="kb wide"><h3>First in <small>· your seat</small></h3><div class="tri" style="grid-template-columns:30px repeat(${seats.length},minmax(0,1fr))"><span></span>${seats.map(c => `<span class="h">${G.P[c]}</span>`).join('')}<span class="h row">You</span>${seats.map(c => lensCell(G.cell.get('RFI|' + c + '|0'), g)).join('')}</div></section>`;
-  $('#l-legend').innerHTML = legendHTML(['J', 'R', 'C', 'X', 'F'], '<span><i class="sw" style="background:repeating-linear-gradient(45deg,var(--empty) 0 2px,transparent 2px 4px)"></i>Folded earlier</span><span><i class="sw est"></i>Multiway: estimate</span><span>“~” mixed · tap for the chart</span>', false);
-  $('#l-blocks').innerHTML = LENS_BLOCKS.map(b => blockHTML(G, b, g)).join('');
-  saveUI();
-}
-$('#l-input').addEventListener('change', e => {
-  let v = e.target.value.trim(); if (!v) return;
-  v = v[0].toUpperCase() + (v[1] || '').toUpperCase() + v.slice(2).toLowerCase();
-  if (v.length === 2 && v[0] !== v[1]) v += 'o';
-  if (v.length === 3 && GIDX[v] == null) { const s2 = v[1] + v[0] + v[2]; if (GIDX[s2] != null) v = s2; }
-  if (GIDX[v] != null) { UI.lens = GIDX[v]; renderLens(); } else e.target.value = GRID[UI.lens];
-});
-for (const id of ['#l-blocks', '#l-rfi']) $(id).addEventListener('click', e => { const c = e.target.closest('[data-k]'); if (c) openInCharts(game().byKey.get(c.dataset.k), UI.lens); });
 
 /* ---------- CHARTS ---------- */
 const cGrid = new Grid($('#c-grid'), { onCell: g => { cSel = g; renderChartsRail(); renderChartsGrid(false); } });
 let cSel = null;
+function cSits() { return sitsWhere(s => s.fam === UI.cFam); }
+function cCurSit() {
+  const sits = cSits(); let s = sits.find(x => x.key === UI.cSit);
+  if (!s) { s = sits.reduce((b, x) => !b || x.w > b.w ? x : b, null); UI.cSit = s && s.key; }
+  return s;
+}
+function cCurSpot() {
+  const s = cCurSit(); if (!s) return null;
+  if (UI.cDpPref == null) UI.cDpPref = UI.cDp;
+  const want = UI.cDpPref;  // the open size you picked; a line that isn't solved there shows the nearest one
+  let best = s.spots[0]; for (const sp of s.spots) if (Math.abs(sp.dp - want) < Math.abs(best.dp - want)) best = sp;
+  return best;
+}
+function ticksHTML(depths, cur, width) {
+  const n = depths.length; if (!n) return '';
+  const posOf = i => n > 1 ? 1 - i / (n - 1) : 0.5;  // biggest on the left, like the slider
+  const minGap = 26 / Math.max(width, 120);
+  const chosen = [];
+  const tryAdd = i => { if (i < 0 || chosen.includes(i)) return; if (chosen.every(j => Math.abs(posOf(j) - posOf(i)) >= minGap)) chosen.push(i); };
+  [depths[0], depths[n - 1], 5, 3, 4, 6, 7].forEach(d => tryAdd(depths.indexOf(d)));
+  depths.forEach((d, i) => tryAdd(i));
+  return chosen.sort((a, b) => a - b).map(i => `<span style="left:${(posOf(i) * 100).toFixed(2)}%" class="${depths[i] === cur ? 'on' : ''}">${depths[i]}</span>`).join('');
+}
+/* ---------- Charts filters: one strip of table seats per role ---------- */
+const ROLE_KEYS = ['hero', 'vs', 'caller'];
+/* a row for each role that varies in this spot; seats that need another role moved, or that aren't solved at this
+   open size (here(sit) is false), are dimmed; seats that never occur are off */
+function seatRowsHTML(sits, cur, names, here) {
+  const keys = ROLE_KEYS.filter(k => new Set(sits.map(s => s[k])).size > 1);
+  return keys.map(k => {
+    const have = new Set(sits.map(s => s[k]));
+    const fits = new Set(sits.filter(s => keys.every(o => o === k || s[o] === cur[o]) && (!here || here(s))).map(s => s[k]));
+    const lab = k === 'hero' ? 'You' : k === 'caller' ? 'Caller' : VS_ROLE[cur.fam] || 'Villain';
+    return `<div class="frow"><span class="flab">${lab}</span><div class="seatpick" data-k="${k}">${names.map((nm, i) => `<button data-v="${i}" title="${nm}" aria-pressed="${cur[k] === i}"${!have.has(i) ? ' disabled' : fits.has(i) ? '' : ' class="off"'}>${nm}</button>`).join('')}</div></div>`;
+  }).join('');
+}
+/* tapping a seat keeps the other roles where they are if that spot exists, else moves them as little as possible;
+   among lines that fit equally well, the most common one */
+function pickSeat(sits, cur, k, v) {
+  let best = null, bs = Infinity;
+  for (const s of sits) {
+    if (s[k] !== v) continue;
+    const d = ROLE_KEYS.reduce((t, o, i) => o === k ? t : t + Math.abs(s[o] - cur[o]) * [4, 2, 1][i], 0);
+    if (d < bs || (d === bs && s.w > best.w)) { bs = d; best = s; }
+  }
+  return best;
+}
+/* a seat strip slides like a slider: press anywhere on it and drag; the seat nearest your finger is picked as you go */
+function scrubSeats(box, choose) {
+  let drag = null;
+  const pick = e => {
+    const strip = box.querySelector(`.seatpick[data-k="${drag.k}"]`); if (!strip) return;
+    const bs = [...strip.querySelectorAll('button')].filter(b => !b.disabled); if (!bs.length) return;
+    const b = bs.reduce((best, x) => { const r = x.getBoundingClientRect(), d = Math.abs(e.clientX - (r.left + r.width / 2)); return d < best.d ? { b: x, d } : best; }, { b: null, d: Infinity }).b;
+    if (b && b.dataset.v !== drag.last) { drag.last = b.dataset.v; choose(drag.k, +b.dataset.v); }
+  };
+  box.addEventListener('pointerdown', e => {
+    const strip = e.target.closest('.seatpick'); if (!strip || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    drag = { k: strip.dataset.k, id: e.pointerId, last: null };
+    try { box.setPointerCapture(e.pointerId); } catch (err) { }
+    pick(e); e.preventDefault();
+  });
+  box.addEventListener('pointermove', e => { if (drag && e.pointerId === drag.id) pick(e); });
+  const end = e => { if (drag && e.pointerId === drag.id) drag = null; };
+  box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
+  // keyboard: Enter or Space on a seat
+  box.addEventListener('click', e => { const b = e.target.closest('.seatpick button'); if (!b || b.disabled || e.detail !== 0) return; choose(b.closest('.seatpick').dataset.k, +b.dataset.v); });
+}
+/* the continuing range by card: how many of the 1,326 combos you continue with hold each rank, by action
+   (a pair counts once; any one rank is in 198 combos). Weighted by how often you take each action and reach this spot. */
+const RANK_COMBOS = new WeakMap();
+function rankCombos(sp) {
+  let by = RANK_COMBOS.get(sp); if (by) return by;
+  const R = sp.reach; by = Array.from({ length: 13 }, () => ({ J: 0, B: 0, R: 0, C: 0, X: 0 }));
+  for (let g = 0; g < 169; g++) {
+    const nm = GRID[g], w = (nm.length === 2 ? 6 : nm[2] === 's' ? 4 : 12) * R[g];
+    if (!(w > 0)) continue;
+    const r1 = RANKS.indexOf(nm[0]), r2 = RANKS.indexOf(nm[1]);
+    for (let a = 0; a < sp.A.length; a++) {
+      const k = sp.A[a].kind; if (k === 'F') continue;
+      const v = w * sp.f[a][g]; if (!(v > 0)) continue;
+      by[r1][k] += v; if (r2 !== r1) by[r2][k] += v;
+    }
+  }
+  RANK_COMBOS.set(sp, by); return by;
+}
+function rankChartSVG(sp, spots) {
+  const kinds = ['J', 'B', 'R', 'C', 'X'], sum = o => kinds.reduce((t, k) => t + o[k], 0);
+  const by = rankCombos(sp), tot = by.map(sum);
+  if (!tot.some(v => v >= 0.5)) return '';
+  const kName = k => kindLabel(sp, k);
+  // one scale for every open size of this spot, so the bars grow and shrink as you slide
+  const peak = Math.max(...(spots || [sp]).map(s => Math.max(...rankCombos(s).map(sum))));
+  const step = [5, 10, 20, 25, 50].find(s => peak / s <= 4) || 50, top = Math.max(step, Math.ceil(peak / step - 1e-9) * step);
+  const W = 300, H = 82, pad = { l: 26, r: 4, t: 10, b: 13 }, cw = (W - pad.l - pad.r) / 13, bw = cw * 0.7;
+  const ys = v => pad.t + (H - pad.t - pad.b) * (1 - v / top);
+  let lines = '';
+  for (let v = step; v <= top + 1e-9; v += step) lines += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--line)" stroke-dasharray="2 3"/><text x="${pad.l - 4}" y="${ys(v) + 3}" text-anchor="end" font-size="9" fill="var(--faint)" font-family="var(--f-mono)">${v}</text>`;
+  const cols = by.map((o, r) => {
+    const x = pad.l + cw * r + (cw - bw) / 2, cx = (x + bw / 2).toFixed(1); let base = 0, rects = '';
+    for (const k of kinds) { const v = o[k]; if (!(v > 0)) continue; rects += `<rect x="${x.toFixed(1)}" y="${ys(base + v).toFixed(1)}" width="${bw.toFixed(1)}" height="${(ys(base) - ys(base + v)).toFixed(1)}" fill="${kColor(k)}"/>`; base += v; }
+    const parts = kinds.filter(k => o[k] >= 0.5).map(k => `${kName(k)} ${Math.round(o[k])}`).join(' · ');
+    return `<g><title>${RANKS[r]}: ${Math.round(tot[r])} of the 198 combos with ${/[A8]/.test(RANKS[r]) ? 'an' : 'a'} ${RANKS[r]} continue${parts ? ' (' + parts + ')' : ''}</title>${rects}<text x="${cx}" y="${(ys(tot[r]) - 2).toFixed(1)}" text-anchor="middle" font-size="8" fill="var(--muted)" font-family="var(--f-mono)">${Math.round(tot[r])}</text><text x="${cx}" y="${H - 2}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--fg)" font-family="var(--f-mono)">${RANKS[r]}</text></g>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Combos you continue with that hold each rank, by action" style="display:block;margin-top:14px">${lines}${cols}</svg><p class="small muted" style="margin:4px 0 0">Combos you continue with (of all 1,326) that hold each rank, by action. Any one rank is in 198 combos.</p>`;
+}
+/* keep the highlighted thumbnail in view; scrolls the strip only, never the page */
+function filmFollow(el = $('#c-film')) {
+  const on = $('figure.on', el); if (!on || !el.clientWidth) return;
+  const d = on.getBoundingClientRect().left - el.getBoundingClientRect().left - (el.clientWidth - on.offsetWidth) / 2;
+  if (Math.abs(d) > 1) el.scrollLeft += d;
+}
 const LINE_MAX = 40;
-function cList(G, fam, hero) { return G.spots.filter(s => s.fam === fam && s.hero === hero).sort((a, b) => b.bp - a.bp); }
-function cCur() { return game().byKey.get(UI.cKey); }
+function renderLines(sit) {
+  const peers = cSits().filter(s => s.hero === sit.hero && s.vs === sit.vs).sort((a, b) => b.w - a.w);
+  if (peers.length < 2) { $('#c-lines').innerHTML = ''; return; }
+  let shown = peers.slice(0, LINE_MAX); if (!shown.includes(sit)) shown = [...shown, sit];
+  const want = cCurSpot().dp, at = s => s.spots.find(x => x.dp === want) || s.spots.reduce((b, x) => x.bp > b.bp ? x : b);
+  $('#c-lines').innerHTML = shown.map(s => { const sp = at(s); return `<button role="option" data-s="${esc(s.key)}" aria-pressed="${s === sit}"><span>${esc(lineShort(sp))}</span><span>${often(sp.bp)}</span></button>`; }).join('') + (peers.length > LINE_MAX ? `<div class="more">${peers.length - LINE_MAX} rarer lines not listed. Find them in Spot builder.</div>` : '');
+  const on = $('#c-lines [aria-pressed="true"]'), box = $('#c-lines');
+  if (on && (on.offsetTop < box.scrollTop || on.offsetTop + on.offsetHeight > box.scrollTop + box.clientHeight)) box.scrollTop = on.offsetTop - box.clientHeight / 2;
+}
 function renderCharts() {
-  const G = game(); if (!G) return;
-  tagSeg($('#c-tag'));
-  const fams = FAM_ORDER.filter(f => G.spots.some(s => s.fam === f));
+  const fams = FAM_ORDER.filter(f => sitsWhere(s => s.fam === f).length);
+  if (!fams.length) { $('#v-charts').innerHTML = '<div class="empty-state">No range data loaded.</div>'; return; }
   if (!fams.includes(UI.cFam)) UI.cFam = fams[0];
-  const heroes = new Set(G.spots.filter(s => s.fam === UI.cFam).map(s => s.hero));
-  if (!heroes.has(UI.cHero)) UI.cHero = [...heroes].sort((a, b) => a - b)[0];
-  const list = cList(G, UI.cFam, UI.cHero);
-  let cur = G.byKey.get(UI.cKey);
-  if (!cur || cur.fam !== UI.cFam || cur.hero !== UI.cHero) { cur = list[0]; UI.cKey = cur.key; }
-  $('#c-fam').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${f === UI.cFam}">${FAMS[f].chip}</button>`).join('');
-  $('#c-hero').innerHTML = G.P.map((nm, i) => `<button data-h="${i}" aria-pressed="${i === UI.cHero}"${heroes.has(i) ? '' : ' disabled'}>${nm}</button>`).join('');
-  let shown = list.slice(0, LINE_MAX);
-  if (!shown.includes(cur)) shown = [...shown, cur];
-  $('#c-lines').innerHTML = shown.map(s => `<button role="option" data-k="${s.key}" aria-pressed="${s === cur}"><span>${esc(lineShort(s))}</span><span>${often(s.bp)}</span></button>`).join('') + (list.length > LINE_MAX ? `<div class="more">${list.length - LINE_MAX} rarer lines not listed. Find them in Spot builder.</div>` : '');
-  const on = $('#c-lines [aria-pressed="true"]'); if (on) { const box = $('#c-lines'); if (on.offsetTop < box.scrollTop || on.offsetTop + on.offsetHeight > box.scrollTop + box.clientHeight) box.scrollTop = on.offsetTop - box.clientHeight / 2; }
-  renderChartsGrid(true);
+  $('#c-fam').innerHTML = fams.map(f => `<button data-f="${f}" aria-pressed="${f === UI.cFam}" title="${FAM[f].label}">${FAM[f].chip}</button>`).join('');
+  const sits = cSits(), sit = cCurSit();
+  const shownD = cCurSpot().dp;  // seats not solved at the open size on screen are dimmed
+  $('#c-sit').innerHTML = seatRowsHTML(sits, sit, POS, s => s.depths.includes(shownD));
+  renderLines(sit);
+  const sp = cCurSpot(); UI.cDp = sp.dp;
+  const sl = $('#c-slider'); sl.max = sit.depths.length - 1; sl.value = sp.idx;
+  $('#c-ticks').innerHTML = ticksHTML(sit.depths, sp.dp, $('#c-ticks').clientWidth || 300);
+  renderChartsGrid(false);
+  renderFilm();
   renderChartsRail();
   saveUI();
 }
 function renderChartsGrid(animate) {
-  const sp = cCur(); if (!sp) return;
+  const sp = cCurSpot();
+  $('#c-dp').textContent = sp.dp;
   $('#c-scn').innerHTML = narrate(sp);
-  cGrid.show(sp, { animate, marks: g => g === cSel ? 'sel' : '' });
-  $('#c-legend').innerHTML = legendHTML([...new Set(sp.order.map(a => sp.A[a].kind))]);
+  const kinds = [...new Set(sp.order.map(a => sp.A[a].kind))];
+  $('#c-legend').innerHTML = legendHTML(kinds, sp);
+  cGrid.show(sp, { animate, marks: g => (g === cSel ? 'sel' : '') });
+}
+function renderFilm() {
+  const sit = cCurSit(), sp = cCurSpot();
+  const el = $('#c-film');
+  const spots = [...sit.spots].reverse();  // biggest first, like the slider
+  el.innerHTML = spots.map(s => `<figure data-dp="${s.dp}" class="${s === sp ? 'on' : ''}"><canvas></canvas><figcaption>${s.dp}</figcaption></figure>`).join('');
+  $$('canvas', el).forEach((cv, i) => drawMini(cv, spots[i], 4));
+  filmFollow();
+}
+function mixChartSVG(sit, cur) {
+  const W = 300, H = 96, pad = { l: 26, r: 6, t: 6, b: 16 };
+  const n = sit.spots.length; if (n < 2) return '';
+  const xs = i => pad.l + (W - pad.l - pad.r) * (1 - i / (n - 1));  // biggest on the left, like the slider
+  const ys = v => pad.t + (H - pad.t - pad.b) * (1 - v);
+  const kinds = ['J', 'B', 'R', 'C', 'X'];
+  const mixes = sit.spots.map(sp => { const m = mixOf(sp); const o = {}; kinds.forEach(k => o[k] = 0); sp.A.forEach((a, i) => { if (a.kind !== 'F') o[a.kind] += m[i]; }); return o; });
+  let base = new Array(n).fill(0); const paths = [];
+  for (const k of kinds) {
+    if (!mixes.some(m => m[k] > 0.004)) continue;
+    const top = base.map((b, i) => b + mixes[i][k]);
+    const d = 'M' + top.map((v, i) => `${xs(i).toFixed(1)},${ys(v).toFixed(1)}`).join('L') + 'L' + base.map((v, i) => `${xs(i).toFixed(1)},${ys(v).toFixed(1)}`).reverse().join('L') + 'Z';
+    paths.push(`<path d="${d}" fill="${kColor(k)}" opacity=".92"/>`);
+    base = top;
+  }
+  const ci = sit.spots.indexOf(cur);
+  const grid = [0.25, 0.5].map(v => `<line x1="${pad.l}" x2="${W - pad.r}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--line)" stroke-dasharray="2 3"/><text x="${pad.l - 4}" y="${ys(v) + 3}" text-anchor="end" font-size="9" fill="var(--faint)" font-family="var(--f-mono)">${v * 100}%</text>`).join('');
+  const lab = sit.spots.map((sp, i) => `<text x="${xs(i)}" y="${H - 3}" text-anchor="middle" font-size="9" fill="${i === ci ? 'var(--fg)' : 'var(--faint)'}" font-family="var(--f-mono)">${sp.dp}</text>`).join('');
+  const hit = sit.spots.map((sp, i) => `<rect x="${xs(i) - (W / n) / 2}" y="0" width="${W / n}" height="${H}" fill="transparent" data-dp="${sp.dp}" style="cursor:pointer"><title>${sp.dp}bb open</title></rect>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Share of hands played by action at each open size" style="display:block;margin-top:12px">${grid}${paths.join('')}<line x1="${xs(ci)}" x2="${xs(ci)}" y1="${pad.t - 2}" y2="${H - pad.b}" stroke="var(--fg)" stroke-width="1.5"/>${lab}${hit}</svg><p class="small muted" style="margin:4px 0 0">Share of hands played, by action, at every open size. Tap to jump.</p>`;
 }
 function renderChartsRail() {
-  const sp = cCur(); if (!sp) return;
-  $('#c-rail').innerHTML = spotInfoHTML(sp) + `<div class="panel"><h3>Hand</h3>${handDetailHTML(sp, cSel)}</div>`;
+  const sp = cCurSpot();
+  const parts = [];
+  parts.push(`<div class="panel"><h3>${sp.dp}bb open · ${esc(sitLabel(sp))}</h3>${stableMixHTML(sp, sp.sit.spots)}<p class="small muted" style="margin:8px 0 0">Pot ${num(sp.pot)}bb · this line comes up in ${often(sp.bp)} of hands.</p>${sp.est ? EST_NOTE : ''}${mixChartSVG(sp.sit, sp)}${rankChartSVG(sp, sp.sit.spots)}</div>`);
+  parts.push(`<div class="panel" id="c-hand"><h3>Hand</h3>${handDetailHTML(sp, cSel)}</div>`);
+  parts.push(`<div class="panel"><h3>Edges</h3><p class="small muted" style="margin:-4px 0 10px">Each ladder from strongest to weakest, and where it stops.</p>${edgesHTML(sp)}</div>`);
+  $('#c-rail').innerHTML = parts.join('');
 }
-$('#c-fam').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; UI.cFam = b.dataset.f; UI.cKey = null; renderCharts(); });
-$('#c-hero').addEventListener('click', e => { const b = e.target.closest('[data-h]'); if (!b || b.disabled) return; UI.cHero = +b.dataset.h; UI.cKey = null; renderCharts(); });
-$('#c-lines').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; UI.cKey = b.dataset.k; renderCharts(); });
-function lensFrom(el) { const l = el.closest('[data-lens]'); if (!l) return false; UI.lens = +l.dataset.lens; setTab('lens'); return true; }
-$('#c-rail').addEventListener('click', e => lensFrom(e.target));
+$('#c-rail').addEventListener('click', e => {
+  const b = e.target.closest('[data-lens]'); if (b) { UI.lens = +b.dataset.lens; setTab('lens'); return; }
+  const r = e.target.closest('rect[data-dp]'); if (r) { const sit = cCurSit(); setDepthIdx(sit.depths.indexOf(+r.dataset.dp)); }
+});
+$('#c-fam').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; UI.cFam = b.dataset.f; UI.cSit = null; renderCharts(); });
+$('#c-lines').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (!b) return; UI.cSit = b.dataset.s; renderCharts(); });
+scrubSeats($('#c-sit'), (k, v) => { const s = pickSeat(cSits(), cCurSit(), k, v); if (!s || s.key === UI.cSit) return; UI.cSit = s.key; renderCharts(); });
+function setDepthIdx(i, animate = true) {
+  const sit = cCurSit(); i = Math.max(0, Math.min(sit.depths.length - 1, i));
+  if (sit.depths[i] === UI.cDp) return false;
+  UI.cDp = UI.cDpPref = sit.depths[i]; saveUI();
+  $('#c-slider').value = i;
+  $$('#c-ticks span').forEach(s => s.classList.toggle('on', +s.textContent === UI.cDp));
+  renderChartsGrid(animate); renderChartsRail(); renderLines(sit);
+  $$('#c-film figure').forEach(f => f.classList.toggle('on', +f.dataset.dp === UI.cDp));
+  filmFollow();
+  return true;
+}
+$('#c-slider').addEventListener('input', e => setDepthIdx(+e.target.value));
+$('#c-film').addEventListener('click', e => { const f = e.target.closest('figure'); if (!f) return; const sit = cCurSit(); setDepthIdx(sit.depths.indexOf(+f.dataset.dp)); });
+document.addEventListener('keydown', e => {
+  if (e.target && e.target.closest && e.target.closest('input,textarea')) return;
+  if (UI.tab === 'charts' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); setDepthIdx(cCurSpot().idx + (e.key === 'ArrowLeft' ? 1 : -1)); }
+});
+function openInCharts(spot, g) { UI.cFam = spot.fam; UI.cSit = spot.sitKey; UI.cDp = UI.cDpPref = spot.dp; cSel = g; setTab('charts'); }
 
 /* ---------- SPOT BUILDER ---------- */
+/* The chosen line is kept as a list of action kinds, so sliding the open size follows the same line in each solve */
 const TBL = { cx: 16.65, cy: 13.2, rx: 13.6, ry: 11.4, potY: 11.0 };
-let bSel = null, bMsg = '', bPrev = null;
+let bSel = null, bPrev = null, bMsg = '';
+const bGame = () => GAME[TAGS.find(t => GAME[t].dp === UI.bDp)];
 /* betting state after a line: what each seat has in, what it did, and who acts next (null once the betting is closed) */
 function tableState(G, line) {
   const n = G.n, posts = G.cfg.posts, bet = posts.slice(), st = Array(n).fill(null), word = Array(n).fill('');
@@ -859,7 +1052,7 @@ function tableState(G, line) {
     if (k === 'X') { st[s] = 'X'; word[s] = 'Check'; acted.add(s); continue; }
     if (k === 'C') { bet[s] = to; st[s] = 'C'; word[s] = raises ? 'Call' : 'Limp'; if (!raises) limps++; acted.add(s); continue; }
     raises++; bet[s] = to; maxBet = Math.max(maxBet, to); st[s] = k; acted = new Set([s]);
-    if (k === 'J') { allin.add(s); word[s] = 'All-in'; } else word[s] = (raises === 1 ? (limps ? 'Raise ' : 'Open ') : raiseWord(raises - 1) + ' ') + num(to);
+    if (k === 'J') { allin.add(s); word[s] = 'All-in'; } else word[s] = (raises === 1 ? (limps ? 'Raise ' : 'Open ') : raiseNo(raises - 1) + ' ') + num(to);
   }
   let next = null;
   if (n - folded.size > 1) {
@@ -869,30 +1062,32 @@ function tableState(G, line) {
       if (!acted.has(q) || bet[q] < maxBet) { next = q; break; }
     }
   }
-  const pot = G.cfg.ante * n + bet.reduce((a, b) => a + b, 0);
-  return { n, bet, st, word, pot, next };
+  return { n, bet, st, word, pot: G.cfg.ante * n + bet.reduce((a, b) => a + b, 0), next };
 }
 function bState() {
-  const G = game(), path = UI.bPath || [];
-  const sp = G.byKey.get(path.join('.')) || null;
-  let line;
-  if (sp) line = sp.line;
-  else {
-    const par = G.byKey.get(path.slice(0, -1).join('.')), a = par && par.A[path[path.length - 1]];
-    line = par && a ? [...par.line, [par.hero, a.kind, a.size]] : [];
+  const G = bGame(), seq = UI.bSeq || [], path = [];
+  let node = G.byKey.get(''), line = [], cut = false;
+  for (const { k } of seq) {
+    if (!node) { cut = true; break; }
+    const a = node.A.find(x => x.kind === k);
+    if (!a) { cut = true; break; }
+    path.push(a.i); line = [...node.line, [node.hero, a.kind, a.size]];
+    node = G.byKey.get(path.join('.'));
   }
+  if (node) line = node.line;
   const T = tableState(G, line);
-  return { G, path, sp, line, T, actor: sp ? sp.hero : T.next };
+  return { G, dp: G.dp, seq, path, sp: node || null, line, T, actor: node ? node.hero : T.next, cut };
 }
+/* the dealer button sits at the bottom so the table never turns while you build a hand */
 function bTableHTML(S) {
   const { G, T } = S, n = T.n, { cx, cy, rx, ry, potY } = TBL, em = v => v.toFixed(2) + 'em', stack = G.cfg.stack, ante = G.cfg.ante;
-  const btn = G.P.indexOf('BTN');
+  const btn = POS.indexOf('BTN');
   let out = '';
   for (let i = 0; i < n; i++) {
     const k = (i - btn + n) % n, th = (90 + k * 360 / n) * Math.PI / 180, ux = Math.cos(th), uy = Math.sin(th);
     const x = cx + rx * ux, y = cy + ry * uy, me = i === S.actor, s = T.st[i], kc = s && 'RJCX'.includes(s) ? s : '';
     const kv = kc ? `;--k:var(--k-${kc})` : '';
-    out += `<button type="button" class="ts${me ? ' me' : ''}${s === 'F' && !me ? ' f' : ''}${kc && !me ? ' act' : ''}" data-seat="${i}" style="left:${em(x)};top:${em(y)}${kv}"><b>${G.P[i]}</b><span>${me ? 'to act' : s ? T.word[i] : num(stack - ante - T.bet[i])}</span></button>`;
+    out += `<button type="button" class="ts${me ? ' me' : ''}${s === 'F' && !me ? ' f' : ''}${kc && !me ? ' act' : ''}" data-seat="${i}" style="left:${em(x)};top:${em(y)}${kv}"><b>${POS[i]}</b><span>${me ? 'to act' : s ? T.word[i] : num(stack - ante - T.bet[i])}</span></button>`;
     const lab = T.bet[i] > 0 && s !== 'F' ? num(T.bet[i]) : '', hw = (lab.length * 0.62 + 1.7) / 2;
     let bx, by;
     if (Math.abs(uy) >= 0.5) { by = y - Math.sign(uy) * 2.7; bx = x + (cx - x) * 0.15; }
@@ -907,86 +1102,164 @@ function bTableHTML(S) {
   out += `<div class="tpot" style="left:${em(cx)};top:${em(cy)}"><b>${stack}<small>bb</small></b><span>Pot ${num(T.pot)}</span></div>`;
   return `<div class="tblw"><div class="tbl"><div class="felt"></div>${out}</div></div>`;
 }
-const bGrid = new Grid($('#b-grid'), { onCell: g => { bSel = g; renderBuildSpot(); } });
-function renderBuild() { if (!game()) return; tagSeg($('#b-tag')); renderBuildSpot(); }
+function renderBuild() {
+  if (!OPENS.includes(UI.bDp)) UI.bDp = OPENS.includes(5) ? 5 : OPENS[OPENS.length - 1];
+  $('#b-game').innerHTML = `<button aria-pressed="true">K Poker · 7-handed</button>`;
+  const sl = $('#b-slider'); sl.max = OPENS.length - 1; sl.value = OPENS.indexOf(UI.bDp);
+  $('#b-ticks').innerHTML = ticksHTML(OPENS, UI.bDp, $('#b-ticks').clientWidth || 300);
+  renderBuildSpot();
+}
 function renderBuildSpot() {
-  const S = bState(), { G, sp } = S;
+  const S = bState(), sp = S.sp;
+  $('#b-dp').textContent = S.dp;
+  $$('#b-ticks span').forEach(s => s.classList.toggle('on', +s.textContent === S.dp));
   $('#b-table').innerHTML = bTableHTML(S);
-  if (sp) {
-    $('#b-who').innerHTML = `<b>${G.P[sp.hero]}</b> to act`;
-    $('#b-acts').innerHTML = [...sp.A].sort((x, y) => KORD[y.kind] - KORD[x.kind]).map(a => `<button data-a="${a.i}" class="${bPrev && bPrev.seat === sp.hero && bPrev.a === a.i ? 'prev' : ''}" style="background:${kColor(a.kind)}"><span>${actLabel(sp, a.i)}</span><small>${often(a.freq)}</small></button>`).join('');
-  } else {
-    $('#b-who').innerHTML = S.actor == null ? 'The betting is closed.' : `<b>${G.P[S.actor]}</b> to act. The solver almost never gets here, so this spot isn't stored.`;
-    $('#b-acts').innerHTML = '';
-  }
-  $('#b-note').textContent = bMsg; bMsg = '';
-  $('#b-back').disabled = !S.path.length;
+  const opts = sp ? [...sp.A].sort((x, y) => KORD[y.kind] - KORD[x.kind]) : [];
+  $('#b-who').innerHTML = S.actor == null ? 'Everyone has acted.' : `<b>${POS[S.actor]}</b> to act${opts.length ? '' : '. No later spots are stored from here.'}`;
+  $('#b-acts').innerHTML = opts.map(a => `<button data-k="${a.kind}" class="${bPrev && bPrev.seat === S.actor && bPrev.k === a.kind ? 'prev' : ''}" style="background:${kColor(a.kind)}">${actLabel(sp, a.i)}</button>`).join('');
+  const notes = [];
+  if (S.cut) notes.push(`At ${S.dp}bb opens the rest of that line isn't in the solutions.`);
+  if (bMsg) notes.push(bMsg);
+  $('#b-note').textContent = notes.join(' ');
+  bMsg = '';
+  $('#b-back').disabled = !S.seq.length;
   $('#b-grid').hidden = !sp; $('#b-legend').hidden = !sp; $('#b-empty').hidden = !!sp;
-  $('#b-title').textContent = sp ? `${G.P[sp.hero]} · ${FAMS[sp.fam].label}` : S.actor == null ? 'Hand over' : `${G.P[S.actor]} to act`;
+  $('#b-title').textContent = sp ? `${POS[sp.hero]} · ${FAM[sp.fam].label}` : S.actor == null ? 'Hand over' : `${POS[S.actor]} to act`;
   if (sp) {
-    bGrid.show(sp, { marks: g => g === bSel ? 'sel' : '' });
-    $('#b-legend').innerHTML = legendHTML([...new Set(sp.order.map(a => sp.A[a].kind))]);
-    $('#b-info').innerHTML = spotInfoHTML(sp, '<div style="margin-top:10px"><button class="btn ghost small" id="b-open">Open in Charts →</button></div>', true);
-    $('#b-hand').innerHTML = `<div class="panel"><h3>Hand</h3>${handDetailHTML(sp, bSel)}</div>`;
+    bGrid.show(sp, { marks: g => (g === bSel ? 'sel' : '') });
+    $('#b-legend').innerHTML = legendHTML([...new Set(sp.order.map(a => sp.A[a].kind))], sp);
+    $('#b-info').innerHTML = `<div class="panel"><h3>${sp.dp}bb open · ${esc(sitLabel(sp))}</h3>${stableMixHTML(sp, sp.sit.spots)}${sp.est ? EST_NOTE : ''}<div style="margin-top:12px"><button class="btn ghost small" id="b-open">Open in Charts →</button></div></div><div class="panel"><h3>Hand</h3>${handDetailHTML(sp, bSel)}</div>`;
   } else {
-    $('#b-empty').textContent = S.actor == null ? 'Tap a seat to change what happened.' : 'Undo, or tap a seat to change what happened.';
-    $('#b-info').innerHTML = ''; $('#b-hand').innerHTML = '';
+    $('#b-empty').textContent = S.actor == null ? 'The betting is closed. Tap a seat to change what happened.' : `No stored ranges for ${POS[S.actor]} here: the solver almost never gets here. Tap a seat to change what happened.`;
+    $('#b-info').innerHTML = '';
   }
   saveUI();
 }
+/* folds added by tapping a later seat are marked s:1, so Undo steps back to the last action you picked */
 function bTapSeat(s) {
-  const S = bState(), { G } = S;
+  const S = bState();
   if (s === S.actor) return;
-  // skip ahead: everyone before the tapped seat folds
-  if (S.sp) {
-    const p = S.path.slice(); let cur = S.sp;
+  if (S.sp && !S.cut) {
+    const seq = S.seq.slice(); let cur = S.sp, p = S.path.slice();
     while (cur && cur.hero !== s) {
-      const fi = cur.A.findIndex(a => a.kind === 'F');
-      if (fi < 0) break;
-      p.push(fi); cur = G.byKey.get(p.join('.'));
+      const f = cur.A.find(a => a.kind === 'F');
+      if (!f) break;
+      p.push(f.i); seq.push({ k: 'F', s: 1 }); cur = S.G.byKey.get(p.join('.'));
     }
-    if (cur && cur.hero === s) { const auto = (UI.bAuto || []).slice(0, S.path.length); while (auto.length < S.path.length) auto.push(false); while (auto.length < p.length) auto.push(true); UI.bPath = p; UI.bAuto = auto; bPrev = null; renderBuildSpot(); return; }
+    if (cur && cur.hero === s) { UI.bSeq = seq; bPrev = null; renderBuildSpot(); return; }
   }
-  // otherwise go back to that seat's last action
-  const at = S.line.map(x => x[0]).lastIndexOf(s);
-  if (at >= 0) { bPrev = { seat: s, a: S.path[at] }; UI.bPath = S.path.slice(0, at); UI.bAuto = (UI.bAuto || []).slice(0, at); renderBuildSpot(); return; }
-  bMsg = `${G.P[s]} doesn't get to act from here.`; renderBuildSpot();
+  const last = S.line.map(x => x[0]).lastIndexOf(s);
+  if (last >= 0 && last < S.seq.length) { bPrev = { seat: s, k: S.seq[last].k }; UI.bSeq = S.seq.slice(0, last); renderBuildSpot(); return; }
+  bMsg = `${POS[s]} doesn't get to act from here.`; renderBuildSpot();
 }
+const bGrid = new Grid($('#b-grid'), { onCell: g => { bSel = g; renderBuildSpot(); } });
+$('#b-slider').addEventListener('input', e => { UI.bDp = OPENS[+e.target.value]; renderBuildSpot(); });
 $('#b-table').addEventListener('click', e => { const b = e.target.closest('[data-seat]'); if (b) bTapSeat(+b.dataset.seat); });
-$('#b-acts').addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; const n = (UI.bPath || []).length; UI.bAuto = (UI.bAuto || []).slice(0, n); while (UI.bAuto.length < n) UI.bAuto.push(false); UI.bAuto.push(false); UI.bPath = [...(UI.bPath || []), +b.dataset.a]; bPrev = null; renderBuildSpot(); });
+$('#b-acts').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; const S = bState(); UI.bSeq = [...S.seq.slice(0, S.path.length), { k: b.dataset.k }]; bPrev = null; renderBuildSpot(); });
 $('#b-back').addEventListener('click', () => {
-  // drop the folds a seat tap added, then the last action you picked
-  const p = (UI.bPath || []).slice(), auto = (UI.bAuto || []).slice(0, p.length);
-  while (p.length && auto[p.length - 1]) { p.pop(); auto.pop(); }
-  p.pop(); auto.pop(); UI.bPath = p; UI.bAuto = auto; bPrev = null; renderBuildSpot();
+  const q = (UI.bSeq || []).slice();
+  while (q.length && q[q.length - 1].s) q.pop();
+  q.pop(); UI.bSeq = q; bPrev = null; renderBuildSpot();
 });
-$('#b-reset').addEventListener('click', () => { UI.bPath = []; UI.bAuto = []; bPrev = null; renderBuildSpot(); });
-$('#b-hand').addEventListener('click', e => lensFrom(e.target));
+$('#b-reset').addEventListener('click', () => { UI.bSeq = []; bPrev = null; renderBuildSpot(); });
 $('#b-info').addEventListener('click', e => {
-  if (lensFrom(e.target)) return;
+  const l = e.target.closest('[data-lens]'); if (l) { UI.lens = +l.dataset.lens; setTab('lens'); return; }
   if (e.target.closest('#b-open')) { const S = bState(); if (S.sp) openInCharts(S.sp, bSel); }
 });
 
-/* ---------- ABOUT ---------- */
+/* ---------- HAND LENS ---------- */
+/* how strong each starting hand is: [top % of the 1,326 combos ranked at or above it, % equity against a random hand].
+   Ranked by all-in equity vs a random hand (2,000,000 simulated deals per hand). */
+const HAND_TOP = {'AA':[0.5,85.2],'KK':[0.9,82.4],'QQ':[1.4,79.9],'JJ':[1.8,77.5],'TT':[2.3,75.0],'99':[2.7,72.1],'88':[3.2,69.2],'AKs':[3.5,67.1],'AQs':[3.8,66.2],'77':[4.2,66.2],'AJs':[4.5,65.4],'AKo':[5.4,65.3],'ATs':[5.7,64.6],'AQo':[6.6,64.3],'AJo':[7.5,63.6],'KQs':[7.8,63.4],'66':[8.3,63.2],'A9s':[8.6,62.8],'ATo':[9.5,62.7],'KJs':[9.8,62.5],'A8s':[10.1,62.0],'KTs':[10.4,61.8],'KQo':[11.3,61.4],'A7s':[11.6,61.0],'A9o':[12.5,60.8],'KJo':[13.4,60.5],'55':[13.9,60.3],'QJs':[14.2,60.2],'K9s':[14.5,60.0],'A5s':[14.8,60.0],'A6s':[15.1,59.9],'A8o':[16.0,59.9],'KTo':[16.9,59.7],'QTs':[17.2,59.4],'A4s':[17.5,59.0],'A7o':[18.4,58.9],'K8s':[18.7,58.4],'A3s':[19.0,58.2],'QJo':[19.9,58.1],'K9o':[20.8,57.8],'A6o':[21.7,57.7],'Q9s':[22.0,57.7],'A5o':[22.9,57.7],'K7s':[23.2,57.5],'JTs':[23.5,57.5],'A2s':[23.8,57.4],'QTo':[24.7,57.3],'44':[25.2,57.1],'A4o':[26.1,56.7],'K6s':[26.4,56.6],'K8o':[27.3,56.0],'Q8s':[27.6,55.9],'A3o':[28.5,55.9],'K5s':[28.8,55.8],'J9s':[29.1,55.6],'Q9o':[30.0,55.3],'JTo':[30.9,55.3],'K7o':[31.8,55.2],'A2o':[32.7,55.0],'K4s':[33.0,54.9],'Q7s':[33.3,54.3],'K6o':[34.2,54.2],'K3s':[34.5,54.1],'J8s':[34.8,54.1],'T9s':[35.1,54.0],'33':[35.6,53.7],'Q6s':[35.9,53.6],'Q8o':[36.8,53.5],'K5o':[37.7,53.4],'J9o':[38.6,53.3],'K2s':[38.9,53.2],'Q5s':[39.2,52.8],'T8s':[39.5,52.3],'K4o':[40.4,52.3],'J7s':[40.7,52.3],'Q4s':[41.0,51.8],'Q7o':[41.9,51.8],'J8o':[42.8,51.5],'T9o':[43.7,51.5],'K3o':[44.6,51.4],'Q6o':[45.6,51.0],'Q3s':[45.9,50.9],'98s':[46.2,50.8],'T7s':[46.5,50.6],'J6s':[46.8,50.6],'K2o':[47.7,50.5],'22':[48.1,50.3],'Q2s':[48.4,50.2],'Q5o':[49.3,50.2],'J5s':[49.6,50.0],'T8o':[50.5,49.7],'J7o':[51.4,49.7],'97s':[51.7,49.2],'Q4o':[52.6,49.1],'J4s':[52.9,49.1],'T6s':[53.2,48.9],'J3s':[53.5,48.2],'Q3o':[54.4,48.2],'98o':[55.4,48.1],'T7o':[56.3,47.9],'87s':[56.6,47.9],'J6o':[57.5,47.8],'96s':[57.8,47.5],'J2s':[58.1,47.4],'Q2o':[59.0,47.3],'T5s':[59.3,47.2],'J5o':[60.2,47.2],'T4s':[60.5,46.5],'97o':[61.4,46.3],'86s':[61.7,46.2],'J4o':[62.6,46.2],'T6o':[63.5,46.2],'95s':[63.8,45.7],'T3s':[64.1,45.7],'76s':[64.4,45.4],'J3o':[65.3,45.2],'87o':[66.2,45.1],'T2s':[66.5,44.8],'85s':[66.8,44.6],'96o':[67.7,44.4],'J2o':[68.6,44.3],'T5o':[69.5,44.3],'94s':[69.8,43.9],'75s':[70.1,43.7],'T4o':[71.0,43.5],'93s':[71.3,43.3],'86o':[72.2,43.2],'65s':[72.5,43.2],'84s':[72.9,42.7],'T3o':[73.8,42.6],'95o':[74.7,42.6],'92s':[75.0,42.5],'76o':[75.9,42.3],'74s':[76.2,41.9],'T2o':[77.1,41.7],'54s':[77.4,41.4],'85o':[78.3,41.4],'64s':[78.6,41.3],'83s':[78.9,40.8],'94o':[79.8,40.7],'75o':[80.7,40.5],'82s':[81.0,40.3],'93o':[81.9,40.0],'73s':[82.2,40.0],'65o':[83.1,39.9],'53s':[83.4,39.8],'63s':[83.7,39.6],'84o':[84.6,39.5],'92o':[85.5,39.1],'43s':[85.8,38.7],'74o':[86.7,38.6],'54o':[87.6,38.2],'72s':[87.9,38.1],'64o':[88.8,38.0],'52s':[89.1,37.9],'62s':[89.4,37.7],'83o':[90.3,37.5],'42s':[90.6,36.8],'82o':[91.6,36.8],'73o':[92.5,36.6],'53o':[93.4,36.3],'32s':[93.7,36.1],'63o':[94.6,36.0],'43o':[95.5,35.2],'72o':[96.4,34.5],'52o':[97.3,34.3],'62o':[98.2,34.0],'42o':[99.1,33.2],'32o':[100.0,32.2]};
+const handTopHTML = g => { const t = HAND_TOP[GRID[g]]; return t ? `<b>Top ${t[0].toFixed(1)}%</b> of starting hands <span class="muted">· ${t[1].toFixed(1)}% vs a random hand</span>` : ''; };
+const lGrid = new Grid($('#l-grid'), { onCell: g => { UI.lens = g; saveUI(); renderLens(); } });
+function cardsHTML(g, combo) {
+  const n = GRID[g]; const c = combo || defaultCombo(n);
+  return c.map(([r, s]) => `<div class="pcard s-${s}"><span class="rk">${r === 'T' ? '10' : r}</span><span class="st">${SUITSYM[s]}</span></div>`).join('');
+}
+function defaultCombo(n) { if (n.length === 2) return [[n[0], 's'], [n[1], 'h']]; return n[2] === 's' ? [[n[0], 'h'], [n[1], 'h']] : [[n[0], 's'], [n[1], 'd']]; }
+/* rows are seat matchups (with a heading per seat you're in when there are several), squares are open sizes */
+function lensMatrix(title, fam, g, note) {
+  const opens = [...TAGS].reverse();  // biggest first, like the sliders
+  const keys = new Map();
+  for (const t of TAGS) for (const [k, sp] of GAME[t].cell) if (sp.fam === fam && !keys.has(k)) keys.set(k, { hero: sp.hero, lvs: sp.lvs });
+  const rows = [...keys.entries()].sort((a, b) => a[1].hero - b[1].hero || a[1].lvs - b[1].lvs);
+  if (!rows.length) return '';
+  const keyD = new Set([5]);
+  const head = `<div class="mx-row hd"><div class="mx-lab"></div><div class="mx-strip" style="--cols:${opens.length}">${opens.map(t => `<span class="d ${keyD.has(+t) ? 'k' : ''}">${t}</span>`).join('')}</div></div>`;
+  const lines = `<div class="mx-lines" style="--cols:${opens.length}" aria-hidden="true">${opens.map(t => `<i class="${keyD.has(+t) ? 'on' : ''}"></i>`).join('')}</div>`;
+  const group = fam !== 'RFI' && new Set(rows.map(r => r[1].hero)).size > 1;  // one heading per seat you're in
+  const rowLab = (sp, v) => fam === 'RFI' ? POS[v.hero] : fam === 'vsLimp' ? `vs ${v.lvs} limp${v.lvs > 1 ? 's' : ''}` : 'vs ' + POS[v.lvs];
+  const html = rows.map(([k, v], i) => {
+    const gh = group && (i === 0 || rows[i - 1][1].hero !== v.hero) ? `<div class="mx-row mx-grp"><div class="mx-lab">Your seat: ${POS[v.hero]}</div><div></div></div>` : '';
+    const cells = opens.map(t => {
+      const sp = GAME[t].cell.get(k);
+      if (!sp) return '<i class="c none"></i>';
+      const tip = `${t}bb open: ${narrate(sp).replace(/<[^>]+>/g, '')}`;
+      if (!inRange(sp, g)) return `<i class="c na${sp.est ? ' est' : ''}" data-k="${t}|${sp.key}" title="${esc(tip)} Not in your range."></i>`;
+      return `<i class="c${sp.est ? ' est' : ''}" data-k="${t}|${sp.key}" title="${esc(tip + ' ' + sp.order.map(a => actLabel(sp, a, true) + ' ' + pct(sp.f[a][g])).join(', '))}" style="background:${cellBg(sp, g)}"></i>`;
+    }).join('');
+    return gh + `<div class="mx-row"><div class="mx-lab"><b>${esc(group ? rowLab(null, v) : fam === 'RFI' ? POS[v.hero] : POS[v.hero] + ' ' + rowLab(null, v))}</b></div><div class="mx-strip" style="--cols:${opens.length}">${cells}</div></div>`;
+  }).join('');
+  return `<section class="panel"><h3 style="font:800 18px/1.1 var(--f-display);text-transform:uppercase;margin:0 0 4px">${title}</h3>${note ? `<p class="small muted" style="margin:0 0 8px">${note}</p>` : ''}<div class="mx"><div class="mx-in has-ft">${head}${html}${head.replace('mx-row hd', 'mx-row hd ft')}${lines}</div></div></section>`;
+}
+function renderLens() {
+  const g = UI.lens;
+  $('#l-input').value = GRID[g];
+  $('#l-cards').innerHTML = cardsHTML(g);
+  $('#l-top').innerHTML = handTopHTML(g);
+  lGrid.show(null, { bg: g2 => g2 === g ? 'var(--accent)' : (COMBOS[g2] === 6 ? 'var(--k-F)' : COMBOS[g2] === 4 ? 'color-mix(in srgb, var(--k-F) 70%, var(--empty))' : 'color-mix(in srgb, var(--k-F) 45%, var(--empty))') });
+  $('#l-legend').innerHTML = legendHTML(['J', 'R', 'C', 'X', 'F']) + '<span><i class="sw" style="background:repeating-linear-gradient(45deg,var(--empty) 0 2px,transparent 2px 4px)"></i>Folded earlier</span><span><i class="sw est"></i>Multiway: an estimate</span>';
+  const blocks = [
+    ['RFI', 'First in', 'Folded to you: limp, raise or fold. The small blind checks or raises.'],
+    ['vsLimp', 'Facing limpers', 'Overlimp, isolate or fold. The blinds check or raise.'],
+    ['vsOpen', 'Facing an open', 'Call, 3-bet or fold.'],
+    ['vsOpenCall', 'Open and a call in front of you', 'Call or squeeze.'],
+    ['vsIso', 'Facing a raise over limpers', ''],
+    ['limpVsRaise', 'You limped and got raised', 'Call, re-raise or fold.'],
+    ['vs3bet', 'You raised and got 3-bet', ''],
+    ['vs4bet', 'You 3-bet and got 4-bet', ''],
+    ['cold', 'Facing a raise and a 3-bet', ''],
+  ];
+  $('#l-blocks').innerHTML = blocks.map(([fam, title, note]) => lensMatrix(title, fam, g, note)).join('');
+}
+$('#l-input').addEventListener('change', e => {
+  let v = e.target.value.trim(); if (!v) return;
+  v = v[0].toUpperCase() + (v[1] || '').toUpperCase() + (v.slice(2).toLowerCase());
+  if (v.length === 2 && v[0] !== v[1]) v += 'o';
+  if (v.length === 3 && GIDX[v] == null) { const sw = v[1] + v[0] + v[2]; if (GIDX[sw] != null) v = sw; }
+  if (GIDX[v] != null) { UI.lens = GIDX[v]; saveUI(); renderLens(); } else e.target.value = GRID[UI.lens];
+});
+$('#l-blocks').addEventListener('click', e => { const c = e.target.closest('[data-k]'); if (!c) return; const [t, key] = c.dataset.k.split('|'); const sp = GAME[t].byKey.get(key); if (sp) openInCharts(sp, UI.lens); });
+
+/* ---------- METHOD ---------- */
 function renderMethod() {
-  const G = game(); if (!G) return;
-  const c = G.cfg, P = G.P;
+  const G = GAME[TAGS.find(t => GAME[t].dp === 5) || TAGS[0]], c = G.cfg;
   const rows = [
-    ['Table', `${G.n}-handed: ${P.join(', ')}`],
+    ['Table', `${G.n}-handed: ${POS.join(', ')}`],
     ['Stacks', `${c.stack}bb each`],
-    ['Blinds', `SB ${c.posts[P.indexOf('SB')]}bb, BB ${c.posts[P.indexOf('BB')]}bb, and a ${c.ante}bb ante from every seat (pot ${num(c.ante * G.n + c.posts.reduce((a, b) => a + b, 0))}bb before anyone acts)`],
-    ['Opens', `${(c.open_raises || []).join(', ')}bb, plus ${c.limper_extra}bb for each limper`],
+    ['Blinds', `SB ${c.posts[POS.indexOf('SB')]}bb, BB ${c.posts[POS.indexOf('BB')]}bb and a ${c.ante}bb ante from every seat: ${num(c.ante * G.n + c.posts.reduce((a, b) => a + b, 0))}bb in the pot before anyone acts`],
+    ['Opens', `${OPENS.join(', ')}bb (one solve each), plus ${c.limper_extra}bb for each limper`],
     ['3-bets', `${(c.raise_mults || []).join(', ')}x, plus one more raise size for each caller`],
     ['4-bets', `${(c.fourbet_mults || []).join(', ')}x; at most ${c.max_raises} raises, all-in always allowed`],
     ['All-in', `Once a raise would commit more than ${Math.round(c.allin_threshold * 100)}% of the stack, the raise is all-in`],
-    ['Limping', c.limp ? 'Allowed' : 'Not allowed'],
     ['Rake', `${c.rake_pct}%, capped at ${c.rake_cap}bb${c.no_flop_no_drop ? ', no flop no drop' : ''}`],
   ];
   $('#m-cfg').innerHTML = rows.map(([a, b]) => `<tr><th>${a}</th><td>${esc(b)}</td></tr>`).join('');
-  $('#m-note').textContent = `${G.spots.length.toLocaleString()} decision spots: from each seat's first-in spot, every line the solver plays at least once in 10,000 times.`;
+  const total = TAGS.reduce((t, x) => t + GAME[x].spots.length, 0);
+  $('#m-about').textContent = `${total.toLocaleString()} decision spots across ${TAGS.length} open sizes: from each seat's first-in spot, every line the solver plays at least once in 10,000 times. These are equilibrium ranges, frequencies only. A table that limps or calls far more than this is worth adjusting against, but learn the baseline first.`;
 }
 
 /* ---------- boot ---------- */
+readColors();
+const mq = window.matchMedia('(prefers-color-scheme: dark)');
+const recolor = () => { readColors(); if (UI.tab === 'charts' && SITS.size) renderFilm(); };
+if (mq.addEventListener) mq.addEventListener('change', recolor);
+new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+/* the phone folds and unfolds without reloading: re-lay out the visible tab so slider ticks and thumbnails fit the new width */
+let resizeT = null;
+window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (!SITS.size) return; if (UI.tab === 'charts') renderCharts(); else if (UI.tab === 'build') renderBuild(); }, 200); });
 if (!TAGS.length) document.querySelector('main').innerHTML = '<div class="empty-state">Range data didn’t load. Make sure k-poker-data.js sits next to this page.</div>';
-else setTab(['lens', 'charts', 'build', 'method'].includes(UI.tab) ? UI.tab : 'lens');
+else loadGames().then(() => setTab(UI.tab), err => { document.querySelector('main').innerHTML = `<div class="empty-state">${esc(err.message)}. Make sure the k-poker-*.js files sit next to this page.</div>`; });
 </script>
