@@ -392,7 +392,18 @@ html.app .ctl .frow .seg button{min-height:30px}
 #v-lens .mx{overflow:visible}
 #v-lens .mx-lab b{font-size:12px;white-space:nowrap}
 /* the open-size row is one more line than the other trainers' hand pickers: tighter gaps keep the left pane from scrolling */
-#v-lens .lens-pick{gap:6px}
+#v-lens .lens-pick{gap:8px}
+/* open size: the same slider as Charts; in Hand lens it heads the right pane, above the legend */
+.kopen{padding:4px 12px}
+.kopen input:disabled{opacity:.45}
+html.app #v-lens #l-rhead{grid-column:2;grid-row:1;display:flex;flex-direction:column;gap:8px}
+#l-rhead{margin-bottom:12px}
+#l-rhead .legend{margin:0!important}
+/* spots the solver almost never reaches: still solved, but faded so a real "never happens" isn't mistaken for data */
+.mx-strip .c.rare{opacity:.38}
+.sw.rare{opacity:.38;background:var(--k-C)}
+.rarenote{font-size:12.5px;color:var(--muted);margin:10px 0 0;padding:6px 10px;border-radius:8px;background:var(--surface-2)}
+.rarenote b{color:var(--fg)}
 .drow{cursor:pointer}
 .sw.est{background:linear-gradient(225deg,var(--muted) 0 35%,var(--empty) 35%)}
 .estnote{font-size:12.5px;color:var(--muted);margin:10px 0 0;padding:6px 10px;border-radius:8px;background:var(--surface-2)}
@@ -448,7 +459,7 @@ html.app .ctl .frow .seg button{min-height:30px}
   <section class="view" id="v-build" hidden>
     <div class="charts">
       <aside class="ctl">
-        <div><p class="eyebrow">Open size</p><div class="chips" id="b-open"></div></div>
+        <div class="clock dual kopen" id="b-open"><div class="drow on"><div class="dval"><b id="b-op">5</b><small>bb open</small></div><div class="dmid"><input type="range" id="b-op-sl" min="0" max="8" step="1" aria-label="Open size"><div class="ticks" id="b-op-ticks"></div></div></div></div>
         <p class="small muted" style="margin:0">Tap a seat to skip ahead to it: everyone before it folds. Then pick that player's action under the table. Tap a seat that already acted to change what it did.</p>
       </aside>
       <div class="stage">
@@ -480,12 +491,11 @@ html.app .ctl .frow .seg button{min-height:30px}
           <label class="eyebrow" for="l-input">Hand</label>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="l-input" value="KTs" autocomplete="off" spellcheck="false"><div class="cards" id="l-cards"></div></div>
           <p class="ltop" id="l-top"></p>
-          <div class="frow"><span class="flab">Open (bb)</span><div class="seg" id="l-open"></div></div>
         </div>
       </div>
       <div><p class="eyebrow">Pick a hand</p><div class="grid mini" id="l-grid" style="width:min(340px,86vw)"></div></div>
     </div>
-    <div class="legend" id="l-legend" style="margin-bottom:12px"></div>
+    <div id="l-rhead"><div class="clock dual kopen" id="l-open"><div class="drow on"><div class="dval"><b id="l-op">5</b><small>bb open</small></div><div class="dmid"><input type="range" id="l-op-sl" min="0" max="8" step="1" aria-label="Open size"><div class="ticks" id="l-op-ticks"></div></div></div></div><div class="legend" id="l-legend"></div></div>
     <div class="lens-blocks" id="l-blocks"></div>
   </section>
 
@@ -705,6 +715,9 @@ function lineShort(spot) {
   }
   return out.length ? out.join(' · ') : 'Folds to you';
 }
+const RARE = 1e-4;  // spots reached less often than this are only there because every seat's standard spots are solved
+const isRare = sp => sp.bp < RARE;
+const RARE_NOTE = sp => `<p class="rarenote"><b>Almost never happens.</b> The solver gets here in ${often(sp.bp)} of hands (at deep stacks it rarely opens from early seats, for example), so its play here is less settled.</p>`;
 const EST_NOTE = '<p class="estnote"><b>Multiway: an estimate.</b> Two or more players are already in, and the solver values multiway flops with a learned estimate rather than solving them out.</p>';
 
 /* ---------- range notation & ladders ---------- */
@@ -1058,7 +1071,7 @@ function renderChartsRail() {
   const sp = cCurSpot();
   const parts = [];
   const ser = cSer(sp);
-  parts.push(`<div class="panel"><h3>${esc(spotTitle(sp))}</h3>${stableMixHTML(sp, ser)}<p class="small muted" style="margin:8px 0 0">Pot ${num(sp.pot)}bb · this line comes up in ${often(sp.bp)} of hands.</p>${sp.est ? EST_NOTE : ''}${mixChartSVG(ser, sp)}${rankChartSVG(sp, ser)}</div>`);
+  parts.push(`<div class="panel"><h3>${esc(spotTitle(sp))}</h3>${stableMixHTML(sp, ser)}<p class="small muted" style="margin:8px 0 0">Pot ${num(sp.pot)}bb · this line comes up in ${often(sp.bp)} of hands.</p>${isRare(sp) ? RARE_NOTE(sp) : ''}${sp.est ? EST_NOTE : ''}${mixChartSVG(ser, sp)}${rankChartSVG(sp, ser)}</div>`);
   parts.push(`<div class="panel" id="c-hand"><h3>Hand</h3>${handDetailHTML(sp, cSel)}</div>`);
   parts.push(`<div class="panel"><h3>Edges</h3><p class="small muted" style="margin:-4px 0 10px">Each ladder from strongest to weakest, and where it stops.</p>${edgesHTML(sp)}</div>`);
   $('#c-rail').innerHTML = parts.join('');
@@ -1098,6 +1111,13 @@ document.addEventListener('keydown', e => {
 });
 function openInCharts(spot, g) { UI.cFam = spot.fam; UI.cSit = spot.sitKey; UI.cDpPref = spot.dp; UI.cOpPref = spot.op; UI.cAxis = 'depth'; cSel = g; setTab('charts'); }
 
+/* the open-size slider in Hand lens and Spot builder: the sizes solved at that stack (all of them in Hand lens) */
+function openSlider(pre, ops, cur) {
+  const sl = $('#' + pre + '-op-sl');
+  $('#' + pre + '-op').textContent = cur;
+  sl.max = Math.max(0, ops.length - 1); sl.value = ops.indexOf(cur); sl.disabled = ops.length < 2;
+  $('#' + pre + '-op-ticks').innerHTML = ticksHTML(ops, cur, $('#' + pre + '-op-ticks').clientWidth || 260);
+}
 /* ---------- SPOT BUILDER ---------- */
 /* The chosen line is kept as a list of action kinds, so sliding the open size follows the same line in each solve */
 const TBL = { cx: 16.65, cy: 13.2, rx: 13.6, ry: 11.4, potY: 11.0 };
@@ -1165,7 +1185,7 @@ function bTableHTML(S) {
 }
 function renderBuild() {
   const ops = opensAt(UI.bDp), dps = stacksAt(UI.bOp);
-  $('#b-open').innerHTML = ops.map(o => `<button data-o="${o}" aria-pressed="${o === UI.bOp}">${o}bb</button>`).join('');
+  openSlider('b', ops, UI.bOp);
   const sl = $('#b-slider'); sl.max = dps.length - 1; sl.value = dps.indexOf(UI.bDp);
   $('#b-ticks').innerHTML = ticksHTML(dps, UI.bDp, $('#b-ticks').clientWidth || 300);
   renderBuildSpot();
@@ -1189,7 +1209,7 @@ function renderBuildSpot() {
   if (sp) {
     bGrid.show(sp, { marks: g => (g === bSel ? 'sel' : '') });
     $('#b-legend').innerHTML = legendHTML([...new Set(sp.order.map(a => sp.A[a].kind))], sp);
-    $('#b-info').innerHTML = `<div class="panel"><h3>${esc(spotTitle(sp))}</h3>${stableMixHTML(sp, series(sp.sit, 'depth', sp.op))}${sp.est ? EST_NOTE : ''}<div style="margin-top:12px"><button class="btn ghost small" id="b-open">Open in Charts →</button></div></div><div class="panel"><h3>Hand</h3>${handDetailHTML(sp, bSel)}</div>`;
+    $('#b-info').innerHTML = `<div class="panel"><h3>${esc(spotTitle(sp))}</h3>${stableMixHTML(sp, series(sp.sit, 'depth', sp.op))}${isRare(sp) ? RARE_NOTE(sp) : ''}${sp.est ? EST_NOTE : ''}<div style="margin-top:12px"><button class="btn ghost small" id="b-open">Open in Charts →</button></div></div><div class="panel"><h3>Hand</h3>${handDetailHTML(sp, bSel)}</div>`;
   } else {
     $('#b-empty').textContent = S.actor == null ? 'The betting is closed. Tap a seat to change what happened.' : `No stored ranges for ${POS[S.actor]} here: the solver almost never gets here. Tap a seat to change what happened.`;
     $('#b-info').innerHTML = '';
@@ -1217,7 +1237,7 @@ const bGrid = new Grid($('#b-grid'), { onCell: g => { bSel = g; renderBuildSpot(
 /* the stack slider runs over the depths solved at this open size; the open-size chips over those solved at this depth */
 function bGo() { loadGames([tagAt(UI.bDp, UI.bOp)]).then(renderBuild, loadFailed); }
 $('#b-slider').addEventListener('input', e => { UI.bDp = stacksAt(UI.bOp)[+e.target.value]; bGo(); });
-$('#b-open').addEventListener('click', e => { const b = e.target.closest('[data-o]'); if (!b) return; UI.bOp = +b.dataset.o; bGo(); });
+$('#b-op-sl').addEventListener('input', e => { const v = opensAt(UI.bDp)[+e.target.value]; if (v == null || v === UI.bOp) return; UI.bOp = v; $('#b-op').textContent = v; bGo(); });
 $('#b-table').addEventListener('click', e => { const b = e.target.closest('[data-seat]'); if (b) bTapSeat(+b.dataset.seat); });
 $('#b-acts').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; const S = bState(); UI.bSeq = [...S.seq.slice(0, S.path.length), { k: b.dataset.k }]; bPrev = null; renderBuildSpot(); });
 $('#b-back').addEventListener('click', () => {
@@ -1261,8 +1281,9 @@ function lensMatrix(title, fam, g, note) {
       const sp = GAME[t].cell.get(k);
       if (!sp) return '<i class="c none"></i>';
       const tip = `${dv(t)}bb: ${narrate(sp).replace(/<[^>]+>/g, '')}`;
-      if (!inRange(sp, g)) return `<i class="c na${sp.est ? ' est' : ''}" data-k="${t}|${sp.key}" title="${esc(tip)} Not in your range."></i>`;
-      return `<i class="c${sp.est ? ' est' : ''}" data-k="${t}|${sp.key}" title="${esc(tip + ' ' + sp.order.map(a => actLabel(sp, a, true) + ' ' + pct(sp.f[a][g])).join(', '))}" style="background:${cellBg(sp, g)}"></i>`;
+      const cls = (sp.est ? ' est' : '') + (isRare(sp) ? ' rare' : ''), rt = isRare(sp) ? ` Almost never happens (${often(sp.bp)} of hands).` : '';
+      if (!inRange(sp, g)) return `<i class="c na${cls}" data-k="${t}|${sp.key}" title="${esc(tip + rt)} Not in your range."></i>`;
+      return `<i class="c${cls}" data-k="${t}|${sp.key}" title="${esc(tip + rt + ' ' + sp.order.map(a => actLabel(sp, a, true) + ' ' + pct(sp.f[a][g])).join(', '))}" style="background:${cellBg(sp, g)}"></i>`;
     }).join('');
     return gh + `<div class="mx-row"><div class="mx-lab"><b>${esc(group ? rowLab(null, v) : fam === 'RFI' ? POS[v.hero] : POS[v.hero] + ' ' + rowLab(null, v))}</b></div><div class="mx-strip" style="--cols:${opens.length}">${cells}</div></div>`;
   }).join('');
@@ -1273,9 +1294,9 @@ function renderLens() {
   $('#l-input').value = GRID[g];
   $('#l-cards').innerHTML = cardsHTML(g);
   $('#l-top').innerHTML = handTopHTML(g);
-  $('#l-open').innerHTML = OPENS.map(o => `<button data-o="${o}" aria-pressed="${o === UI.lOp}" title="${o}bb opens: ${stacksAt(o).length} stack depth${stacksAt(o).length > 1 ? 's' : ''}">${o}</button>`).join('');
+  openSlider('l', OPENS, UI.lOp);
   lGrid.show(null, { bg: g2 => g2 === g ? 'var(--accent)' : (COMBOS[g2] === 6 ? 'var(--k-F)' : COMBOS[g2] === 4 ? 'color-mix(in srgb, var(--k-F) 70%, var(--empty))' : 'color-mix(in srgb, var(--k-F) 45%, var(--empty))') });
-  $('#l-legend').innerHTML = legendHTML(['J', 'R', 'C', 'X', 'F']) + '<span><i class="sw" style="background:repeating-linear-gradient(45deg,var(--empty) 0 2px,transparent 2px 4px)"></i>Folded earlier</span><span><i class="sw est"></i>Multiway: an estimate</span>';
+  $('#l-legend').innerHTML = legendHTML(['J', 'R', 'C', 'X', 'F']) + '<span><i class="sw" style="background:repeating-linear-gradient(45deg,var(--empty) 0 2px,transparent 2px 4px)"></i>Folded earlier</span><span><i class="sw est"></i>Multiway: an estimate</span><span><i class="sw rare"></i>Almost never happens</span>';
   const blocks = [
     ['RFI', 'First in', 'Folded to you: limp, raise or fold. The small blind checks or raises.'],
     ['vsLimp', 'Facing limpers', 'Overlimp, isolate or fold. The blinds check or raise.'],
@@ -1296,7 +1317,7 @@ $('#l-input').addEventListener('change', e => {
   if (v.length === 3 && GIDX[v] == null) { const sw = v[1] + v[0] + v[2]; if (GIDX[sw] != null) v = sw; }
   if (GIDX[v] != null) { UI.lens = GIDX[v]; saveUI(); renderLens(); } else e.target.value = GRID[UI.lens];
 });
-$('#l-open').addEventListener('click', e => { const b = e.target.closest('[data-o]'); if (!b) return; UI.lOp = +b.dataset.o; saveUI(); loadGames(tabTags('lens')).then(renderLens, loadFailed); });
+$('#l-op-sl').addEventListener('input', e => { const v = OPENS[+e.target.value]; if (v == null || v === UI.lOp) return; UI.lOp = v; $('#l-op').textContent = v; saveUI(); loadGames(tabTags('lens')).then(() => { if (UI.lOp === v) renderLens(); }, loadFailed); });
 $('#l-blocks').addEventListener('click', e => { const c = e.target.closest('[data-k]'); if (!c) return; const [t, key] = c.dataset.k.split('|'); const sp = GAME[t].byKey.get(key); if (sp) openInCharts(sp, UI.lens); });
 
 /* ---------- METHOD ---------- */
